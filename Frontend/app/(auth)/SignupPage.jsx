@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { API_BASE_URL } from "../config";
 
 export default function Signup() {
   const router = useRouter();
@@ -43,20 +44,17 @@ export default function Signup() {
     try {
       setIsLoading(true);
 
-      const response = await fetch(
-        "http://192.168.0.102:5000/api/auth/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: fullName,
-            email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -65,12 +63,12 @@ export default function Signup() {
       }
 
       Alert.alert("Success", "Account created successfully");
-      router.replace("/OnboardingStep1"); // Navigate to onboarding
+      router.replace("/(auth)/OnboardingPage");
     } catch (error) {
       console.error("Signup error:", error);
       Alert.alert("Signup Error", error.message);
     } finally {
-      setIsLoading(false);-
+      setIsLoading(false);
     }
   };
 

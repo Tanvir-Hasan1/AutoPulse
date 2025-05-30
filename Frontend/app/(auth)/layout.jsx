@@ -9,6 +9,7 @@ export default function AuthLayout() {
         name="ForgotPasswordPage"
         options={{ title: "Forgot Password" }}
       />
+      <Stack.Screen name="OnboardingPage" options={{ title: "Bike Setup" }} />
     </Stack>
   );
 }

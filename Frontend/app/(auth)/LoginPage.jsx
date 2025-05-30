@@ -1,6 +1,7 @@
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { API_BASE_URL } from "../config";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -23,7 +24,7 @@ export default function LoginPage() {
     try {
       setIsLoading(true);
 
-      const response = await fetch("http://192.168.0.102:5000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
