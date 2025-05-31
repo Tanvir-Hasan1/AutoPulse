@@ -1,7 +1,9 @@
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +12,8 @@ import {
   View,
 } from "react-native";
 import * as Progress from "react-native-progress";
+import { API_BASE_URL } from "../config";
+import { useUser } from "../contexts/UserContext";
 
 const BIKE_BRANDS = [
   "Royal Enfield",
@@ -52,8 +56,10 @@ const BIKE_MODELS = {
 };
 
 export default function OnboardingScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
+  const { user } = useUser();
   const [step, setStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [bikeData, setBikeData] = useState({
     brand: "",
@@ -75,8 +81,64 @@ export default function OnboardingScreen() {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      console.log("Bike Data Submitted:", bikeData); // <-- Log here
-      navigation.navigate("Home"); // Replace with your dashboard route
+      submitBikeData();
+    }
+  };
+
+  const submitBikeData = async () => {
+    if (!user.userId || !user.email) {
+      Alert.alert("Error", "User information not found. Please sign up again.");
+      router.replace("/(auth)/SignupPage");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Console log for verification
+      console.log("🚲 Submitting bike data:");
+      console.log("User ID from context:", user.userId);
+      console.log("Email from context:", user.email);
+      console.log("Bike data:", bikeData);
+
+      const payload = {
+        user: user.userId,
+        brand: bikeData.brand,
+        model: bikeData.model,
+        year: bikeData.year,
+        registrationNumber: bikeData.registrationNumber,
+        odometer: parseInt(bikeData.odometer),
+      };
+
+      console.log("📤 API Payload:", payload);
+
+      const response = await fetch(`${API_BASE_URL}/api/bikes/registerBike`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to save bike data");
+      }
+
+      console.log("✅ Bike data saved successfully:", data);
+
+      Alert.alert("Success", "Bike setup completed successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/(tabs)"),
+        },
+      ]);
+    } catch (error) {
+      console.error("❌ Onboarding error:", error);
+      Alert.alert("Error", error.message || "Failed to save bike data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -198,11 +260,15 @@ export default function OnboardingScreen() {
             styles.button,
             { backgroundColor: isStepComplete() ? "#4F46E5" : "#9CA3AF" },
           ]}
-          disabled={!isStepComplete()}
+          disabled={!isStepComplete() || isLoading}
         >
-          <Text style={styles.buttonText}>
-            {step === 3 ? "Complete" : "Next"}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.buttonText}>
+              {step === 3 ? "Complete" : "Next"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>

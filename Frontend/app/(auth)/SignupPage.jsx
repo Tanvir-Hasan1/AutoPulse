@@ -13,9 +13,11 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../config";
+import { useUser } from "../contexts/UserContext";
 
 export default function Signup() {
   const router = useRouter();
+  const { updateUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,8 +64,23 @@ export default function Signup() {
         throw new Error(data.message || "Signup failed");
       }
 
-      Alert.alert("Success", "Account created successfully");
-      router.replace("/(auth)/OnboardingPage");
+      // Store user ID and email in context
+      updateUser({
+        userId: data.user._id || data.user.id,
+        email: data.user.email,
+      });
+
+      // Console log for verification
+      console.log("✅ User stored in context:");
+      console.log("User ID:", data.user._id || data.user.id);
+      console.log("Email:", data.user.email);
+
+      Alert.alert("Success", "Account created successfully", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/(auth)/OnboardingPage"),
+        },
+      ]);
     } catch (error) {
       console.error("Signup error:", error);
       Alert.alert("Signup Error", error.message);
