@@ -277,7 +277,8 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    justifyContent: "center",
+    padding: 30,
     flexGrow: 1,
     backgroundColor: "#fff",
   },
@@ -289,13 +290,13 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 16,
     marginBottom: 4,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
     color: "#111827",
   },
   pickerWrapper: {
     backgroundColor: "#f3f4f6",
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#d1d5db",
     marginBottom: 12,
