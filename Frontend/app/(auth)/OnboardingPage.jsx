@@ -112,7 +112,7 @@ export default function OnboardingScreen() {
 
       console.log("📤 API Payload:", payload);
 
-      const response = await fetch(`${API_BASE_URL}/api/bikes/registerBike`, {
+      const response = await fetch(`${API_BASE_URL}/bikes/registerBike`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -174,6 +174,7 @@ export default function OnboardingScreen() {
           <Text style={styles.label}>Bike Brand</Text>
           <View style={styles.pickerWrapper}>
             <Picker
+              mode="dropdown"
               selectedValue={bikeData.brand}
               onValueChange={(value) => handleChange("brand", value)}
             >
@@ -187,6 +188,7 @@ export default function OnboardingScreen() {
           <Text style={styles.label}>Bike Model</Text>
           <View style={styles.pickerWrapper}>
             <Picker
+              mode="dropdown"
               selectedValue={bikeData.model}
               enabled={bikeData.brand !== ""}
               onValueChange={(value) => handleChange("model", value)}
@@ -206,6 +208,7 @@ export default function OnboardingScreen() {
           <Text style={styles.label}>Manufacturing Year</Text>
           <View style={styles.pickerWrapper}>
             <Picker
+              mode="dropdown"
               selectedValue={bikeData.year}
               onValueChange={(value) => handleChange("year", value)}
             >
@@ -310,6 +313,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 16,
     marginBottom: 16,
+    height: 55,
   },
   buttonRow: {
     flexDirection: "row",
