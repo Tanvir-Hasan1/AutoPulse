@@ -27,23 +27,52 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    // Find user and populate bikes
+    const user = await User.findOne({ email })
+      .select("-password") // Exclude password
+      .populate({
+        path: "bikes",
+        select:
+          "brand model year registrationNumber odometer createdAt updatedAt", // Include bike timestamps
+      });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Verify password (query again for password verification)
+    const userWithPassword = await User.findOne({ email }).select("+password");
+    const isMatch = await bcrypt.compare(password, userWithPassword.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    res
-      .status(200)
-      .json({ message: "Login successful", user: userWithoutPassword });
+    // Prepare response data with timestamps
+    const responseData = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      bikes: (user.bikes || []).map((bike) => ({
+        brand: bike.brand,
+        model: bike.model,
+        year: bike.year,
+        registrationNumber: bike.registrationNumber,
+        odometer: bike.odometer,
+        createdAt: bike.createdAt,
+        updatedAt: bike.updatedAt,
+      })),
+    };
+
+    res.status(200).json({
+      message: "Login successful",
+      user: responseData,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 // Get specific Users (for testing only)

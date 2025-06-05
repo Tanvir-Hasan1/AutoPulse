@@ -1,7 +1,6 @@
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { API_BASE_URL } from "../config";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,9 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { API_BASE_URL } from "../config";
+import { useUser } from "../contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { updateUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -40,14 +42,27 @@ export default function LoginPage() {
         return;
       }
 
-      // ✅ Save user info or token here if needed
       console.log("Login successful:", data.user);
 
-      setIsLoading(false);
-      router.replace("/home");
+      // Update user context with the received data
+      updateUser({
+        userId: data.user._id,
+        email: data.user.email,
+        name: data.user.name,
+        avatar: data.user.avatar,
+        bikes: data.user.bikes || [],
+      });
+
+      // Redirect based on bikes
+      if (!data.user.bikes || data.user.bikes.length === 0) {
+        router.replace("/(auth)/OnboardingPage");
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Server error. Please try again.");
+      alert(error.message || "Server error. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
