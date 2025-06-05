@@ -8,40 +8,45 @@ export default function TabLayout() {
         tabBarActiveTintColor: "#4F46E5",
         tabBarInactiveTintColor: "#9CA3AF",
         headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 1,
+          borderTopColor: "#E5E7EB",
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="fuel"
+        name="Fuel"
         options={{
           title: "Fuel",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="car" size={size} color={color} />
+          tabBarIcon: ({ color, size = 24 }) => (
+            <Ionicons name="bicycle" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="marketplace"
+        name="Marketplace"
         options={{
           title: "Marketplace",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="storefront" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="Profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
         }}
