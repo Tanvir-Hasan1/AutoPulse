@@ -50,7 +50,7 @@ export default function FuelLog({
         const distance = log.odometer - prev.odometer;
         const mileage =
           log.amount > 0 && distance > 0
-            ? parseFloat((distance / log.amount).toFixed(1))
+            ? Math.floor((distance / log.amount) * 100) / 100 // truncate to 2 decimals
             : null;
 
         return { ...log, mileage };
@@ -95,7 +95,7 @@ export default function FuelLog({
       if (lastLog && lastLog.odometer && payload.amount > 0) {
         const distance = payload.odometer - lastLog.odometer;
         if (distance > 0) {
-          mileage = parseFloat((distance / payload.amount).toFixed(1));
+          mileage = Math.floor((distance / payload.amount) * 100) / 100;
         }
       }
 
