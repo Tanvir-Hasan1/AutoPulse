@@ -54,8 +54,43 @@ const getFuelLogsByBike = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+//delete fuel log by id
+const deleteFuelLog = async (req, res) => {
+  try {
+    const { fuelLogId } = req.params;
+
+    // Check if fuel log exists
+    const fuelLog = await FuelLog.findById(fuelLogId);
+    if (!fuelLog) {
+      return res.status(404).json({ message: "Fuel log not found" });
+    }
+
+    // Delete the fuel log
+    await FuelLog.findByIdAndDelete(fuelLogId);
+
+    res.status(200).json({
+      message: "Fuel log deleted successfully",
+      deletedFuelLog: {
+        id: fuelLog._id,
+        date: fuelLog.date,
+        amount: fuelLog.amount,
+        totalCost: fuelLog.totalCost,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting fuel log:", error);
+
+    // Handle invalid ObjectId format
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid fuel log ID format" });
+    }
+
+    res.status(500).json({ message: "Server error", error });
+  }
+};
 
 module.exports = {
   createFuelLog,
   getFuelLogsByBike,
+  deleteFuelLog,
 };
