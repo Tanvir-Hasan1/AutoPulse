@@ -77,6 +77,7 @@ export default function FuelLog({
       volume: newFuelLog.volume ? parseFloat(newFuelLog.volume) : undefined,
       unitCost: parseFloat(newFuelLog.unitCost),
       odometer: parseFloat(newFuelLog.odometer),
+      note: newFuelLog.note || "", // Include note in payload
     };
 
     try {
@@ -112,6 +113,7 @@ export default function FuelLog({
         unitCost: "",
         odometer: "",
         volume: "",
+        note: "",
       });
 
       setFuelLevel(Math.min(100, fuelLevel + (payload.amount / 15) * 100));
@@ -192,6 +194,22 @@ export default function FuelLog({
                 keyboardType="numeric"
               />
             </View>
+          </View>
+
+          {/* Notes Field */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Notes (Optional)</Text>
+            <TextInput
+              style={styles.notesInput}
+              value={newFuelLog.note}
+              onChangeText={(text) =>
+                setNewFuelLog({ ...newFuelLog, note: text })
+              }
+              placeholder="Add any notes about this fuel entry..."
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
           </View>
 
           <View style={styles.totalCostContainer}>
@@ -298,10 +316,18 @@ export default function FuelLog({
                 </View>
               </View>
 
-              {/* Optional Notes */}
-              {log.notes && (
+              {/* Notes Section */}
+              {log.note && (
                 <View style={styles.notesSection}>
-                  <Text style={styles.notesText}>{log.notes}</Text>
+                  <View style={styles.noteHeader}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={16}
+                      color="#6b7280"
+                      style={styles.noteIcon}
+                    />
+                  </View>
+                  <Text style={styles.notesText}>{log.note}</Text>
                 </View>
               )}
             </View>
@@ -341,6 +367,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#374151",
     marginBottom: 6,
+    fontWeight: "500",
   },
   input: {
     backgroundColor: "#f9fafb",
@@ -349,6 +376,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    fontSize: 16,
+    color: "#1f2937",
+  },
+  notesInput: {
+    backgroundColor: "#f9fafb",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: "#1f2937",
+    minHeight: 80,
+    maxHeight: 120,
   },
   datePickerButton: {
     flexDirection: "row",
@@ -359,6 +400,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
+    alignItems: "center",
   },
   datePickerText: {
     fontSize: 16,
@@ -367,27 +409,34 @@ const styles = StyleSheet.create({
   totalCostContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    padding: 12,
-    backgroundColor: "#f3f4f6",
-    borderRadius: 8,
-    borderColor: "#e5e7eb",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#f0f9f4",
+    borderRadius: 10,
+    borderColor: "#d1fae5",
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   totalCostLabel: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#065f46",
   },
   totalCostValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#059669",
   },
   addButton: {
     backgroundColor: "#4F46E5",
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 14,
     alignItems: "center",
+    elevation: 2,
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   addButtonText: {
     color: "#ffffff",
@@ -401,15 +450,15 @@ const styles = StyleSheet.create({
     borderLeftColor: "#10b981",
     borderBottomColor: "#e5e7eb",
     borderBottomWidth: 1,
-    marginBottom: 10,
+    marginBottom: 12,
     backgroundColor: "#ffffff",
     borderRadius: 10,
-    padding: 15,
-    elevation: 0,
+    padding: 16,
+    elevation: 1,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 1,
+    shadowRadius: 2,
   },
   historyContent: {
     flexDirection: "row",
@@ -420,7 +469,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
   },
   metaItem: {
     flexDirection: "row",
@@ -432,12 +484,12 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 15,
     color: "#6b7280",
-    fontWeight: "700",
+    fontWeight: "600",
   },
   metaSeparator: {
     width: 1,
     height: 16,
-    backgroundColor: "#d1d5d0",
+    backgroundColor: "#d1d5db",
     marginHorizontal: 10,
   },
 
@@ -476,14 +528,27 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   notesSection: {
-    marginTop: 12,
-    paddingTop: 12,
+    flexDirection: "row",
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
+    padding: 12,
+    marginHorizontal: -4,
   },
+  noteHeader: {
+    marginBottom: 6,
+  },
+  noteIcon: {
+    marginRight: 6,
+  },
+
   notesText: {
     fontSize: 14,
-    color: "#6b7280",
+    color: "#4b5563",
+    lineHeight: 20,
     fontStyle: "italic",
   },
 });

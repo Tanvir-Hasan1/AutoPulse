@@ -4,8 +4,7 @@ const Bike = require("../models/bike");
 // Create a new fuel log
 const createFuelLog = async (req, res) => {
   try {
-    const { bike, date, amount, volume, unitCost, odometer, mileage } =
-      req.body;
+    const { bike, date, amount, unitCost, odometer, note } = req.body;
 
     if (!bike || !date || !amount || !unitCost || !odometer) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -22,11 +21,10 @@ const createFuelLog = async (req, res) => {
       bike,
       date,
       amount,
-      volume,
       unitCost,
       totalCost,
       odometer,
-      mileage,
+      note, // Optional
     });
 
     await newFuelLog.save();

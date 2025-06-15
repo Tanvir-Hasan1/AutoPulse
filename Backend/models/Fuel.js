@@ -8,7 +8,7 @@ const fuelLogSchema = new mongoose.Schema(
     unitCost: { type: Number, required: true }, // Cost per litre
     totalCost: { type: Number, required: true }, // Computed = amount * unitCost
     odometer: { type: Number, required: true }, // km
-    mileage: { type: Number }, // optional: km/litre
+    note: { type: String }, // optional
   },
   { timestamps: true }
 );
