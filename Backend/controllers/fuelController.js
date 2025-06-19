@@ -88,9 +88,53 @@ const deleteFuelLog = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+// update/edit fuelLog
+
+const updateFuelLog = async (req, res) => {
+  try {
+    const { fuelLogId } = req.params;
+    const { date, amount, unitCost, odometer, note } = req.body;
+
+    // Find the fuel log by ID
+    const fuelLog = await FuelLog.findById(fuelLogId);
+    if (!fuelLog) {
+      return res.status(404).json({ message: "Fuel log not found" });
+    }
+
+    // Update fields if provided
+    if (date) fuelLog.date = date;
+    if (amount) fuelLog.amount = amount;
+    if (unitCost) fuelLog.unitCost = unitCost;
+    if (odometer) fuelLog.odometer = odometer;
+    if (note !== undefined) fuelLog.note = note;
+
+    // Recalculate totalCost if amount or unitCost changed
+    if (amount || unitCost) {
+      fuelLog.totalCost = parseFloat(
+        (fuelLog.amount * fuelLog.unitCost).toFixed(2)
+      );
+    }
+
+    await fuelLog.save();
+
+    res.status(200).json({
+      message: "Fuel log updated successfully",
+      updatedFuelLog: fuelLog,
+    });
+  } catch (error) {
+    console.error("Error updating fuel log:", error);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid fuel log ID format" });
+    }
+
+    res.status(500).json({ message: "Server error", error });
+  }
+};
 
 module.exports = {
   createFuelLog,
   getFuelLogsByBike,
   deleteFuelLog,
+  updateFuelLog,
 };

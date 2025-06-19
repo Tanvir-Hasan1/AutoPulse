@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../config"; // e.g. http://192.168.x.x:5000/api
-import { useUser } from "../contexts/UserContext"; 
+import { useUser } from "../contexts/UserContext";
 
 export default function FuelLog({
   fuelLogs,
@@ -104,12 +104,7 @@ export default function FuelLog({
         }
       }
 
-      const newLog = {
-        ...data.fuelLog,
-        mileage,
-      };
-
-      setFuelLogs([newLog, ...fuelLogs]);
+      await fetchFuelLogs(); // Refresh logs to include new entry
 
       setNewFuelLog({
         date: new Date().toISOString().split("T")[0],
@@ -192,7 +187,7 @@ export default function FuelLog({
     }
 
     const payload = {
-      date: editingLog.date,
+      date: editingLog.date, // format: "YYYY-MM-DD"
       amount: parseFloat(editingLog.amount),
       unitCost: parseFloat(editingLog.unitCost),
       odometer: parseFloat(editingLog.odometer),
@@ -202,16 +197,20 @@ export default function FuelLog({
     try {
       const res = await fetch(`${API_BASE_URL}/fuel/${editingLog.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
-      // Refresh fuel logs to recalculate mileage
+      // Refresh fuel logs after update (recalculate mileage, etc.)
       await fetchFuelLogs();
 
+      // Reset editing state
       setIsEditing(false);
       setEditingLog(null);
 
