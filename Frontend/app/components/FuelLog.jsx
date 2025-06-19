@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../config"; // e.g. http://192.168.x.x:5000/api
-import { useUser } from "../contexts/UserContext";
+import { useUser } from "../contexts/UserContext"; 
 
 export default function FuelLog({
   fuelLogs,
@@ -26,6 +27,9 @@ export default function FuelLog({
 }) {
   const { user } = useUser();
   const bikeId = user.selectedBikeId;
+  const [selectedLogId, setSelectedLogId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingLog, setEditingLog] = useState(null);
 
   const calculateTotalCost = () => {
     const amount = parseFloat(newFuelLog.amount) || 0;
@@ -125,6 +129,114 @@ export default function FuelLog({
     }
   };
 
+  const handleDeleteFuelLog = async (logId) => {
+    Alert.alert(
+      "Delete Fuel Log",
+      "Are you sure you want to delete this fuel log entry?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/fuel/${logId}`, {
+                method: "DELETE",
+              });
+
+              if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || "Failed to delete fuel log");
+              }
+
+              // Remove the deleted log from the state
+              setFuelLogs(
+                fuelLogs.filter((log) => (log._id || log.id) !== logId)
+              );
+              setSelectedLogId(null);
+
+              Alert.alert("Success", "Fuel log deleted successfully");
+            } catch (error) {
+              console.error("Delete error:", error);
+              Alert.alert(
+                "Error",
+                error.message || "Failed to delete fuel log"
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEditFuelLog = (log) => {
+    setEditingLog({
+      id: log._id || log.id,
+      date: log.date.split("T")[0], // Format date for input
+      amount: log.amount.toString(),
+      unitCost: log.unitCost.toString(),
+      odometer: log.odometer.toString(),
+      note: log.note || "",
+    });
+    setIsEditing(true);
+    setSelectedLogId(null);
+  };
+
+  const handleUpdateFuelLog = async () => {
+    if (!editingLog.amount || !editingLog.unitCost || !editingLog.odometer) {
+      Alert.alert("Error", "Please fill all fuel log fields");
+      return;
+    }
+
+    const payload = {
+      date: editingLog.date,
+      amount: parseFloat(editingLog.amount),
+      unitCost: parseFloat(editingLog.unitCost),
+      odometer: parseFloat(editingLog.odometer),
+      note: editingLog.note || "",
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/fuel/${editingLog.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to update");
+
+      // Refresh fuel logs to recalculate mileage
+      await fetchFuelLogs();
+
+      setIsEditing(false);
+      setEditingLog(null);
+
+      Alert.alert("Success", "Fuel log updated successfully!");
+    } catch (error) {
+      console.error("Update error:", error);
+      Alert.alert("Error", error.message || "Failed to update fuel log");
+    }
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditingLog(null);
+  };
+
+  const handleLongPress = (logId) => {
+    setSelectedLogId(logId);
+  };
+
+  const handlePress = () => {
+    if (selectedLogId) {
+      setSelectedLogId(null);
+    }
+  };
+
   useEffect(() => {
     if (bikeId) fetchFuelLogs();
   }, [bikeId]);
@@ -138,19 +250,23 @@ export default function FuelLog({
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Add Fuel Entry Form */}
+        {/* Add/Edit Fuel Entry Form */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Add Fuel Entry</Text>
+          <Text style={styles.cardTitle}>
+            {isEditing ? "Edit Fuel Entry" : "Add Fuel Entry"}
+          </Text>
 
           <View style={styles.inputRow}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Date</Text>
               <TouchableOpacity
                 style={styles.datePickerButton}
-                onPress={openDatePicker}
+                onPress={isEditing ? () => {} : openDatePicker}
               >
                 <Text style={styles.datePickerText}>
-                  {formatDisplayDate(newFuelLog.date)}
+                  {isEditing
+                    ? formatDisplayDate(editingLog.date)
+                    : formatDisplayDate(newFuelLog.date)}
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6b7280" />
               </TouchableOpacity>
@@ -159,9 +275,11 @@ export default function FuelLog({
               <Text style={styles.label}>Amount (L)</Text>
               <TextInput
                 style={styles.input}
-                value={newFuelLog.amount}
+                value={isEditing ? editingLog.amount : newFuelLog.amount}
                 onChangeText={(text) =>
-                  setNewFuelLog({ ...newFuelLog, amount: text })
+                  isEditing
+                    ? setEditingLog({ ...editingLog, amount: text })
+                    : setNewFuelLog({ ...newFuelLog, amount: text })
                 }
                 placeholder="0.0"
                 keyboardType="decimal-pad"
@@ -174,9 +292,11 @@ export default function FuelLog({
               <Text style={styles.label}>Unit Cost (BDT/L)</Text>
               <TextInput
                 style={styles.input}
-                value={newFuelLog.unitCost}
+                value={isEditing ? editingLog.unitCost : newFuelLog.unitCost}
                 onChangeText={(text) =>
-                  setNewFuelLog({ ...newFuelLog, unitCost: text })
+                  isEditing
+                    ? setEditingLog({ ...editingLog, unitCost: text })
+                    : setNewFuelLog({ ...newFuelLog, unitCost: text })
                 }
                 placeholder="0.0"
                 keyboardType="decimal-pad"
@@ -186,9 +306,11 @@ export default function FuelLog({
               <Text style={styles.label}>Odometer (km)</Text>
               <TextInput
                 style={styles.input}
-                value={newFuelLog.odometer}
+                value={isEditing ? editingLog.odometer : newFuelLog.odometer}
                 onChangeText={(text) =>
-                  setNewFuelLog({ ...newFuelLog, odometer: text })
+                  isEditing
+                    ? setEditingLog({ ...editingLog, odometer: text })
+                    : setNewFuelLog({ ...newFuelLog, odometer: text })
                 }
                 placeholder="0.0"
                 keyboardType="numeric"
@@ -201,9 +323,11 @@ export default function FuelLog({
             <Text style={styles.label}>Notes (Optional)</Text>
             <TextInput
               style={styles.notesInput}
-              value={newFuelLog.note}
+              value={isEditing ? editingLog.note : newFuelLog.note}
               onChangeText={(text) =>
-                setNewFuelLog({ ...newFuelLog, note: text })
+                isEditing
+                  ? setEditingLog({ ...editingLog, note: text })
+                  : setNewFuelLog({ ...newFuelLog, note: text })
               }
               placeholder="Add any notes about this fuel entry..."
               multiline
@@ -215,21 +339,73 @@ export default function FuelLog({
           <View style={styles.totalCostContainer}>
             <Text style={styles.totalCostLabel}>Total Cost:</Text>
             <Text style={styles.totalCostValue}>
-              BDT {calculateTotalCost()}
+              BDT{" "}
+              {isEditing
+                ? (
+                    (parseFloat(editingLog.amount) || 0) *
+                    (parseFloat(editingLog.unitCost) || 0)
+                  ).toFixed(2)
+                : calculateTotalCost()}
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.addButton} onPress={handleAddFuelLog}>
-            <Text style={styles.addButtonText}>Add Fuel Entry</Text>
-          </TouchableOpacity>
+          {isEditing ? (
+            <View style={styles.editButtonsContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={cancelEdit}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.updateButton}
+                onPress={handleUpdateFuelLog}
+              >
+                <Text style={styles.updateButtonText}>Update Entry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleAddFuelLog}
+            >
+              <Text style={styles.addButtonText}>Add Fuel Entry</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Fuel History List */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Fuel History</Text>
           {fuelLogs.map((log) => (
-            //fuel log item
-            <View key={log._id || log.id} style={styles.historyItem}>
+            <Pressable
+              key={log._id || log.id}
+              onLongPress={() => handleLongPress(log._id || log.id)}
+              onPress={handlePress}
+              style={[
+                styles.historyItem,
+                selectedLogId === (log._id || log.id) &&
+                  styles.selectedHistoryItem,
+              ]}
+            >
+              {/* Action Icons */}
+              {selectedLogId === (log._id || log.id) && (
+                <View style={styles.actionIcons}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={() => handleEditFuelLog(log)}
+                  >
+                    <Ionicons name="pencil" size={18} color="#ffffff" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={() => handleDeleteFuelLog(log._id || log.id)}
+                  >
+                    <Ionicons name="trash" size={18} color="#ffffff" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               <View style={styles.cardTopMeta}>
                 <View style={styles.metaItem}>
                   <Ionicons
@@ -330,7 +506,7 @@ export default function FuelLog({
                   <Text style={styles.notesText}>{log.note}</Text>
                 </View>
               )}
-            </View>
+            </Pressable>
           ))}
         </View>
       </ScrollView>
@@ -443,8 +619,36 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+  editButtonsContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#6b7280",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  updateButton: {
+    flex: 1,
+    backgroundColor: "#059669",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  updateButtonText: {
+    color: "#ffffff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
 
-  // Updated card layout
+  // Updated card layout with selection
   historyItem: {
     borderLeftWidth: 4,
     borderLeftColor: "#10b981",
@@ -459,6 +663,38 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    position: "relative",
+  },
+  selectedHistoryItem: {
+    backgroundColor: "#f8f9ff",
+    borderColor: "#4F46E5",
+    borderWidth: 2,
+  },
+  actionIcons: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    flexDirection: "row",
+    gap: 8,
+    zIndex: 1,
+  },
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  editButton: {
+    backgroundColor: "#059669",
+  },
+  deleteButton: {
+    backgroundColor: "#dc2626",
   },
   historyContent: {
     flexDirection: "row",
@@ -544,7 +780,6 @@ const styles = StyleSheet.create({
   noteIcon: {
     marginRight: 6,
   },
-
   notesText: {
     fontSize: 14,
     color: "#4b5563",
