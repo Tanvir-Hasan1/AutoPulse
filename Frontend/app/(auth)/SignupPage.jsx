@@ -27,6 +27,10 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  const isPasswordTooShort = password.length > 0 && password.length < 6;
+  const isConfirmPasswordTooShort =
+    confirmPassword.length > 0 && confirmPassword.length < 6;
+
   const handleSignup = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert("Error", "All fields are required");
@@ -147,6 +151,11 @@ export default function Signup() {
             />
           </TouchableOpacity>
         </View>
+        {isPasswordTooShort && (
+          <Text style={styles.errorText}>
+            Password must be at least 6 characters
+          </Text>
+        )}
 
         <View style={styles.inputWrapper}>
           <FontAwesome name="lock" size={16} color="gray" style={styles.icon} />
@@ -167,6 +176,12 @@ export default function Signup() {
             />
           </TouchableOpacity>
         </View>
+        {isConfirmPasswordTooShort && (
+          <Text style={styles.errorText}>
+            {" "}
+            Confirm password must be at least 6 characters
+          </Text>
+        )}
 
         <TouchableOpacity
           style={styles.checkbox}
@@ -240,6 +255,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 12,
   },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+
   icon: {
     marginRight: 8,
   },
