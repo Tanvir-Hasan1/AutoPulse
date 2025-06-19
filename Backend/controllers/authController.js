@@ -56,6 +56,7 @@ const loginUser = async (req, res) => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       bikes: (user.bikes || []).map((bike) => ({
+        _id: bike._id,
         brand: bike.brand,
         model: bike.model,
         year: bike.year,

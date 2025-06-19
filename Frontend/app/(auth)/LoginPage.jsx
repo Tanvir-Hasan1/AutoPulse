@@ -16,7 +16,7 @@ import { useUser } from "../contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { updateUser } = useUser();
+  const { updateUser, user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -43,13 +43,14 @@ export default function LoginPage() {
       }
 
       console.log("Login successful:", data.user);
+      console.log("User ID:", data.user._id);
+      console.log("User Email:", data.user.email);
+      console.log("Selected Bike:", data.user.bikes || []);
 
       // Update user context with the received data
       updateUser({
         userId: data.user._id,
         email: data.user.email,
-        name: data.user.name,
-        avatar: data.user.avatar,
         bikes: data.user.bikes || [],
       });
 
