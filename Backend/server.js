@@ -23,6 +23,7 @@ app.use("/api/fuel", fuelRoutes);
 app.use("/api/service", serviceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
+
 // Connect to MongoDB and start server
 mongoose
   .connect(process.env.MONGO_URI)
