@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const bikeRoutes = require("./routes/bikeRoutes");
 const fuelRoutes = require("./routes/fuelRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +21,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bikes", bikeRoutes);
 app.use("/api/fuel", fuelRoutes);
 app.use("/api/service", serviceRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
 
 // Connect to MongoDB and start server
 mongoose
