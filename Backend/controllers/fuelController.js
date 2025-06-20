@@ -1,5 +1,5 @@
-const FuelLog = require("../models/fuel");
-const Bike = require("../models/bike");
+const FuelLog = require("../models/Fuel");
+const Bike = require("../models/Bike");
 
 // Create a new fuel log
 const createFuelLog = async (req, res) => {
