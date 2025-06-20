@@ -1,5 +1,5 @@
-const Bike = require("../models/bike");
-const User = require("../models/user"); // Assuming this exists
+const Bike = require("../models/Bike");
+const User = require("../models/User"); // Assuming this exists
 
 // Register a new bike
 const registerBike = async (req, res) => {
