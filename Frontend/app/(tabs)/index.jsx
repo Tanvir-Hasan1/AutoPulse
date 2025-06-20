@@ -7,7 +7,9 @@ export default function Dashboard() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Dashboard</Text>
+
       <Text style={styles.subtitle}>Welcome, {user.email}! You Rock!</Text>
+
 
       {user.selectedBikeId && (
         <View style={styles.bikeBox}>
