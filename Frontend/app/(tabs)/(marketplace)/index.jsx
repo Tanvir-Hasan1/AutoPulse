@@ -11,14 +11,15 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProductCard from "../../components/ProductCard"; // Updated path
+import ProductCard from "../../components/ProductCard";
 import { useRouter } from "expo-router";
 
-export default function Marketplace() { // Renamed to Marketplace for clarity
+export default function Marketplace() {
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
   const router = useRouter();
 
   useEffect(() => {
@@ -138,35 +139,41 @@ export default function Marketplace() { // Renamed to Marketplace for clarity
         },
       ];
       setProducts(data);
-      setFiltered(data);
+      setFiltered(data); // Set filtered directly to ensure initial render
+      setIsLoading(false); // Update loading state
+      console.log('Initial Products:', data); // Debug log
     };
 
     loadProducts();
   }, []);
 
   useEffect(() => {
-    filterProducts();
-  }, [search, activeTab]);
+    console.log('Filtering - Products:', products.length, 'Search:', search, 'ActiveTab:', activeTab); // Debug log
+    const filterProducts = () => {
+      let result = products;
 
-  const filterProducts = () => {
-    let result = products;
+      if (activeTab !== "all") {
+        result = result.filter((p) => p.category === activeTab);
+      }
 
-    if (activeTab !== "all") {
-      result = result.filter((p) => p.category === activeTab);
+      if (search.trim() !== "") {
+        result = result.filter((p) =>
+          p.name.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      setFiltered(result);
+      console.log('Filtered Products:', result); // Debug log
+    };
+
+    if (products.length > 0) { // Only filter if products are loaded
+      filterProducts();
     }
-
-    if (search.trim() !== "") {
-      result = result.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    setFiltered(result);
-  };
+  }, [products, search, activeTab]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
 
       <Text style={styles.title}>Marketplace</Text>
 
@@ -184,80 +191,99 @@ export default function Marketplace() { // Renamed to Marketplace for clarity
           { id: "all", label: "All", icon: "apps" },
           { id: "bike", label: "Bikes", icon: "bicycle" },
           { id: "part", label: "Parts", icon: "construct" },
-        ].map(({ id, label, icon }) => (
+        ].map((item) => (
           <TouchableOpacity
-            key={id}
-            style={[styles.tab, activeTab === id && styles.activeTab]}
-            onPress={() => setActiveTab(id)}
+            key={item.id}
+            style={[styles.tab, activeTab === item.id && styles.activeTab]}
+            onPress={() => setActiveTab(item.id)}
           >
             <Ionicons
-              name={icon}
+              name={item.icon}
               size={20}
-              color={activeTab === id ? "#4F46E5" : "#9CA3AF"}
+              color={activeTab === item.id ? colors.active : colors.accent}
             />
             <Text
               style={[
                 styles.tabText,
-                activeTab === id && styles.activeTabText,
+                activeTab === item.id && styles.activeTabText,
               ]}
             >
-              {label}
+              {item.label}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Product Grid */}
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/(marketplace)/Product",
-                params: { product: JSON.stringify(item) },
-              })
-            }
-          />
-        )}
-        numColumns={2}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={{ textAlign: "center", marginTop: 20, color: "#999" }}>
-            No products found.
-          </Text>
-        }
-      />
+      {isLoading ? (
+        <Text style={styles.emptyText}>Loading products...</Text>
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ProductCard
+              product={item}
+              onPress={() => {
+                console.log('Navigating to Product:', item); // Debug log
+                router.push({
+                  pathname: "/(tabs)/(marketplace)/Product",
+                  params: { product: JSON.stringify(item) },
+                });
+              }}
+            />
+          )}
+          numColumns={numColumns}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>
+              No products found.
+            </Text>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
 
+const numColumns = 2;
+
+const colors = {
+  primary: "#4F46E5",
+  accent: "#9CA3AF",
+  active: "#4F46E5",
+  text: "#1f2937",
+  border: "#d1d5db",
+  bg: "#f8fafc",
+  card: "#ffffff",
+  tabBg: "#e5e7eb",
+  shadow: "#000",
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.bg,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 20,
-    color: "#1f2937",
+    color: colors.text,
   },
   searchBox: {
     height: 40,
-    borderColor: "#d1d5db",
+    borderColor: colors.border,
     borderWidth: 1,
     marginHorizontal: 16,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.card,
   },
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#e5e7eb",
+    backgroundColor: colors.tabBg,
     margin: 16,
     borderRadius: 8,
     padding: 4,
@@ -275,21 +301,26 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 14,
     fontWeight: "500",
-    color: "#9CA3AF",
+    color: colors.accent,
   },
   activeTab: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.card,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   activeTabText: {
-    color: "#4F46E5",
+    color: colors.active,
   },
   list: {
     paddingHorizontal: 10,
     paddingBottom: 20,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    color: colors.accent,
   },
 });

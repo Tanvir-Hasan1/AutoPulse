@@ -13,7 +13,7 @@ const Product = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       <View style={styles.content}>
         <Image source={{ uri: parsedProduct.image }} style={styles.image} />
         <Text style={styles.name}>{parsedProduct.name}</Text>
@@ -29,10 +29,18 @@ const Product = () => {
   );
 };
 
+const colors = {
+  primary: "#4F46E5",
+  text: "#1f2937",
+  bg: "#f8fafc",
+  accent: "#6B7280",
+  card: "#ffffff",
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: colors.bg,
   },
   content: {
     flex: 1,
@@ -48,28 +56,28 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.text,
     marginBottom: 10,
   },
   price: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#4F46E5',
+    color: colors.primary,
     marginBottom: 10,
   },
   category: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.accent,
     marginBottom: 20,
   },
   buyButton: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 8,
   },
   buyButtonText: {
-    color: '#fff',
+    color: colors.card,
     fontSize: 18,
     fontWeight: 'bold',
   },
