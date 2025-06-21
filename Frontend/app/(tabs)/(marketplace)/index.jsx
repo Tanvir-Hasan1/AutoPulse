@@ -11,13 +11,15 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProductCard from "../components/ProductCard";
+import ProductCard from "../../components/ProductCard"; // Updated path
+import { useRouter } from "expo-router";
 
-export default function Marketplace() {
+export default function Marketplace() { // Renamed to Marketplace for clarity
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -164,10 +166,7 @@ export default function Marketplace() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#f8fafc"
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
       <Text style={styles.title}>Marketplace</Text>
 
@@ -212,7 +211,17 @@ export default function Marketplace() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ProductCard product={item} />}
+        renderItem={({ item }) => (
+          <ProductCard
+            product={item}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/(marketplace)/Product",
+                params: { product: JSON.stringify(item) },
+              })
+            }
+          />
+        )}
         numColumns={2}
         contentContainerStyle={styles.list}
         ListEmptyComponent={

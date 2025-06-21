@@ -16,7 +16,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="(dashboard)"
+        name="index"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color, size = 24 }) => (
@@ -34,12 +34,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Marketplace"
+        name="(marketplace)"
         options={{
           title: "Marketplace",
           tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="storefront" size={size} color={color} />
           ),
+          href: "/(tabs)/(marketplace)", // Ensure correct routing to the marketplace group
         }}
       />
       <Tabs.Screen
