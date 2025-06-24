@@ -213,6 +213,12 @@ export default function Marketplace() {
           </TouchableOpacity>
         ))}
       </View>
+        <TouchableOpacity
+  style={styles.postButton}
+  onPress={() => router.push("/(tabs)/(marketplace)/PostProduct")}
+>
+  <Text style={styles.postButtonText}>+ Post a Product</Text>
+</TouchableOpacity>
 
       {/* Product Grid */}
       {isLoading ? (
@@ -323,4 +329,17 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: colors.accent,
   },
+  postButton: {
+  backgroundColor: colors.primary,
+  margin: 16,
+  padding: 12,
+  borderRadius: 8,
+  alignItems: "center",
+},
+postButtonText: {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 16,
+},
+
 });
