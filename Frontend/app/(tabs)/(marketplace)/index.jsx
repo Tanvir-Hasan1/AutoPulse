@@ -27,16 +27,16 @@ export default function Marketplace() {
       const data = [
         {
           id: "b1",
-          name: "Mountain Bike",
-          price: 400,
-          image: "https://via.placeholder.com/200x150?text=Mountain+Bike",
+          name: "pulsar150",
+          price: 900000,
+          image: "https://picsum.photos/200/300?random=0",
           category: "bike",
         },
         {
           id: "p1",
           name: "Helmet",
           price: 40,
-          image: "https://via.placeholder.com/200x150?text=Helmet",
+          image: "https://picsum.photos/200/300?random=1",
           category: "part",
         },
         {
