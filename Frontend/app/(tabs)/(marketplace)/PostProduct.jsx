@@ -14,6 +14,7 @@ export default function PostProduct() {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [category, setCategory] = useState("");
+  const [address, setAddress] = useState(""); // Added address
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -22,6 +23,7 @@ export default function PostProduct() {
       price: parseFloat(price),
       image,
       category,
+      address, // Include address
     };
 
     // Send the product as JSON (you can use fetch here if connecting to API)
@@ -57,6 +59,12 @@ export default function PostProduct() {
         style={styles.input}
         value={category}
         onChangeText={setCategory}
+      />
+      <TextInput
+        placeholder="Address"
+        style={styles.input}
+        value={address}
+        onChangeText={setAddress}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>

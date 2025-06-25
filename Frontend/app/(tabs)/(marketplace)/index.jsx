@@ -210,12 +210,39 @@ export default function Marketplace() {
       <Text style={styles.title}>Marketplace</Text>
 
       {/* Search Bar */}
-      <TextInput
-        placeholder="Search products..."
-        value={search}
-        onChangeText={setSearch}
-        style={styles.searchBox}
-      />
+      <View style={{ flexDirection: "row", alignItems: "center", marginHorizontal: 16 }}>
+        <TextInput
+          placeholder="Search products..."
+          value={search}
+          onChangeText={setSearch}
+          style={[styles.searchBox, { flex: 1, marginRight: 8 }]}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity
+            onPress={() => setSearch("")}
+            style={{
+              position: "absolute",
+              right: 50,
+              padding: 8,
+              zIndex: 1,
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={() => {
+            router.push({
+              pathname: "/(tabs)/(marketplace)/SearchResults",
+              params: { results: JSON.stringify(filtered) },
+            });
+          }}
+        >
+          <Ionicons name="search" size={22} color="#fff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -314,10 +341,16 @@ const styles = StyleSheet.create({
     height: 40,
     borderColor: colors.border,
     borderWidth: 1,
-    marginHorizontal: 16,
     paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: colors.card,
+  },
+  searchButton: {
+    backgroundColor: colors.primary,
+    padding: 9,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
   },
   tabContainer: {
     flexDirection: "row",
