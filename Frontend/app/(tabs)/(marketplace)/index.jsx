@@ -33,6 +33,7 @@ export default function Marketplace() {
           category: "bike",
           address: "123 Main St, Dhaka",
           phone: "01700000001",
+          details: "Well maintained, single owner, 2019 model.",
         },
         {
           id: "p1",
@@ -42,6 +43,7 @@ export default function Marketplace() {
           category: "part",
           address: "456 Park Ave, Chittagong",
           phone: "01700000002",
+          details: "Brand new helmet, never used.",
         },
         {
           id: "b2",
@@ -51,6 +53,7 @@ export default function Marketplace() {
           category: "bike",
           address: "789 Lake Rd, Sylhet",
           phone: "01700000003",
+          details: "Lightweight frame, perfect for city rides.",
         },
         {
           id: "p2",
@@ -60,6 +63,7 @@ export default function Marketplace() {
           category: "part",
           address: "321 Hill St, Khulna",
           phone: "01700000004",
+          details: "Durable chain, fits most bikes.",
         },
         {
           id: "b3",
@@ -69,6 +73,7 @@ export default function Marketplace() {
           category: "bike",
           address: "654 River Rd, Rajshahi",
           phone: "01700000005",
+          details: "Hybrid bike, suitable for both city and off-road.",
         },
         {
           id: "p3",
@@ -78,6 +83,7 @@ export default function Marketplace() {
           category: "part",
           address: "987 Forest Ave, Barisal",
           phone: "01700000006",
+          details: "Portable pump, easy to carry.",
         },
         {
           id: "b4",
@@ -87,6 +93,7 @@ export default function Marketplace() {
           category: "bike",
           address: "246 Ocean Dr, Rangpur",
           phone: "01700000007",
+          details: "Electric bike with long battery life.",
         },
         {
           id: "p4",
@@ -96,6 +103,7 @@ export default function Marketplace() {
           category: "part",
           address: "135 City Rd, Mymensingh",
           phone: "01700000008",
+          details: "Bright LED light for night rides.",
         },
         {
           id: "b5",
@@ -105,6 +113,7 @@ export default function Marketplace() {
           category: "bike",
           address: "753 Green St, Comilla",
           phone: "01700000009",
+          details: "Easily foldable, great for commuters.",
         },
         {
           id: "p5",
@@ -114,6 +123,7 @@ export default function Marketplace() {
           category: "part",
           address: "159 Blue Rd, Narayanganj",
           phone: "01700000010",
+          details: "Strong lock for bike security.",
         },
         {
           id: "b6",
@@ -123,6 +133,7 @@ export default function Marketplace() {
           category: "bike",
           address: "852 Red Ave, Gazipur",
           phone: "01700000011",
+          details: "Colorful bike for kids aged 5-8.",
         },
         {
           id: "p6",
@@ -132,6 +143,7 @@ export default function Marketplace() {
           category: "part",
           address: "951 Yellow St, Sylhet",
           phone: "01700000012",
+          details: "Comfortable seat, easy to install.",
         },
         {
           id: "b7",
@@ -141,6 +153,7 @@ export default function Marketplace() {
           category: "bike",
           address: "357 White Rd, Dhaka",
           phone: "01700000013",
+          details: "Perfect for long distance rides.",
         },
         {
           id: "p7",
@@ -150,6 +163,7 @@ export default function Marketplace() {
           category: "part",
           address: "258 Black Ave, Chittagong",
           phone: "01700000014",
+          details: "High grip tire for all terrains.",
         },
         {
           id: "b8",
@@ -159,6 +173,7 @@ export default function Marketplace() {
           category: "bike",
           address: "654 Silver St, Khulna",
           phone: "01700000015",
+          details: "Sturdy BMX for tricks and stunts.",
         },
         {
           id: "p8",
@@ -168,6 +183,7 @@ export default function Marketplace() {
           category: "part",
           address: "753 Gold Rd, Rajshahi",
           phone: "01700000016",
+          details: "Comfortable gloves for long rides.",
         },
       ];
       setProducts(data);

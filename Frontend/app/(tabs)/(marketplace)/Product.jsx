@@ -46,6 +46,12 @@ const Product = () => {
             <Ionicons name="call" size={18} color={colors.accent} />
             <Text style={styles.phone}>{parsedProduct.phone}</Text>
           </View>
+          {parsedProduct.details ? (
+            <View style={styles.infoRow}>
+              <Ionicons name="information-circle" size={18} color={colors.primary} />
+              <Text style={styles.detailsText}>{parsedProduct.details}</Text>
+            </View>
+          ) : null}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.callButton} onPress={handleCall}>
               <Ionicons name="call" size={20} color="#fff" style={{ marginRight: 6 }} />
@@ -136,6 +142,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.accent,
     marginLeft: 6,
+  },
+  detailsText: {
+    fontSize: 15,
+    color: colors.text,
+    marginLeft: 6,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   buttonRow: {
     flexDirection: 'row',

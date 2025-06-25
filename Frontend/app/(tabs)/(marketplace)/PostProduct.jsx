@@ -14,7 +14,8 @@ export default function PostProduct() {
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
   const [category, setCategory] = useState("");
-  const [address, setAddress] = useState(""); // Added address
+  const [address, setAddress] = useState("");
+  const [details, setDetails] = useState(""); // New field
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -23,13 +24,14 @@ export default function PostProduct() {
       price: parseFloat(price),
       image,
       category,
-      address, // Include address
+      address,
+      details, // Include details
     };
 
     // Send the product as JSON (you can use fetch here if connecting to API)
     console.log("Posting Product JSON:", JSON.stringify(newProduct));
     Alert.alert("Success", "Product posted!");
-    router.back(); // Navigate back to the marketplace
+    router.back();
   };
 
   return (
@@ -65,6 +67,13 @@ export default function PostProduct() {
         style={styles.input}
         value={address}
         onChangeText={setAddress}
+      />
+      <TextInput
+        placeholder="Details"
+        style={[styles.input, { height: 80 }]}
+        value={details}
+        onChangeText={setDetails}
+        multiline
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSubmit}>
