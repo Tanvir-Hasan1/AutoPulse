@@ -11,6 +11,7 @@ export default function MarketplaceLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="Product" options={{ title: 'Product Details' }} />
+      <Stack.Screen name="PostProduct" options={{ title: 'Post Product' }} />
     </Stack>
   );
 }
