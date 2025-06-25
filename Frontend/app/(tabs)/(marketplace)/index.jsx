@@ -11,7 +11,7 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProductCard from "../../components/ProductCard";
+import ProductCard from "../../components/marketplace-component/ProductCard";
 import { useRouter } from "expo-router";
 
 export default function Marketplace() {
@@ -31,6 +31,8 @@ export default function Marketplace() {
           price: 900000,
           image: "https://picsum.photos/200/300?random=0",
           category: "bike",
+          address: "123 Main St, Dhaka",
+          phone: "01700000001",
         },
         {
           id: "p1",
@@ -38,6 +40,8 @@ export default function Marketplace() {
           price: 40,
           image: "https://picsum.photos/200/300?random=1",
           category: "part",
+          address: "456 Park Ave, Chittagong",
+          phone: "01700000002",
         },
         {
           id: "b2",
@@ -45,6 +49,8 @@ export default function Marketplace() {
           price: 550,
           image: "https://via.placeholder.com/200x150?text=Road+Bike",
           category: "bike",
+          address: "789 Lake Rd, Sylhet",
+          phone: "01700000003",
         },
         {
           id: "p2",
@@ -52,6 +58,8 @@ export default function Marketplace() {
           price: 25,
           image: "https://via.placeholder.com/200x150?text=Chain",
           category: "part",
+          address: "321 Hill St, Khulna",
+          phone: "01700000004",
         },
         {
           id: "b3",
@@ -59,6 +67,8 @@ export default function Marketplace() {
           price: 600,
           image: "https://via.placeholder.com/200x150?text=Hybrid+Bike",
           category: "bike",
+          address: "654 River Rd, Rajshahi",
+          phone: "01700000005",
         },
         {
           id: "p3",
@@ -66,6 +76,8 @@ export default function Marketplace() {
           price: 15,
           image: "https://via.placeholder.com/200x150?text=Pump",
           category: "part",
+          address: "987 Forest Ave, Barisal",
+          phone: "01700000006",
         },
         {
           id: "b4",
@@ -73,6 +85,8 @@ export default function Marketplace() {
           price: 1200,
           image: "https://via.placeholder.com/200x150?text=Electric+Bike",
           category: "bike",
+          address: "246 Ocean Dr, Rangpur",
+          phone: "01700000007",
         },
         {
           id: "p4",
@@ -80,6 +94,8 @@ export default function Marketplace() {
           price: 20,
           image: "https://via.placeholder.com/200x150?text=Light",
           category: "part",
+          address: "135 City Rd, Mymensingh",
+          phone: "01700000008",
         },
         {
           id: "b5",
@@ -87,6 +103,8 @@ export default function Marketplace() {
           price: 300,
           image: "https://via.placeholder.com/200x150?text=Folding+Bike",
           category: "bike",
+          address: "753 Green St, Comilla",
+          phone: "01700000009",
         },
         {
           id: "p5",
@@ -94,6 +112,8 @@ export default function Marketplace() {
           price: 30,
           image: "https://via.placeholder.com/200x150?text=Lock",
           category: "part",
+          address: "159 Blue Rd, Narayanganj",
+          phone: "01700000010",
         },
         {
           id: "b6",
@@ -101,6 +121,8 @@ export default function Marketplace() {
           price: 200,
           image: "https://via.placeholder.com/200x150?text=Kids+Bike",
           category: "bike",
+          address: "852 Red Ave, Gazipur",
+          phone: "01700000011",
         },
         {
           id: "p6",
@@ -108,6 +130,8 @@ export default function Marketplace() {
           price: 35,
           image: "https://via.placeholder.com/200x150?text=Seat",
           category: "part",
+          address: "951 Yellow St, Sylhet",
+          phone: "01700000012",
         },
         {
           id: "b7",
@@ -115,6 +139,8 @@ export default function Marketplace() {
           price: 800,
           image: "https://via.placeholder.com/200x150?text=Touring+Bike",
           category: "bike",
+          address: "357 White Rd, Dhaka",
+          phone: "01700000013",
         },
         {
           id: "p7",
@@ -122,6 +148,8 @@ export default function Marketplace() {
           price: 45,
           image: "https://via.placeholder.com/200x150?text=Tire",
           category: "part",
+          address: "258 Black Ave, Chittagong",
+          phone: "01700000014",
         },
         {
           id: "b8",
@@ -129,6 +157,8 @@ export default function Marketplace() {
           price: 350,
           image: "https://via.placeholder.com/200x150?text=BMX+Bike",
           category: "bike",
+          address: "654 Silver St, Khulna",
+          phone: "01700000015",
         },
         {
           id: "p8",
@@ -136,6 +166,8 @@ export default function Marketplace() {
           price: 15,
           image: "https://via.placeholder.com/200x150?text=Gloves",
           category: "part",
+          address: "753 Gold Rd, Rajshahi",
+          phone: "01700000016",
         },
       ];
       setProducts(data);

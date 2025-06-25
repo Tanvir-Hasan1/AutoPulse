@@ -8,7 +8,7 @@ const Product = () => {
   const parsedProduct = JSON.parse(product);
 
   const handleBuy = () => {
-    alert(`Proceeding to buy ${parsedProduct.name} for $${parsedProduct.price}`);
+    alert(`Proceeding to buy ${parsedProduct.name} for TK ${parsedProduct.price}`);
   };
 
   return (
@@ -17,10 +17,12 @@ const Product = () => {
       <View style={styles.content}>
         <Image source={{ uri: parsedProduct.image }} style={styles.image} />
         <Text style={styles.name}>{parsedProduct.name}</Text>
-        <Text style={styles.price}>${parsedProduct.price}</Text>
+        <Text style={styles.price}>TK {parsedProduct.price}</Text>
         <Text style={styles.category}>
           Category: {parsedProduct.category.charAt(0).toUpperCase() + parsedProduct.category.slice(1)}
         </Text>
+        <Text style={styles.address}>Address: {parsedProduct.address}</Text>
+        <Text style={styles.phone}>Phone: {parsedProduct.phone}</Text>
         <TouchableOpacity style={styles.buyButton} onPress={handleBuy}>
           <Text style={styles.buyButtonText}>Buy Now</Text>
         </TouchableOpacity>
@@ -67,6 +69,16 @@ const styles = StyleSheet.create({
   },
   category: {
     fontSize: 16,
+    color: colors.accent,
+    marginBottom: 5,
+  },
+  address: {
+    fontSize: 15,
+    color: colors.accent,
+    marginBottom: 5,
+  },
+  phone: {
+    fontSize: 15,
     color: colors.accent,
     marginBottom: 20,
   },

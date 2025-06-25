@@ -6,6 +6,7 @@ const ProductCard = ({ product, onPress }) => (
     <Image source={{ uri: product.image }} style={styles.image} />
     <Text style={styles.name}>{product.name}</Text>
     <Text style={styles.price}>TK {product.price}</Text>
+    <Text style={styles.address}>{product.address}</Text>
   </TouchableOpacity>
 );
 
@@ -18,9 +19,31 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 3,
   },
-  image: { width: '100%', height: 120 },
-  name: { fontSize: 16, margin: 8 },
-  price: { fontSize: 14, marginHorizontal: 8, marginBottom: 8, fontWeight: 'bold' },
+  image: {
+    width: '100%',
+    height: 120,
+    resizeMode: 'cover',
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginHorizontal: 8,
+    marginTop: 8,
+    color: '#1f2937',
+  },
+  price: {
+    fontSize: 13,
+    marginHorizontal: 8,
+    marginBottom: 4,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  address: {
+    fontSize: 12,
+    marginHorizontal: 8,
+    marginBottom: 8,
+    color: '#6B7280',
+  },
 });
 
 export default ProductCard;
