@@ -23,3 +23,7 @@ yarn-error.log*
 # Optional: ignore system-specific files or IDE settings
 .vscode/
 .idea/
+Frontend/.expo/types/router.d.ts
+Frontend/.expo/types/router.d.ts
+Frontend/app/config.js
+Frontend/expo-env.d.ts
