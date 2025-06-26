@@ -20,7 +20,7 @@ const options = {
         User: {
           type: "object",
           properties: {
-            userId: {
+            _id: {
               type: "string",
               description: "MongoDB ObjectId of the user",
               example: "685d4cabcc39dcbd6a017198",
@@ -35,6 +35,115 @@ const options = {
               format: "email",
               description: "User email address",
               example: "t@gmail.com",
+            },
+            avatar: {
+              type: "string",
+              description: "Avatar URL or path",
+              example: "",
+            },
+            bikes: {
+              type: "array",
+              items: { $ref: "#/components/schemas/Bike" },
+              description: "List of user's bikes",
+            },
+            drivingLicense: {
+              type: "object",
+              properties: {
+                fileId: {
+                  type: "string",
+                  description: "GridFS file ID",
+                  example: "685db385b85dc63148492c3d",
+                },
+                filename: {
+                  type: "string",
+                  description: "Generated filename",
+                  example: "license_685d4cabcc39dcbd6a017198_1750971269305.pdf",
+                },
+                originalName: {
+                  type: "string",
+                  description: "Original uploaded filename",
+                  example: "driving licence.pdf",
+                },
+                uploadDate: {
+                  type: "string",
+                  format: "date-time",
+                  description: "Upload timestamp",
+                  example: "2025-06-26T20:54:29.325Z",
+                },
+                fileSize: {
+                  type: "integer",
+                  description: "File size in bytes",
+                  example: 101977,
+                },
+                contentType: {
+                  type: "string",
+                  description: "MIME type of the file",
+                  example: "application/pdf",
+                },
+                isVerified: {
+                  type: "boolean",
+                  description: "Verification status",
+                  example: false,
+                },
+              },
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-26T13:35:39.965Z",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-26T20:54:29.330Z",
+            },
+          },
+        },
+        Bike: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "685d4f07cc39dcbd6a0171a0" },
+            user: { type: "string", example: "685d4cabcc39dcbd6a017198" },
+            brand: { type: "string", example: "Suzuki" },
+            model: { type: "string", example: "Gixxer" },
+            year: { type: "string", example: "2025" },
+            registrationNumber: { type: "string", example: "DH-LA-65-9421" },
+            odometer: { type: "integer", example: 9500 },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-26T13:45:43.514Z",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-26T13:45:43.514Z",
+            },
+          },
+        },
+        AuthRegisterResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "User registered successfully",
+            },
+            user: { $ref: "#/components/schemas/User" },
+          },
+        },
+        AuthLoginResponse: {
+          type: "object",
+          properties: {
+            message: { type: "string", example: "Login successful" },
+            user: { $ref: "#/components/schemas/User" },
+          },
+        },
+        AuthUsersList: {
+          type: "object",
+          properties: {
+            users: {
+              type: "array",
+              items: { $ref: "#/components/schemas/User" },
             },
           },
         },
