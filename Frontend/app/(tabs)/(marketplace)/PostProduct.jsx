@@ -6,16 +6,32 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
+
+const categories = [
+  { label: "Bike", value: "bike" },
+  { label: "Tires", value: "tires" },
+  { label: "Chains", value: "chains" },
+  { label: "Sprockets", value: "sprockets" },
+  { label: "Brake Pads", value: "brake_pads" },
+  { label: "Pedals", value: "pedals" },
+  { label: "Handlebars", value: "handlebars" },
+  { label: "Seats", value: "seats" },
+  { label: "Inner Tubes", value: "inner_tubes" },
+  { label: "Cranksets", value: "cranksets" },
+  { label: "Derailleurs", value: "derailleurs" },
+];
 
 export default function PostProduct() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [image, setImage] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(categories[0].value);
   const [address, setAddress] = useState("");
-  const [details, setDetails] = useState(""); // New field
+  const [details, setDetails] = useState("");
   const router = useRouter();
 
   const handleSubmit = () => {
@@ -25,7 +41,7 @@ export default function PostProduct() {
       image,
       category,
       address,
-      details, // Include details
+      details,
     };
 
     // Send the product as JSON (you can use fetch here if connecting to API)
@@ -56,12 +72,23 @@ export default function PostProduct() {
         value={image}
         onChangeText={setImage}
       />
-      <TextInput
-        placeholder="Category (bike or part)"
-        style={styles.input}
-        value={category}
-        onChangeText={setCategory}
-      />
+      <View
+        style={
+          Platform.OS === "android"
+            ? styles.pickerAndroid
+            : styles.pickerIOS
+        }
+      >
+        <Picker
+          selectedValue={category}
+          onValueChange={(itemValue) => setCategory(itemValue)}
+          style={{ width: "100%" }}
+        >
+          {categories.map((cat) => (
+            <Picker.Item key={cat.value} label={cat.label} value={cat.value} />
+          ))}
+        </Picker>
+      </View>
       <TextInput
         placeholder="Address"
         style={styles.input}
@@ -101,6 +128,18 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 8,
     padding: 10,
+    backgroundColor: "#fff",
+  },
+  pickerAndroid: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 15,
+    backgroundColor: "#fff",
+    overflow: "hidden",
+  },
+  pickerIOS: {
+    marginBottom: 15,
     backgroundColor: "#fff",
   },
   button: {
