@@ -20,6 +20,15 @@ const userSchema = new mongoose.Schema(
     },
     avatar: { type: String, default: "" },
     bikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bike" }],
+    drivingLicense: {
+      fileId: { type: mongoose.Schema.Types.ObjectId },
+      filename: { type: String },
+      originalName: { type: String },
+      uploadDate: { type: Date },
+      fileSize: { type: Number },
+      contentType: { type: String },
+      isVerified: { type: Boolean, default: false },
+    },
   },
   { timestamps: true }
 );
