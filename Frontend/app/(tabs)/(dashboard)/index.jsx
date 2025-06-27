@@ -49,6 +49,7 @@ const Dashboard = () => {
     totalKm: 12450,
     lastServiceKm: 11200,
     nextServiceDue: 13000,
+    costPerKm: 2.8, // ৳ per km (calculated from fuel costs, maintenance, etc.)
   };
 
   const upcomingTasks = [
@@ -272,6 +273,16 @@ const Dashboard = () => {
                 </Text>
               </View>
               <Text style={styles.statusLabel}>Fuel Economy (km/l)</Text>
+            </View>
+
+            <View style={styles.statusCard}>
+              <View style={styles.statusHeader}>
+                <Ionicons name="cash" size={24} color="#E91E63" />
+                <Text style={styles.statusValue}>
+                  ৳{currentStatus.costPerKm}
+                </Text>
+              </View>
+              <Text style={styles.statusLabel}>Cost per KM</Text>
             </View>
 
             <View style={styles.statusCard}>
