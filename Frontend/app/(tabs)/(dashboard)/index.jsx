@@ -143,8 +143,12 @@ const Dashboard = () => {
 
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("pdf")) {
-        // For PDF, use the API URL directly in WebView
-        setLicenseImageUri(`${API_BASE_URL}/license/download/${userId}`);
+        // Use Google Docs Viewer for PDF preview in WebView
+        const pdfUrl = `${API_BASE_URL}/license/download/${userId}`;
+        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
+          pdfUrl
+        )}`;
+        setLicenseImageUri(googleDocsUrl);
         setLicenseFileType("pdf");
         setLicenseOverlayVisible(true);
         setIsLoadingLicense(false);
