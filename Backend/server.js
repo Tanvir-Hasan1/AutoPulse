@@ -11,7 +11,7 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const licenseRoutes = require("./routes/licenseRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
-
+const taxTokenRoutes = require("./routes/taxTokenRoutes");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -29,6 +29,7 @@ app.use("/api/service", serviceRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/license", licenseRoutes);
 app.use("/api/registration", registrationRoutes);
+app.use("/api/tax-token", taxTokenRoutes);
 
 // Connect to MongoDB and start server
 mongoose

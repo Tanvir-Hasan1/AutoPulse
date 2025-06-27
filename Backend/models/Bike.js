@@ -41,6 +41,15 @@ const bikeSchema = new mongoose.Schema(
       fileSize: { type: Number },
       contentType: { type: String },
     },
+    taxToken: {
+      fileId: { type: mongoose.Schema.Types.ObjectId },
+      filename: { type: String },
+      originalName: { type: String },
+      uploadDate: { type: Date },
+      fileSize: { type: Number },
+      contentType: { type: String },
+      expiryDate: { type: Date }, // Additional field for tax token expiry
+    },
   },
   { timestamps: true }
 );

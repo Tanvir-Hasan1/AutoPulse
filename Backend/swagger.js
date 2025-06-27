@@ -5,7 +5,7 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "License Management API",
+      title: "AutoPulse API",
       version: "1.0.0",
       description: "API for managing driving license uploads and operations",
     },
@@ -407,76 +407,34 @@ const options = {
             },
           },
         },
+        ServiceLog: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "6860a1b2c3d4e5f678901234" },
+            bike: { type: "string", example: "685d4f07cc39dcbd6a0171a0" },
+            date: { type: "string", format: "date", example: "2025-06-27" },
+            serviceType: { type: "string", example: "Oil Change" },
+            cost: { type: "number", example: 500 },
+            odometer: { type: "number", example: 12000 },
+            nextService: { type: "number", example: 13000 },
+            description: { type: "string", example: "Changed oil and filter" },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T10:00:00.000Z",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T10:00:00.000Z",
+            },
+          },
+        },
       },
     },
   },
   apis: ["./routes/*.js"], // Path to the API routes
 };
-
-/**
- * @swagger
- * tags:
- *   - name: Registration
- *     description: Bike registration document management
- */
-
-/**
- * @swagger
- * /api/registration/upload/{bikeId}:
- *   post:
- *     summary: Upload a bike registration document
- *     tags: [Registration]
- *     parameters:
- *       - in: path
- *         name: bikeId
- *         required: true
- *         schema:
- *           type: string
- *         description: MongoDB ObjectId of the bike
- *         example: '685d4f07cc39dcbd6a0171a0'
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               registration:
- *                 type: string
- *                 format: binary
- *                 description: PDF or image file (max 10MB)
- *     responses:
- *       201:
- *         description: Registration document uploaded successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: 'Bike registration document uploaded successfully'
- *                 registration:
- *                   $ref: '#/components/schemas/RegistrationDoc'
- *       400:
- *         description: Bad request (invalid file type, size, or missing file)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Bike not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
 
 const specs = swaggerJSDoc(options);
 
