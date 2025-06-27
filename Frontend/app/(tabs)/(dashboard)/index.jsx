@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "expo-router";
 import { useUser } from "../../contexts/UserContext";
 import {
@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Dimensions,
   Modal,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { API_BASE_URL } from "../../config";
@@ -23,67 +24,10 @@ export const hideHeader = true;
 
 const Dashboard = () => {
   const { user } = useUser();
-
   const userId = user?.userId || user?.id;
   const userName = user?.name;
-  console.log(userId);
-
-  const currentStatus = {
-    fuelLevel: 75, // percentage
-    fuelEconomy: 45.2, // km/l
-    totalKm: 12450,
-    lastServiceKm: 11200,
-    nextServiceDue: 13000,
-    costPerKm: 2.8, // ৳ per km (calculated from fuel costs, maintenance, etc.)
-  };
-
-  const upcomingTasks = [
-    {
-      id: 1,
-      title: "Oil Change",
-      dueIn: "550 km",
-      priority: "high",
-      type: "service",
-    },
-    {
-      id: 2,
-      title: "Chain Lubrication",
-      dueIn: "3 days",
-      priority: "medium",
-      type: "maintenance",
-    },
-    {
-      id: 3,
-      title: "Tire Pressure Check",
-      dueIn: "1 week",
-      priority: "low",
-      type: "maintenance",
-    },
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: "fuel",
-      description: "Fuel added - 8L",
-      date: "2 days ago",
-      amount: "৳640",
-    },
-    {
-      id: 2,
-      type: "service",
-      description: "General Service",
-      date: "1 week ago",
-      amount: "৳2500",
-    },
-    {
-      id: 3,
-      type: "fuel",
-      description: "Fuel added - 6L",
-      date: "1 week ago",
-      amount: "৳480",
-    },
-  ];
+  console.log("##Dashboard:", user);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Demo quick actions with updated license action
   const quickActions = [
@@ -142,19 +86,117 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const [selectedBikeId, setSelectedBikeId] = useState(user.bikes[0].id);
+  const [selectedBikeId, setSelectedBikeId] = useState(user.selectedBikeId);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedBike = user.bikes.find((bike) => bike.id === selectedBikeId);
+  const selectedBike =
+    user?.bikes?.find(
+      (bike) => bike.id === selectedBikeId || bike._id === selectedBikeId
+    ) || user?.bikes?.[0];
 
   const handleBikeSelect = (bikeId) => {
     setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
     setModalVisible(false);
   };
 
+  //Other data
+  const [currentStatus, setCurrentStatus] = useState(null);
+  const [upcomingTasks, setUpcomingTasks] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchDashboardData = async () => {
+    if (!selectedBikeId) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const [statusData, tasksData, activitiesData] = await Promise.all([
+        fetch(`${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/status`).then(
+          (res) => res.json()
+        ),
+        fetch(
+          `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/upcoming-tasks`
+        ).then((res) => res.json()),
+        fetch(
+          `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/recent-activities`
+        ).then((res) => res.json()),
+      ]);
+      setCurrentStatus(statusData);
+      setUpcomingTasks(tasksData);
+      setRecentActivities(activitiesData);
+    } catch (err) {
+      setError("Failed to fetch dashboard data.");
+    }
+    setLoading(false);
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedBikeId]);
+
+  // useEffect(() => {
+  //   if (!selectedBikeId) return;
+
+  //   setLoading(true);
+  //   setError(null);
+
+  //   // Fetch all dashboard data in parallel
+  //   Promise.all([
+  //     fetch(`${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/status`).then(
+  //       (res) => res.json()
+  //     ),
+  //     fetch(
+  //       `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/upcoming-tasks`
+  //     ).then((res) => res.json()),
+  //     fetch(
+  //       `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/recent-activities`
+  //     ).then((res) => res.json()),
+  //   ])
+  //     .then(([statusData, tasksData, activitiesData]) => {
+  //       setCurrentStatus(statusData);
+  //       setUpcomingTasks(tasksData);
+  //       setRecentActivities(activitiesData);
+  //       setLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       setError("Failed to fetch dashboard data.");
+  //       setLoading(false);
+  //     });
+  // }, [selectedBikeId]);
+
+  // Defensive rendering for required objects
+  if (!user || !user.bikes || user.bikes.length === 0)
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ margin: 20 }}>No bikes found for this user.</Text>
+      </SafeAreaView>
+    );
+
+  if (!selectedBike) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={{ margin: 20 }}>No bike selected.</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              fetchDashboardData();
+            }}
+          />
+        }
+      >
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -174,7 +216,7 @@ const Dashboard = () => {
               />
             </TouchableOpacity>
             <Text style={styles.registerNumber}>
-              {selectedBike.registerNumber}
+              {selectedBike.registrationNumber}
             </Text>
           </View>
           <TouchableOpacity style={styles.notificationIcon}>
@@ -195,7 +237,6 @@ const Dashboard = () => {
             activeOpacity={1}
           >
             <View
-              key={user.bike}
               style={{
                 backgroundColor: "white",
                 padding: 16,
@@ -210,15 +251,15 @@ const Dashboard = () => {
               </Text>
               {user.bikes.map((bike) => (
                 <TouchableOpacity
-                  key={bike.id}
-                  onPress={() => handleBikeSelect(bike.id)}
+                  key={bike.id || bike._id}
+                  onPress={() => handleBikeSelect(bike.id || bike._id)}
                   style={{ paddingVertical: 10 }}
                 >
                   <Text>
                     {bike.brand} {bike.model} ({bike.year})
                   </Text>
                   <Text style={{ fontSize: 12, color: "#555" }}>
-                    {bike.registerNumber}
+                    {bike.registrationNumber}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -229,89 +270,98 @@ const Dashboard = () => {
         {/* Current Status Cards */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Current Status</Text>
-          <View style={styles.statusGrid}>
-            <View style={[styles.statusCard, styles.fuelCard]}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="car" size={24} color="#4CAF50" />
-                <Text style={styles.statusValue}>
-                  {currentStatus.fuelLevel}%
-                </Text>
+          {currentStatus && !loading ? (
+            <View style={styles.statusGrid}>
+              <View style={[styles.statusCard, styles.fuelCard]}>
+                <View style={styles.statusHeader}>
+                  <Ionicons name="car" size={24} color="#4CAF50" />
+                  <Text style={styles.statusValue}>
+                    {currentStatus.fuelLevel ?? "--"}%
+                  </Text>
+                </View>
+                <Text style={styles.statusLabel}>Fuel Level</Text>
+                <View style={styles.fuelBar}>
+                  <View
+                    style={[
+                      styles.fuelBarFill,
+                      {
+                        width: `${
+                          currentStatus.fuelLevel ? currentStatus.fuelLevel : 0
+                        }%`,
+                      },
+                    ]}
+                  />
+                </View>
               </View>
-              <Text style={styles.statusLabel}>Fuel Level</Text>
-              <View style={styles.fuelBar}>
-                <View
-                  style={[
-                    styles.fuelBarFill,
-                    { width: `${currentStatus.fuelLevel}%` },
-                  ]}
-                />
-              </View>
-            </View>
 
-            <View style={styles.statusCard}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="trending-up" size={24} color="#2196F3" />
-                <Text style={styles.statusValue}>
-                  {currentStatus.fuelEconomy}
-                </Text>
+              <View style={styles.statusCard}>
+                <View style={styles.statusHeader}>
+                  <Ionicons name="trending-up" size={24} color="#2196F3" />
+                  <Text style={styles.statusValue}>
+                    {currentStatus.fuelEconomy ?? "--"}
+                  </Text>
+                </View>
+                <Text style={styles.statusLabel}>Fuel Economy (km/l)</Text>
               </View>
-              <Text style={styles.statusLabel}>Fuel Economy (km/l)</Text>
-            </View>
 
-            <View style={styles.statusCard}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="cash" size={24} color="#E91E63" />
-                <Text style={styles.statusValue}>
-                  ৳{currentStatus.costPerKm}
-                </Text>
+              <View style={styles.statusCard}>
+                <View style={styles.statusHeader}>
+                  <Ionicons name="cash" size={24} color="#E91E63" />
+                  <Text style={styles.statusValue}>
+                    ৳{currentStatus.costPerKm ?? "--"}
+                  </Text>
+                </View>
+                <Text style={styles.statusLabel}>Cost per KM</Text>
               </View>
-              <Text style={styles.statusLabel}>Cost per KM</Text>
-            </View>
 
-            <View style={styles.statusCard}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="speedometer" size={24} color="#FF9800" />
-                <Text style={styles.statusValue}>
-                  {currentStatus.totalKm.toLocaleString()}
-                </Text>
+              <View style={styles.statusCard}>
+                <View style={styles.statusHeader}>
+                  <Ionicons name="speedometer" size={24} color="#FF9800" />
+                  <Text style={styles.statusValue}>
+                    {currentStatus.totalKm
+                      ? currentStatus.totalKm.toLocaleString()
+                      : "--"}
+                  </Text>
+                </View>
+                <Text style={styles.statusLabel}>Total KM</Text>
               </View>
-              <Text style={styles.statusLabel}>Total KM</Text>
-            </View>
 
-            <View style={styles.statusCard}>
-              <View style={styles.statusHeader}>
-                <Ionicons name="construct" size={24} color="#9C27B0" />
-                <Text style={styles.statusValue}>
-                  {currentStatus.nextServiceDue - currentStatus.totalKm}
-                </Text>
+              <View style={styles.statusCard}>
+                <View style={styles.statusHeader}>
+                  <Ionicons name="construct" size={24} color="#9C27B0" />
+                  <Text style={styles.statusValue}>
+                    {currentStatus.nextServiceDue && currentStatus.totalKm
+                      ? currentStatus.nextServiceDue - currentStatus.totalKm
+                      : "--"}
+                  </Text>
+                </View>
+                <Text style={styles.statusLabel}>KM to Service</Text>
               </View>
-              <Text style={styles.statusLabel}>KM to Service</Text>
             </View>
-          </View>
+          ) : (
+            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+          )}
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => {
-              // Handle other actions with Link
-              return (
-                <Link key={action.id} href={action.href} asChild>
-                  <TouchableOpacity style={styles.quickActionCard}>
-                    <View
-                      style={[
-                        styles.quickActionIcon,
-                        { backgroundColor: action.color },
-                      ]}
-                    >
-                      <Ionicons name={action.icon} size={24} color="white" />
-                    </View>
-                    <Text style={styles.quickActionText}>{action.title}</Text>
-                  </TouchableOpacity>
-                </Link>
-              );
-            })}
+            {quickActions.map((action) => (
+              <Link key={action.id} href={action.href} asChild>
+                <TouchableOpacity style={styles.quickActionCard}>
+                  <View
+                    style={[
+                      styles.quickActionIcon,
+                      { backgroundColor: action.color },
+                    ]}
+                  >
+                    <Ionicons name={action.icon} size={24} color="white" />
+                  </View>
+                  <Text style={styles.quickActionText}>{action.title}</Text>
+                </TouchableOpacity>
+              </Link>
+            ))}
           </View>
         </View>
 
@@ -323,32 +373,36 @@ const Dashboard = () => {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          {upcomingTasks.map((task) => (
-            <View key={task.id} style={styles.taskCard}>
-              <View style={styles.taskInfo}>
-                <View style={styles.taskHeader}>
-                  <Text style={styles.taskTitle}>{task.title}</Text>
-                  <View
-                    style={[
-                      styles.priorityBadge,
-                      { backgroundColor: getPriorityColor(task.priority) },
-                    ]}
-                  >
-                    <Text style={styles.priorityText}>
-                      {task.priority.toUpperCase()}
-                    </Text>
+          {upcomingTasks && upcomingTasks.length > 0 ? (
+            upcomingTasks.map((task) => (
+              <View key={task.id || task._id} style={styles.taskCard}>
+                <View style={styles.taskInfo}>
+                  <View style={styles.taskHeader}>
+                    <Text style={styles.taskTitle}>{task.title}</Text>
+                    <View
+                      style={[
+                        styles.priorityBadge,
+                        { backgroundColor: getPriorityColor(task.priority) },
+                      ]}
+                    >
+                      <Text style={styles.priorityText}>
+                        {task.priority?.toUpperCase()}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.taskDetails}>
+                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Text style={styles.taskDue}>Due in {task.dueIn}</Text>
                   </View>
                 </View>
-                <View style={styles.taskDetails}>
-                  <Ionicons name="time-outline" size={16} color="#666" />
-                  <Text style={styles.taskDue}>Due in {task.dueIn}</Text>
-                </View>
+                <TouchableOpacity style={styles.taskAction}>
+                  <Ionicons name="chevron-forward" size={20} color="#666" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.taskAction}>
-                <Ionicons name="chevron-forward" size={20} color="#666" />
-              </TouchableOpacity>
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+          )}
         </View>
 
         {/* Recent Activities */}
@@ -359,24 +413,31 @@ const Dashboard = () => {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          {recentActivities.map((activity) => (
-            <View key={activity.id} style={styles.activityCard}>
-              <View style={styles.activityIcon}>
-                <Ionicons
-                  name={getActivityIcon(activity.type)}
-                  size={20}
-                  color="#666"
-                />
+          {recentActivities && recentActivities.length > 0 ? (
+            recentActivities.map((activity) => (
+              <View
+                key={activity.id || activity._id}
+                style={styles.activityCard}
+              >
+                <View style={styles.activityIcon}>
+                  <Ionicons
+                    name={getActivityIcon(activity.type)}
+                    size={20}
+                    color="#666"
+                  />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityDescription}>
+                    {activity.description}
+                  </Text>
+                  <Text style={styles.activityDate}>{activity.date}</Text>
+                </View>
+                <Text style={styles.activityAmount}>{activity.amount}</Text>
               </View>
-              <View style={styles.activityInfo}>
-                <Text style={styles.activityDescription}>
-                  {activity.description}
-                </Text>
-                <Text style={styles.activityDate}>{activity.date}</Text>
-              </View>
-              <Text style={styles.activityAmount}>{activity.amount}</Text>
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+          )}
         </View>
 
         {/* Bottom spacing */}
@@ -385,7 +446,6 @@ const Dashboard = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
