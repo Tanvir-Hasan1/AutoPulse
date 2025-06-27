@@ -43,16 +43,13 @@ export default function LoginPage() {
       }
 
       console.log("Login successful:", data.user);
+      console.log("user name:", data.user.name);
       console.log("User ID:", data.user._id);
       console.log("User Email:", data.user.email);
       console.log("Selected Bike:", data.user.bikes || []);
 
       // Update user context with the received data
-      updateUser({
-        userId: data.user._id,
-        email: data.user.email,
-        bikes: data.user.bikes || [],
-      });
+      updateUser(data.user);
 
       // Redirect based on bikes
       if (!data.user.bikes || data.user.bikes.length === 0) {
