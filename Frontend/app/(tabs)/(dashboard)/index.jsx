@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-// import { useUser } from "../../contexts/UserContext"; // Adjust path if needed
+import { useUser } from "../../contexts/UserContext";
 import {
   View,
   Text,
@@ -11,8 +11,15 @@ import {
   Dimensions,
   FlatList,
   Modal,
+  Image,
+  Alert,
+  ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { API_BASE_URL } from "../../config";
+import * as FileSystem from "expo-file-system";
+import { WebView } from "react-native-webview";
 
 const { width } = Dimensions.get("window");
 
@@ -22,9 +29,18 @@ export const unstable_settings = {
 export const hideHeader = true;
 
 const Dashboard = () => {
+  const { user } = useUser();
+  const userId = user?.userId || user?.id;
+
+  // License overlay states
+  const [licenseOverlayVisible, setLicenseOverlayVisible] = useState(false);
+  const [licenseImageUri, setLicenseImageUri] = useState(null);
+  const [isLoadingLicense, setIsLoadingLicense] = useState(false);
+  const [licenseFileType, setLicenseFileType] = useState(null); // 'image' or 'pdf'
+
   // Mock data - replace with actual data from your API
   const demoUser = {
-    name: "Muhit",
+    name: user?.name || "Muhit",
     bikes: [
       {
         id: 1,
@@ -100,14 +116,73 @@ const Dashboard = () => {
     },
   ];
 
-  // Demo quick actions with paths to pages inside (dashboard)
+  // Function to download and display license
+  const handleLicensePress = async () => {
+    if (!userId) {
+      Alert.alert("Error", "User ID not found. Please log in again.");
+      return;
+    }
+
+    setIsLoadingLicense(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/license/download/${userId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to download license");
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("pdf")) {
+        // For PDF, use the API URL directly in WebView
+        setLicenseImageUri(`${API_BASE_URL}/license/download/${userId}`);
+        setLicenseFileType("pdf");
+        setLicenseOverlayVisible(true);
+        setIsLoadingLicense(false);
+      } else if (contentType && contentType.startsWith("image/")) {
+        // Handle image
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLicenseImageUri(reader.result);
+          setLicenseFileType("image");
+          setLicenseOverlayVisible(true);
+          setIsLoadingLicense(false);
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        throw new Error("Unsupported file type");
+      }
+    } catch (error) {
+      console.error("License download error:", error);
+      Alert.alert("Error", error.message || "Failed to download license");
+      setIsLoadingLicense(false);
+    }
+  };
+
+  // Function to close license overlay
+  const closeLicenseOverlay = () => {
+    setLicenseOverlayVisible(false);
+    setLicenseImageUri(null);
+  };
+
+  // Demo quick actions with updated license action
   const quickActions = [
     {
       id: 1,
       title: "License",
       icon: "card-outline",
       color: "#4CAF50",
-      href: "/(tabs)/(dashboard)/license",
+      onPress: handleLicensePress, // Custom onPress instead of href
     },
     {
       id: 2,
@@ -155,6 +230,7 @@ const Dashboard = () => {
         return "information-circle";
     }
   };
+
   // Dashboard Header
   const [selectedBikeId, setSelectedBikeId] = useState(demoUser.bikes[0].id);
   const [modalVisible, setModalVisible] = useState(false);
@@ -243,6 +319,65 @@ const Dashboard = () => {
           </TouchableOpacity>
         </Modal>
 
+        {/* License Overlay Modal */}
+        <Modal
+          visible={licenseOverlayVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closeLicenseOverlay}
+        >
+          <View style={styles.licenseOverlay}>
+            <View style={styles.licenseContainer}>
+              {/* Close Button */}
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeLicenseOverlay}
+              >
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+
+              {/* License File (Image or PDF) */}
+              {licenseFileType === "image" && licenseImageUri && (
+                <ScrollView
+                  contentContainerStyle={styles.licenseScrollContainer}
+                  maximumZoomScale={3}
+                  minimumZoomScale={1}
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
+                >
+                  <Image
+                    source={{ uri: licenseImageUri }}
+                    style={styles.licenseImage}
+                    resizeMode="contain"
+                  />
+                </ScrollView>
+              )}
+              {licenseFileType === "pdf" && licenseImageUri && (
+                <WebView
+                  source={{ uri: licenseImageUri }}
+                  style={{ flex: 1, width: "100%", height: "100%" }}
+                  originWhitelist={["*"]}
+                  useWebKit
+                  javaScriptEnabled
+                  domStorageEnabled
+                  startInLoadingState
+                  scalesPageToFit
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
+
+        {/* Loading Modal for License */}
+        <Modal visible={isLoadingLicense} transparent animationType="fade">
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#4CAF50" />
+              <Text style={styles.loadingText}>Loading License...</Text>
+            </View>
+          </View>
+        </Modal>
+
         {/* Current Status Cards */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Current Status</Text>
@@ -311,21 +446,45 @@ const Dashboard = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <Link key={action.id} href={action.href} asChild>
-                <TouchableOpacity style={styles.quickActionCard}>
-                  <View
-                    style={[
-                      styles.quickActionIcon,
-                      { backgroundColor: action.color },
-                    ]}
+            {quickActions.map((action) => {
+              // Handle License action differently
+              if (action.onPress) {
+                return (
+                  <TouchableOpacity
+                    key={action.id}
+                    style={styles.quickActionCard}
+                    onPress={action.onPress}
                   >
-                    <Ionicons name={action.icon} size={24} color="white" />
-                  </View>
-                  <Text style={styles.quickActionText}>{action.title}</Text>
-                </TouchableOpacity>
-              </Link>
-            ))}
+                    <View
+                      style={[
+                        styles.quickActionIcon,
+                        { backgroundColor: action.color },
+                      ]}
+                    >
+                      <Ionicons name={action.icon} size={24} color="white" />
+                    </View>
+                    <Text style={styles.quickActionText}>{action.title}</Text>
+                  </TouchableOpacity>
+                );
+              }
+
+              // Handle other actions with Link
+              return (
+                <Link key={action.id} href={action.href} asChild>
+                  <TouchableOpacity style={styles.quickActionCard}>
+                    <View
+                      style={[
+                        styles.quickActionIcon,
+                        { backgroundColor: action.color },
+                      ]}
+                    >
+                      <Ionicons name={action.icon} size={24} color="white" />
+                    </View>
+                    <Text style={styles.quickActionText}>{action.title}</Text>
+                  </TouchableOpacity>
+                </Link>
+              );
+            })}
           </View>
         </View>
 
@@ -619,6 +778,60 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 20,
+  },
+  // License Overlay Styles
+  licenseOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  licenseContainer: {
+    width: width * 0.95,
+    height: "90%",
+    backgroundColor: "#000",
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    borderRadius: 20,
+    padding: 8,
+  },
+  licenseScrollContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  licenseImage: {
+    width: width * 0.9,
+    height: "100%",
+    maxHeight: 600,
+  },
+  // Loading Overlay Styles
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    backgroundColor: "white",
+    padding: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    minWidth: 150,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
   },
 });
 
