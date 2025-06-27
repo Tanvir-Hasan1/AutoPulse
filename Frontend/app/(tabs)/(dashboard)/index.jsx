@@ -9,17 +9,10 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
-  FlatList,
   Modal,
-  Image,
-  Alert,
-  ActivityIndicator,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { API_BASE_URL } from "../../config";
-import * as FileSystem from "expo-file-system";
-import { WebView } from "react-native-webview";
 
 const { width } = Dimensions.get("window");
 
@@ -30,34 +23,10 @@ export const hideHeader = true;
 
 const Dashboard = () => {
   const { user } = useUser();
+
   const userId = user?.userId || user?.id;
-
-  // License overlay states
-  const [licenseOverlayVisible, setLicenseOverlayVisible] = useState(false);
-  const [licenseImageUri, setLicenseImageUri] = useState(null);
-  const [isLoadingLicense, setIsLoadingLicense] = useState(false);
-  const [licenseFileType, setLicenseFileType] = useState(null); // 'image' or 'pdf'
-
-  // Mock data - replace with actual data from your API
-  const demoUser = {
-    name: user?.name || "Muhit",
-    bikes: [
-      {
-        id: 1,
-        brand: "Yamaha",
-        model: "R15 V4",
-        year: 2023,
-        registerNumber: "DH-123-456",
-      },
-      {
-        id: 2,
-        brand: "Honda",
-        model: "CBR 150R",
-        year: 2021,
-        registerNumber: "BA-456-789",
-      },
-    ],
-  };
+  const userName = user?.name;
+  console.log(userId);
 
   const currentStatus = {
     fuelLevel: 75, // percentage
@@ -116,69 +85,6 @@ const Dashboard = () => {
     },
   ];
 
-  // Function to download and display license
-  const handleLicensePress = async () => {
-    if (!userId) {
-      Alert.alert("Error", "User ID not found. Please log in again.");
-      return;
-    }
-
-    setIsLoadingLicense(true);
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/license/download/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to download license");
-      }
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("pdf")) {
-        // Use Google Docs Viewer for PDF preview in WebView
-        const pdfUrl = `${API_BASE_URL}/license/download/${userId}`;
-        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-          pdfUrl
-        )}`;
-        setLicenseImageUri(googleDocsUrl);
-        setLicenseFileType("pdf");
-        setLicenseOverlayVisible(true);
-        setIsLoadingLicense(false);
-      } else if (contentType && contentType.startsWith("image/")) {
-        // Handle image
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLicenseImageUri(reader.result);
-          setLicenseFileType("image");
-          setLicenseOverlayVisible(true);
-          setIsLoadingLicense(false);
-        };
-        reader.readAsDataURL(blob);
-      } else {
-        throw new Error("Unsupported file type");
-      }
-    } catch (error) {
-      console.error("License download error:", error);
-      Alert.alert("Error", error.message || "Failed to download license");
-      setIsLoadingLicense(false);
-    }
-  };
-
-  // Function to close license overlay
-  const closeLicenseOverlay = () => {
-    setLicenseOverlayVisible(false);
-    setLicenseImageUri(null);
-  };
-
   // Demo quick actions with updated license action
   const quickActions = [
     {
@@ -186,7 +92,7 @@ const Dashboard = () => {
       title: "License",
       icon: "card-outline",
       color: "#4CAF50",
-      onPress: handleLicensePress, // Custom onPress instead of href
+      href: "/(tabs)/(dashboard)/license", // Custom onPress instead of href
     },
     {
       id: 2,
@@ -236,12 +142,10 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const [selectedBikeId, setSelectedBikeId] = useState(demoUser.bikes[0].id);
+  const [selectedBikeId, setSelectedBikeId] = useState(user.bikes[0].id);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedBike = demoUser.bikes.find(
-    (bike) => bike.id === selectedBikeId
-  );
+  const selectedBike = user.bikes.find((bike) => bike.id === selectedBikeId);
 
   const handleBikeSelect = (bikeId) => {
     setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
@@ -254,9 +158,7 @@ const Dashboard = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.welcomeText}>
-              Welcome back, {demoUser.name}!
-            </Text>
+            <Text style={styles.welcomeText}>Welcome {userName}</Text>
             <TouchableOpacity
               onPress={() => setModalVisible(true)}
               style={{ flexDirection: "row", alignItems: "center" }}
@@ -293,6 +195,7 @@ const Dashboard = () => {
             activeOpacity={1}
           >
             <View
+              key={user.bike}
               style={{
                 backgroundColor: "white",
                 padding: 16,
@@ -305,7 +208,7 @@ const Dashboard = () => {
               >
                 Select Your Bike
               </Text>
-              {demoUser.bikes.map((bike) => (
+              {user.bikes.map((bike) => (
                 <TouchableOpacity
                   key={bike.id}
                   onPress={() => handleBikeSelect(bike.id)}
@@ -321,65 +224,6 @@ const Dashboard = () => {
               ))}
             </View>
           </TouchableOpacity>
-        </Modal>
-
-        {/* License Overlay Modal */}
-        <Modal
-          visible={licenseOverlayVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={closeLicenseOverlay}
-        >
-          <View style={styles.licenseOverlay}>
-            <View style={styles.licenseContainer}>
-              {/* Close Button */}
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={closeLicenseOverlay}
-              >
-                <Ionicons name="close" size={24} color="#fff" />
-              </TouchableOpacity>
-
-              {/* License File (Image or PDF) */}
-              {licenseFileType === "image" && licenseImageUri && (
-                <ScrollView
-                  contentContainerStyle={styles.licenseScrollContainer}
-                  maximumZoomScale={3}
-                  minimumZoomScale={1}
-                  showsVerticalScrollIndicator={false}
-                  showsHorizontalScrollIndicator={false}
-                >
-                  <Image
-                    source={{ uri: licenseImageUri }}
-                    style={styles.licenseImage}
-                    resizeMode="contain"
-                  />
-                </ScrollView>
-              )}
-              {licenseFileType === "pdf" && licenseImageUri && (
-                <WebView
-                  source={{ uri: licenseImageUri }}
-                  style={{ flex: 1, width: "100%", height: "100%" }}
-                  originWhitelist={["*"]}
-                  useWebKit
-                  javaScriptEnabled
-                  domStorageEnabled
-                  startInLoadingState
-                  scalesPageToFit
-                />
-              )}
-            </View>
-          </View>
-        </Modal>
-
-        {/* Loading Modal for License */}
-        <Modal visible={isLoadingLicense} transparent animationType="fade">
-          <View style={styles.loadingOverlay}>
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#4CAF50" />
-              <Text style={styles.loadingText}>Loading License...</Text>
-            </View>
-          </View>
         </Modal>
 
         {/* Current Status Cards */}
@@ -406,7 +250,7 @@ const Dashboard = () => {
 
             <View style={styles.statusCard}>
               <View style={styles.statusHeader}>
-                <Ionicons name="speedometer" size={24} color="#2196F3" />
+                <Ionicons name="trending-up" size={24} color="#2196F3" />
                 <Text style={styles.statusValue}>
                   {currentStatus.fuelEconomy}
                 </Text>
@@ -426,7 +270,7 @@ const Dashboard = () => {
 
             <View style={styles.statusCard}>
               <View style={styles.statusHeader}>
-                <Ionicons name="odometer" size={24} color="#FF9800" />
+                <Ionicons name="speedometer" size={24} color="#FF9800" />
                 <Text style={styles.statusValue}>
                   {currentStatus.totalKm.toLocaleString()}
                 </Text>
@@ -451,27 +295,6 @@ const Dashboard = () => {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             {quickActions.map((action) => {
-              // Handle License action differently
-              if (action.onPress) {
-                return (
-                  <TouchableOpacity
-                    key={action.id}
-                    style={styles.quickActionCard}
-                    onPress={action.onPress}
-                  >
-                    <View
-                      style={[
-                        styles.quickActionIcon,
-                        { backgroundColor: action.color },
-                      ]}
-                    >
-                      <Ionicons name={action.icon} size={24} color="white" />
-                    </View>
-                    <Text style={styles.quickActionText}>{action.title}</Text>
-                  </TouchableOpacity>
-                );
-              }
-
               // Handle other actions with Link
               return (
                 <Link key={action.id} href={action.href} asChild>

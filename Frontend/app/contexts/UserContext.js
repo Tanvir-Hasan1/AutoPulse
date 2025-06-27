@@ -5,7 +5,10 @@ const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState({
     userId: null,
+    name: null,
     email: null,
+    createdAt: null,
+    updatedAt: null,
     bikes: [],
     selectedBikeId: null,
   });
@@ -14,7 +17,10 @@ export const UserProvider = ({ children }) => {
     const bikes = userData.bikes || [];
     setUser({
       userId: userData.userId || userData._id,
+      name: userData.name,
       email: userData.email,
+      createdAt: userData.createdAt,
+      updatedAt: userData.updatedAt,
       bikes,
       selectedBikeId: bikes.length > 0 ? bikes[0]._id : null,
     });
@@ -24,6 +30,8 @@ export const UserProvider = ({ children }) => {
     setUser({
       userId: null,
       email: null,
+      createdAt: null,
+      updatedAt: null,
       bikes: [],
       selectedBikeId: null,
     });
