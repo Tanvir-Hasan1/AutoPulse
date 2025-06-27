@@ -300,11 +300,183 @@ const options = {
             },
           },
         },
+        RegistrationDoc: {
+          type: "object",
+          properties: {
+            bikeId: { type: "string", example: "685d4f07cc39dcbd6a0171a0" },
+            fileId: { type: "string", example: "685dac080cbde4aba4fb7fd6" },
+            filename: {
+              type: "string",
+              example:
+                "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf",
+            },
+            originalName: { type: "string", example: "bike_registration.pdf" },
+            uploadDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T20:22:32.225Z",
+            },
+            fileSize: { type: "integer", example: 28310 },
+            contentType: { type: "string", example: "application/pdf" },
+          },
+        },
+        UploadRegistration: {
+          type: "object",
+          properties: {
+            bikeId: { type: "string", example: "685d4f07cc39dcbd6a0171a0" },
+            fileId: { type: "string", example: "685dac080cbde4aba4fb7fd6" },
+            filename: {
+              type: "string",
+              example:
+                "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf",
+            },
+            originalName: { type: "string", example: "bike_registration.pdf" },
+            uploadDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T20:22:32.225Z",
+            },
+            fileSize: { type: "integer", example: 28310 },
+            contentType: { type: "string", example: "application/pdf" },
+          },
+        },
+        BikeInfo: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "685d4f07cc39dcbd6a0171a0" },
+            brand: { type: "string", example: "Suzuki" },
+            model: { type: "string", example: "Gixxer" },
+            year: { type: "string", example: "2025" },
+            registrationNumber: { type: "string", example: "DH-LA-65-9421" },
+            odometer: { type: "integer", example: 9500 },
+          },
+        },
+        Registration: {
+          type: "object",
+          properties: {
+            fileId: { type: "string", example: "685dac080cbde4aba4fb7fd6" },
+            filename: {
+              type: "string",
+              example:
+                "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf",
+            },
+            originalName: { type: "string", example: "bike_registration.pdf" },
+            uploadDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T20:22:32.225Z",
+            },
+            fileSize: { type: "integer", example: 28310 },
+            contentType: { type: "string", example: "application/pdf" },
+          },
+        },
+        RegistrationStatus: {
+          type: "object",
+          properties: {
+            hasRegistration: {
+              type: "string",
+              description:
+                "Registration file ID if exists, or boolean false if no registration",
+              example: "685dac080cbde4aba4fb7fd6",
+            },
+            uploadDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T20:22:32.225Z",
+            },
+            filename: {
+              type: "string",
+              example: "bike_registration.pdf",
+            },
+          },
+        },
+        DeletedRegistration: {
+          type: "object",
+          properties: {
+            fileId: { type: "string", example: "685dac080cbde4aba4fb7fd6" },
+            filename: {
+              type: "string",
+              example:
+                "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf",
+            },
+            originalName: { type: "string", example: "bike_registration.pdf" },
+            uploadDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-06-27T20:22:32.225Z",
+            },
+          },
+        },
       },
     },
   },
   apis: ["./routes/*.js"], // Path to the API routes
 };
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Registration
+ *     description: Bike registration document management
+ */
+
+/**
+ * @swagger
+ * /api/registration/upload/{bikeId}:
+ *   post:
+ *     summary: Upload a bike registration document
+ *     tags: [Registration]
+ *     parameters:
+ *       - in: path
+ *         name: bikeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: MongoDB ObjectId of the bike
+ *         example: '685d4f07cc39dcbd6a0171a0'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               registration:
+ *                 type: string
+ *                 format: binary
+ *                 description: PDF or image file (max 10MB)
+ *     responses:
+ *       201:
+ *         description: Registration document uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: 'Bike registration document uploaded successfully'
+ *                 registration:
+ *                   $ref: '#/components/schemas/RegistrationDoc'
+ *       400:
+ *         description: Bad request (invalid file type, size, or missing file)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Bike not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 
 const specs = swaggerJSDoc(options);
 

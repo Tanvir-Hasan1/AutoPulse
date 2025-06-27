@@ -33,6 +33,14 @@ const bikeSchema = new mongoose.Schema(
     lastServiceOdometer: {
       type: Number,
     },
+    registrationDoc: {
+      fileId: { type: mongoose.Schema.Types.ObjectId },
+      filename: { type: String },
+      originalName: { type: String },
+      uploadDate: { type: Date },
+      fileSize: { type: Number },
+      contentType: { type: String },
+    },
   },
   { timestamps: true }
 );
