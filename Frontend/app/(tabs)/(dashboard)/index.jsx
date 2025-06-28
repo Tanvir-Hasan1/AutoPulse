@@ -87,7 +87,7 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const [selectedBikeId, setSelectedBikeId] = useState(user.selectedBikeId);
+  const selectedBikeId = user.selectedBikeId;
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedBike =
@@ -95,8 +95,13 @@ const Dashboard = () => {
       (bike) => bike.id === selectedBikeId || bike._id === selectedBikeId
     ) || user?.bikes?.[0];
 
+  useEffect(() => {
+    if (!user.selectedBikeId) return;
+    // fetch dashboard/report data for selectedBike
+  }, [user.selectedBikeId]);
+
   const handleBikeSelect = (bikeId) => {
-    setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
+    // setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
     selectBike(bikeId);
     setModalVisible(false);
   };
