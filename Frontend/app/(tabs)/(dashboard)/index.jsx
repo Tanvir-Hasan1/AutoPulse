@@ -87,7 +87,7 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const selectedBikeId = user.selectedBikeId;
+  const   selectedBikeId = user.selectedBikeId;
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedBike =
