@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "expo-router";
-import { useUser } from "../../contexts/UserContext";
+import { useUser, selectBike } from "../../contexts/UserContext";
+
 import {
   View,
   Text,
@@ -23,7 +24,7 @@ export const unstable_settings = {
 export const hideHeader = true;
 
 const Dashboard = () => {
-  const { user } = useUser();
+  const { user, selectBike } = useUser();
   const userId = user?.userId || user?.id;
   const userName = user?.name;
   console.log("##Dashboard:", user);
@@ -96,6 +97,7 @@ const Dashboard = () => {
 
   const handleBikeSelect = (bikeId) => {
     setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
+    selectBike(bikeId);
     setModalVisible(false);
   };
 
