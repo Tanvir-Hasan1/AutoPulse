@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const { sendMail } = require("../utils/mailer");
 
 // Register User
 const registerUser = async (req, res) => {
@@ -76,6 +77,7 @@ const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 // Get specific Users (for testing only)
 const getUserByEmail = async (req, res) => {
   try {
@@ -105,9 +107,108 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// Update Password without JWT or middleware
+const updatePassword = async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+    user.password = newPassword;
+    await user.save();
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Update password error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Forgot Password - send OTP
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.passwordResetOTP = otp;
+    user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+    // Send OTP via email
+    await sendMail({
+      to: user.email,
+      subject: "Your Password Reset Code",
+      text: `Your password reset code is: ${otp}`,
+    });
+    res.json({ message: "OTP sent to email" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Reset Password with OTP
+const resetPasswordWithOTP = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !user.passwordResetOTP || !user.passwordResetExpires) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+    if (
+      user.passwordResetOTP !== otp ||
+      user.passwordResetExpires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+    user.password = newPassword;
+    user.passwordResetOTP = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Change Name
+const changeName = async (req, res) => {
+  const { email, password, newName } = req.body;
+  try {
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+    user.name = newName;
+    await user.save();
+    res
+      .status(200)
+      .json({ message: "Name updated successfully", name: user.name });
+  } catch (error) {
+    console.error("Change name error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getAllUsers,
   getUserByEmail,
+  updatePassword,
+  forgotPassword,
+  resetPasswordWithOTP,
+  changeName,
 };
