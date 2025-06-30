@@ -40,28 +40,37 @@ export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // <-- add this
   const router = useRouter();
 
   // Fetch products from backend API with filters
-  useEffect(() => {
-    const loadProducts = async () => {
-      setIsLoading(true);
-      try {
-        let url = `${API_URL}?category=${activeTab}`;
-        if (search.trim() !== "") {
-          url += `&search=${encodeURIComponent(search)}`;
-        }
-        const res = await fetch(url);
-        const data = await res.json();
-        setProducts(data);
-      } catch (err) {
-        setProducts([]);
+  const loadProducts = async () => {
+    setIsLoading(true);
+    try {
+      let url = `${API_URL}?category=${activeTab}`;
+      if (search.trim() !== "") {
+        url += `&search=${encodeURIComponent(search)}`;
       }
-      setIsLoading(false);
-    };
+      const res = await fetch(url);
+      const data = await res.json();
+      setProducts(data);
+    } catch (err) {
+      setProducts([]);
+    }
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
     loadProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, search]);
+
+  // Pull-to-refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadProducts();
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -149,6 +158,8 @@ export default function Marketplace() {
               No products found.
             </Text>
           }
+          refreshing={refreshing} // <-- add this
+          onRefresh={onRefresh}   // <-- add this
         />
       )}
     </SafeAreaView>

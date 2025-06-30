@@ -1,22 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const allProducts = [
-  {
-    id: "b1",
-    name: "pulsar150",
-    price: 900000,
-    image: "https://picsum.photos/200/300?random=0",
-    category: "bike",
-    address: "123 Main St, Dhaka",
-    phone: "01700000001",
-    details: "Well maintained, single owner, 2019 model.",
-  },
-  // ...repeat all products from Product.jsx here...
-  // (copy the full allProducts array from above)
-];
+import { API_BASE_URL } from "../../config";
 
 const { width } = Dimensions.get('window');
 
@@ -24,37 +10,57 @@ export default function RelatedProducts() {
   const { category } = useLocalSearchParams();
   const router = useRouter();
 
-  const related = useMemo(() => {
-    return allProducts.filter((p) => p.category === category);
+  const [related, setRelated] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      setIsLoading(true);
+      try {
+        let url = `${API_BASE_URL}/products?category=${category}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        setRelated(data);
+      } catch (err) {
+        setRelated([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRelated();
   }, [category]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Related Products</Text>
-      <FlatList
-        data={related}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/(marketplace)/Product",
-                params: { product: JSON.stringify(item) },
-              })
-            }
-          >
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.price}>TK {item.price}</Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No related products found.</Text>
-        }
-      />
+      {isLoading ? (
+        <Text style={styles.emptyText}>Loading...</Text>
+      ) : (
+        <FlatList
+          data={related}
+          keyExtractor={(item) => item._id || item.id}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/(marketplace)/Product",
+                  params: { product: JSON.stringify(item) },
+                })
+              }
+            >
+              <Image source={{ uri: item.image }} style={styles.image} />
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.price}>TK {item.price}</Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No related products found.</Text>
+          }
+        />
+      )}
     </View>
   );
 }
