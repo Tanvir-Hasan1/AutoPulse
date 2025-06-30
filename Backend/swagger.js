@@ -430,6 +430,47 @@ const options = {
             },
           },
         },
+        Product: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "60d21b4667d0d8992e610c85" },
+            productName: { type: "string", example: "Helmet" },
+            price: { type: "number", example: 1200 },
+            productImage: {
+              type: "object",
+              properties: {
+                fileId: { type: "string", example: "60d21b4667d0d8992e610c99" },
+                filename: { type: "string", example: "helmet.jpg" },
+                originalName: { type: "string", example: "helmet.jpg" },
+                uploadDate: {
+                  type: "string",
+                  format: "date-time",
+                  example: "2025-07-01T10:00:00.000Z",
+                },
+                fileSize: { type: "number", example: 204800 },
+                contentType: { type: "string", example: "image/jpeg" },
+              },
+            },
+            category: { type: "string", example: "Accessories" },
+            phoneNumber: { type: "string", example: "01700000000" },
+            address: { type: "string", example: "Dhaka, Bangladesh" },
+            details: {
+              type: "string",
+              example: "High quality helmet for bikers.",
+            },
+            user: { type: "string", example: "685d4cabcc39dcbd6a017198" },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-07-01T10:00:00.000Z",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-07-01T10:00:00.000Z",
+            },
+          },
+        },
       },
     },
   },
