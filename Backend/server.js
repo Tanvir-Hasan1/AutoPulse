@@ -12,6 +12,8 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const licenseRoutes = require("./routes/licenseRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
 const taxTokenRoutes = require("./routes/taxTokenRoutes");
+const productRoutes = require("./routes/productRoutes"); // Marketplace product routes
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -21,6 +23,7 @@ app.use(cors());
 
 // Swagger Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/bikes", bikeRoutes);
@@ -30,6 +33,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/license", licenseRoutes);
 app.use("/api/registration", registrationRoutes);
 app.use("/api/tax-token", taxTokenRoutes);
+app.use("/api/products", productRoutes); // Marketplace product API
 
 // Connect to MongoDB and start server
 mongoose
