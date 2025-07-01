@@ -1,8 +1,19 @@
-import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, StatusBar, Linking, ScrollView, Dimensions, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useMemo } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Linking,
+  ScrollView,
+  Dimensions,
+  FlatList,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Use the same product data as in index.jsx
 const allProducts = [
@@ -168,12 +179,15 @@ const allProducts = [
   },
 ];
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const Product = () => {
   const { product } = useLocalSearchParams();
   const router = useRouter();
   const parsedProduct = JSON.parse(product);
+
+  // Fallback for missing condition (for old data)
+  const productCondition = parsedProduct.condition || "Unknown";
 
   const handleCall = () => {
     if (parsedProduct.phone) {
@@ -189,13 +203,14 @@ const Product = () => {
     }
   };
 
+  // --- Related Products Section (commented out) ---
+  /*
   // Find related products by category, excluding the current product
   const relatedProducts = useMemo(() => {
     return allProducts
       .filter(
         (p) =>
-          p.category === parsedProduct.category &&
-          p.id !== parsedProduct.id
+          p.category === parsedProduct.category && p.id !== parsedProduct.id
       )
       .slice(0, 2);
   }, [parsedProduct]);
@@ -213,52 +228,100 @@ const Product = () => {
       params: { category: parsedProduct.category },
     });
   };
+  */
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Image source={{ uri: parsedProduct.image }} style={styles.image} />
-        <View style={styles.details}>
-          <Text style={styles.name}>{parsedProduct.name}</Text>
-          <Text style={styles.price}>TK {parsedProduct.price}</Text>
-          <View style={styles.infoRow}>
-            <Ionicons name="pricetag" size={18} color={colors.primary} />
-            <Text style={styles.category}>
-              {parsedProduct.category.charAt(0).toUpperCase() + parsedProduct.category.slice(1)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="location" size={18} color={colors.accent} />
-            <Text style={styles.address}>{parsedProduct.address}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="call" size={18} color={colors.accent} />
-            <Text style={styles.phone}>{parsedProduct.phone}</Text>
-          </View>
-          {parsedProduct.details ? (
-            <View style={styles.infoRow}>
-              <Ionicons name="information-circle" size={18} color={colors.primary} />
-              <Text style={styles.detailsText}>{parsedProduct.details}</Text>
+        <View style={styles.cardModern}>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: parsedProduct.image }}
+              style={styles.imageModern}
+            />
+            <View style={styles.conditionBadge}>
+              <Ionicons
+                name="star"
+                size={14}
+                color="#fff"
+                style={{ marginRight: 3 }}
+              />
+              <Text style={styles.conditionText}>
+                {productCondition
+                  .replace(/_/g, " ")
+                  .replace(/^./, (c) => c.toUpperCase())}
+              </Text>
             </View>
-          ) : null}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.callButton} onPress={handleCall}>
-              <Ionicons name="call" size={20} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={styles.buttonText}>Call</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp}>
-              <MaterialCommunityIcons name="whatsapp" size={22} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={styles.buttonText}>WhatsApp</Text>
-            </TouchableOpacity>
+          </View>
+          <View style={styles.detailsModern}>
+            <Text style={styles.nameModern}>{parsedProduct.name}</Text>
+            <Text style={styles.priceModern}>TK {parsedProduct.price}</Text>
+            <View style={styles.infoRowModern}>
+              <Ionicons name="pricetag" size={18} color={colors.primary} />
+              <Text style={styles.categoryModern}>
+                {parsedProduct.category.charAt(0).toUpperCase() +
+                  parsedProduct.category.slice(1)}
+              </Text>
+            </View>
+            <View style={styles.infoRowModern}>
+              <Ionicons name="location" size={18} color={colors.accent} />
+              <Text style={styles.addressModern}>{parsedProduct.address}</Text>
+            </View>
+            <View style={styles.infoRowModern}>
+              <Ionicons name="call" size={18} color={colors.accent} />
+              <Text style={styles.phoneModern}>{parsedProduct.phone}</Text>
+            </View>
+            {parsedProduct.details ? (
+              <View style={styles.infoRowModern}>
+                <Ionicons
+                  name="information-circle"
+                  size={18}
+                  color={colors.primary}
+                />
+                <Text style={styles.detailsTextModern}>
+                  {parsedProduct.details}
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.buttonRowModern}>
+              <TouchableOpacity
+                style={styles.callButtonModern}
+                onPress={handleCall}
+              >
+                <Ionicons
+                  name="call"
+                  size={20}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.buttonTextModern}>Call</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.whatsappButtonModern}
+                onPress={handleWhatsApp}
+              >
+                <MaterialCommunityIcons
+                  name="whatsapp"
+                  size={22}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.buttonTextModern}>WhatsApp</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        {/* Related Products Section */}
+        {/*
+        // Related Products Section
         <View style={styles.relatedSection}>
           <View style={styles.relatedHeader}>
             <Text style={styles.relatedTitle}>Related Products</Text>
-            <TouchableOpacity onPress={handleSeeAllRelated} style={styles.plusButton}>
+            <TouchableOpacity
+              onPress={handleSeeAllRelated}
+              style={styles.plusButton}
+            >
               <Ionicons name="add-circle" size={26} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -268,17 +331,28 @@ const Product = () => {
             horizontal
             showsHorizontalScrollIndicator={false}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.relatedCard} onPress={() => handleRelatedPress(item)}>
-                <Image source={{ uri: item.image }} style={styles.relatedImage} />
-                <Text style={styles.relatedName} numberOfLines={1}>{item.name}</Text>
+              <TouchableOpacity
+                style={styles.relatedCard}
+                onPress={() => handleRelatedPress(item)}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  style={styles.relatedImage}
+                />
+                <Text style={styles.relatedName} numberOfLines={1}>
+                  {item.name}
+                </Text>
                 <Text style={styles.relatedPrice}>TK {item.price}</Text>
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <Text style={styles.noRelatedText}>No related products found.</Text>
+              <Text style={styles.noRelatedText}>
+                No related products found.
+              </Text>
             }
           />
         </View>
+        */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -299,121 +373,169 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   scroll: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: 32,
     paddingTop: 0,
   },
-  image: {
-    width: width,
-    height: 300,
-    resizeMode: 'cover',
-    borderRadius: 0,
-    marginBottom: 0,
+  cardModern: {
+    width: "94%",
     backgroundColor: colors.card,
-  },
-  details: {
-    width: '100%',
-    backgroundColor: colors.card,
-    borderRadius: 0,
-    padding: 22,
-    marginTop: 0,
-    marginBottom: 20,
-    elevation: 2,
+    borderRadius: 22,
+    marginTop: 18,
+    marginBottom: 18,
+    alignSelf: "center",
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.13,
+    shadowRadius: 12,
+    elevation: 6,
+    overflow: "hidden",
+  },
+  imageContainer: {
+    width: "100%",
+    height: 260,
+    backgroundColor: "#e5e7eb",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  imageModern: {
+    width: "100%",
+    height: 260,
+    resizeMode: "cover",
+  },
+  conditionBadge: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    zIndex: 2,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
     shadowRadius: 4,
+    elevation: 3,
   },
-  name: {
-    fontSize: 26,
-    fontWeight: 'bold',
+  conditionText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+    letterSpacing: 0.2,
+  },
+  detailsModern: {
+    padding: 22,
+    backgroundColor: colors.card,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+  },
+  nameModern: {
+    fontSize: 27,
+    fontWeight: "bold",
     color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
+    marginBottom: 6,
+    textAlign: "center",
+    letterSpacing: 0.1,
   },
-  price: {
-    fontSize: 22,
-    fontWeight: '700',
+  priceModern: {
+    fontSize: 23,
+    fontWeight: "700",
     color: colors.primary,
-    marginBottom: 16,
-    textAlign: 'center',
+    marginBottom: 14,
+    textAlign: "center",
+    letterSpacing: 0.1,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  infoRowModern: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
     gap: 8,
   },
-  category: {
+  categoryModern: {
     fontSize: 16,
     color: colors.primary,
     marginLeft: 6,
   },
-  address: {
+  addressModern: {
     fontSize: 15,
     color: colors.accent,
     marginLeft: 6,
   },
-  phone: {
+  phoneModern: {
     fontSize: 15,
     color: colors.accent,
     marginLeft: 6,
   },
-  detailsText: {
+  detailsTextModern: {
     fontSize: 15,
     color: colors.text,
     marginLeft: 6,
     flex: 1,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 24,
+  buttonRowModern: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 22,
     gap: 16,
   },
-  callButton: {
+  callButtonModern: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  whatsappButton: {
+  whatsappButtonModern: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#25D366',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    backgroundColor: "#25D366",
+    paddingVertical: 13,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 8,
+    shadowColor: "#25D366",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  buttonText: {
+  buttonTextModern: {
     color: "#fff",
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 4,
+    letterSpacing: 0.1,
   },
-  // Related section styles
+  // Related section styles (unchanged)
   relatedSection: {
-    width: '100%',
+    width: "100%",
     marginTop: 10,
     paddingHorizontal: 18,
     paddingBottom: 20,
   },
   relatedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   relatedTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: colors.text,
   },
   plusButton: {
@@ -425,11 +547,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 14,
     padding: 10,
-    alignItems: 'center',
+    alignItems: "center",
     elevation: 2,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   relatedImage: {
@@ -437,20 +559,20 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   relatedName: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: "500",
     color: colors.text,
     marginBottom: 2,
-    textAlign: 'center',
+    textAlign: "center",
   },
   relatedPrice: {
     fontSize: 14,
     color: colors.primary,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   noRelatedText: {
     color: colors.accent,

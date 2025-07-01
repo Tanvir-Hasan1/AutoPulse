@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema(
       contentType: { type: String },
     },
     category: { type: String, required: true },
+    condition: { type: String, required: true }, // default condition is 'good'
     phoneNumber: { type: String, required: true },
     address: { type: String, required: true },
     details: { type: String },

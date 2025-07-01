@@ -40,8 +40,15 @@ const uploadMiddleware = multer({
 // Post a new product with GridFS image
 const postProduct = async (req, res) => {
   try {
-    const { productName, price, category, phoneNumber, address, details } =
-      req.body;
+    const {
+      productName,
+      price,
+      condition,
+      category,
+      phoneNumber,
+      address,
+      details,
+    } = req.body;
     const userId = req.params.userId;
     if (!req.file) {
       return res.status(400).json({ message: "Product image is required" });
@@ -74,6 +81,7 @@ const postProduct = async (req, res) => {
           price,
           productImage,
           category,
+          condition,
           phoneNumber,
           address,
           details,

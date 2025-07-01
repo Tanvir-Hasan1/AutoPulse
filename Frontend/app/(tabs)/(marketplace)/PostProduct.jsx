@@ -33,6 +33,15 @@ const categories = [
   { label: "Other", value: "other" },
 ];
 
+const conditionOptions = [
+  { label: "Any Condition", value: "all" },
+  { label: "Brand New", value: "new" },
+  { label: "Like New", value: "like_new" },
+  { label: "Good", value: "good" },
+  { label: "Fair", value: "fair" },
+  { label: "Poor", value: "poor" },
+];
+
 const countryCodes = [
   { label: "+880", value: "+880", country: "Bangladesh" },
   { label: "+1", value: "+1", country: "USA" },
@@ -47,6 +56,7 @@ const countryCodes = [
 ];
 
 export default function PostProduct() {
+  const [condition, setCondition] = useState("all");
   // Removed duplicate state declarations. All state and hooks are inside the PostProduct function below.
   // ...existing code...
   const [name, setName] = useState("");
@@ -99,6 +109,7 @@ export default function PostProduct() {
       formData.append("address", address);
       formData.append("details", details);
       formData.append("phoneNumber", `${countryCode}${phoneNumber}`);
+      formData.append("condition", condition);
       if (imageUri) {
         const filename = imageUri.split("/").pop();
         const match = /\.([a-zA-Z0-9]+)$/.exec(filename || "");
@@ -191,6 +202,30 @@ export default function PostProduct() {
                     key={cat.value}
                     label={cat.label}
                     value={cat.value}
+                  />
+                ))}
+              </Picker>
+            </View>
+
+            {/* Condition Dropdown */}
+            <View
+              style={
+                Platform.OS === "android"
+                  ? styles.pickerAndroid
+                  : styles.pickerIOS
+              }
+            >
+              <Picker
+                selectedValue={condition}
+                onValueChange={setCondition}
+                style={{ width: "100%" }}
+                dropdownIconColor="#4F46E5"
+              >
+                {conditionOptions.map((option) => (
+                  <Picker.Item
+                    key={option.value}
+                    label={option.label}
+                    value={option.value}
                   />
                 ))}
               </Picker>
