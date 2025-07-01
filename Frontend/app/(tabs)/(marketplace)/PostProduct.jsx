@@ -7,9 +7,13 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { API_URL } from "../../config";
 
 const categories = [
   { label: "Bike", value: "bike" },
@@ -28,26 +32,74 @@ const categories = [
 export default function PostProduct() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState(null); // now an object
   const [category, setCategory] = useState(categories[0].value);
   const [address, setAddress] = useState("");
   const [details, setDetails] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = () => {
-    const newProduct = {
-      name,
-      price: parseFloat(price),
-      image,
-      category,
-      address,
-      details,
-    };
+  // Replace with actual user ID if you have auth
+  const userId = "demoUserId";
 
-    // Send the product as JSON (you can use fetch here if connecting to API)
-    console.log("Posting Product JSON:", JSON.stringify(newProduct));
-    Alert.alert("Success", "Product posted!");
-    router.back();
+  const pickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission required", "Please allow access to your photos.");
+      return;
+    }
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImage(result.assets[0]);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!name || !price || !category || !address || !details || !image) {
+      Alert.alert("Error", "Please fill all fields and select an image.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("productName", name);
+      formData.append("price", price);
+      formData.append("category", category);
+      formData.append("address", address);
+      formData.append("details", details);
+      formData.append("phoneNumber", ""); // Add phone if you have it
+
+      // Image file
+      formData.append("productImage", {
+        uri: image.uri,
+        name: image.fileName || "photo.jpg",
+        type: image.type || "image/jpeg",
+      });
+
+      const res = await fetch(`${API_URL}/api/products/${userId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      });
+
+      if (res.ok) {
+        Alert.alert("Success", "Product posted!");
+        router.back();
+      } else {
+        const err = await res.json();
+        Alert.alert("Error", err.message || "Failed to post product.");
+      }
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to post product.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,12 +118,23 @@ export default function PostProduct() {
         value={price}
         onChangeText={setPrice}
       />
-      <TextInput
-        placeholder="Image URL"
-        style={styles.input}
-        value={image}
-        onChangeText={setImage}
-      />
+      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+        <Text style={{ color: "#4F46E5" }}>
+          {image ? "Change Image" : "Pick Product Image"}
+        </Text>
+      </TouchableOpacity>
+      {image && (
+        <Image
+          source={{ uri: image.uri }}
+          style={{
+            width: 120,
+            height: 90,
+            alignSelf: "center",
+            marginBottom: 10,
+            borderRadius: 8,
+          }}
+        />
+      )}
       <View
         style={
           Platform.OS === "android"
@@ -103,8 +166,16 @@ export default function PostProduct() {
         multiline
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit Product</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Submit Product</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -129,6 +200,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: "#fff",
+  },
+  imagePicker: {
+    borderWidth: 1,
+    borderColor: "#4F46E5",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+    alignItems: "center",
+    backgroundColor: "#f0f4ff",
   },
   pickerAndroid: {
     borderWidth: 1,

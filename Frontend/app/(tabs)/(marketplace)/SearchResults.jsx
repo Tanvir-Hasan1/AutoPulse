@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { View, Text, FlatList, StyleSheet, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProductCard from "../../components/marketplace-component/ProductCard";
+import { API_URL } from "../../config";
 
 const colors = {
   primary: "#4F46E5",
@@ -24,7 +25,19 @@ export default function SearchResults() {
   // Parse products from params (passed as JSON string)
   let products = [];
   try {
-    products = JSON.parse(results);
+    products = JSON.parse(results).map((p) => ({
+      ...p,
+      image: p.productImage
+        ? `${API_URL}/api/products/image/${p._id || p.id}`
+        : p.image || "https://via.placeholder.com/200x150?text=No+Image",
+      name: p.productName || p.name,
+      price: p.price,
+      category: p.category,
+      address: p.address,
+      phone: p.phoneNumber || p.phone,
+      details: p.details,
+      id: p._id || p.id,
+    }));
   } catch {
     products = [];
   }
@@ -42,7 +55,7 @@ export default function SearchResults() {
             onPress={() =>
               router.push({
                 pathname: "/(tabs)/(marketplace)/Product",
-                params: { product: JSON.stringify(item) },
+                params: { product: JSON.stringify(item), related: JSON.stringify(products) },
               })
             }
           />

@@ -1,60 +1,81 @@
-import React, { useMemo } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const allProducts = [
-  {
-    id: "b1",
-    name: "pulsar150",
-    price: 900000,
-    image: "https://picsum.photos/200/300?random=0",
-    category: "bike",
-    address: "123 Main St, Dhaka",
-    phone: "01700000001",
-    details: "Well maintained, single owner, 2019 model.",
-  },
-  // ...repeat all products from Product.jsx here...
-  // (copy the full allProducts array from above)
-];
+import { API_URL } from "../../config";
 
 const { width } = Dimensions.get('window');
 
 export default function RelatedProducts() {
   const { category } = useLocalSearchParams();
   const router = useRouter();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_URL}/api/products`);
+        const json = await res.json();
+        const data = (json.products || []).map((p) => ({
+          ...p,
+          image: p.productImage
+            ? `${API_URL}/api/products/image/${p._id}`
+            : "https://via.placeholder.com/200x150?text=No+Image",
+          name: p.productName || p.name,
+          price: p.price,
+          category: p.category,
+          address: p.address,
+          phone: p.phoneNumber,
+          details: p.details,
+          id: p._id,
+        }));
+        setProducts(data);
+      } catch (e) {
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const related = useMemo(() => {
-    return allProducts.filter((p) => p.category === category);
-  }, [category]);
+    return products.filter((p) => p.category === category);
+  }, [products, category]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Related Products</Text>
-      <FlatList
-        data={related}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/(marketplace)/Product",
-                params: { product: JSON.stringify(item) },
-              })
-            }
-          >
-            <Image source={{ uri: item.image }} style={styles.image} />
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.price}>TK {item.price}</Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No related products found.</Text>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#4F46E5" style={{ marginTop: 30 }} />
+      ) : (
+        <FlatList
+          data={related}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/(marketplace)/Product",
+                  params: { product: JSON.stringify(item), related: JSON.stringify(products) },
+                })
+              }
+            >
+              <Image source={{ uri: item.image }} style={styles.image} />
+              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.price}>TK {item.price}</Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No related products found.</Text>
+          }
+        />
+      )}
     </View>
   );
 }

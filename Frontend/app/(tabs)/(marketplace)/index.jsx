@@ -14,6 +14,7 @@ import { Picker } from "@react-native-picker/picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProductCard from "../../components/marketplace-component/ProductCard";
 import { useRouter } from "expo-router";
+import { API_URL } from "../../config";
 
 const categoryOptions = [
   { label: "All", value: "all" },
@@ -39,173 +40,36 @@ export default function Marketplace() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch products from backend
   useEffect(() => {
     const loadProducts = async () => {
-      const data = [
-        {
-          id: "b1",
-          name: "pulsar150",
-          price: 900000,
-          image: "https://picsum.photos/200/300?random=0",
-          category: "bike",
-          address: "123 Main St, Dhaka",
-          phone: "01700000001",
-          details: "Well maintained, single owner, 2019 model.",
-        },
-        {
-          id: "p1",
-          name: "Helmet",
-          price: 40,
-          image: "https://picsum.photos/200/300?random=1",
-          category: "part",
-          address: "456 Park Ave, Chittagong",
-          phone: "01700000002",
-          details: "Brand new helmet, never used.",
-        },
-        {
-          id: "b2",
-          name: "Road Bike",
-          price: 550,
-          image: "https://via.placeholder.com/200x150?text=Road+Bike",
-          category: "bike",
-          address: "789 Lake Rd, Sylhet",
-          phone: "01700000003",
-          details: "Lightweight frame, perfect for city rides.",
-        },
-        {
-          id: "p2",
-          name: "Bike Chain",
-          price: 25,
-          image: "https://via.placeholder.com/200x150?text=Chain",
-          category: "part",
-          address: "321 Hill St, Khulna",
-          phone: "01700000004",
-          details: "Durable chain, fits most bikes.",
-        },
-        {
-          id: "b3",
-          name: "Hybrid Bike",
-          price: 600,
-          image: "https://via.placeholder.com/200x150?text=Hybrid+Bike",
-          category: "bike",
-          address: "654 River Rd, Rajshahi",
-          phone: "01700000005",
-          details: "Hybrid bike, suitable for both city and off-road.",
-        },
-        {
-          id: "p3",
-          name: "Bike Pump",
-          price: 15,
-          image: "https://via.placeholder.com/200x150?text=Pump",
-          category: "part",
-          address: "987 Forest Ave, Barisal",
-          phone: "01700000006",
-          details: "Portable pump, easy to carry.",
-        },
-        {
-          id: "b4",
-          name: "Electric Bike",
-          price: 1200,
-          image: "https://via.placeholder.com/200x150?text=Electric+Bike",
-          category: "bike",
-          address: "246 Ocean Dr, Rangpur",
-          phone: "01700000007",
-          details: "Electric bike with long battery life.",
-        },
-        {
-          id: "p4",
-          name: "Bike Light",
-          price: 20,
-          image: "https://via.placeholder.com/200x150?text=Light",
-          category: "part",
-          address: "135 City Rd, Mymensingh",
-          phone: "01700000008",
-          details: "Bright LED light for night rides.",
-        },
-        {
-          id: "b5",
-          name: "Folding Bike",
-          price: 300,
-          image: "https://via.placeholder.com/200x150?text=Folding+Bike",
-          category: "bike",
-          address: "753 Green St, Comilla",
-          phone: "01700000009",
-          details: "Easily foldable, great for commuters.",
-        },
-        {
-          id: "p5",
-          name: "Bike Lock",
-          price: 30,
-          image: "https://via.placeholder.com/200x150?text=Lock",
-          category: "part",
-          address: "159 Blue Rd, Narayanganj",
-          phone: "01700000010",
-          details: "Strong lock for bike security.",
-        },
-        {
-          id: "b6",
-          name: "Kids Bike",
-          price: 200,
-          image: "https://via.placeholder.com/200x150?text=Kids+Bike",
-          category: "bike",
-          address: "852 Red Ave, Gazipur",
-          phone: "01700000011",
-          details: "Colorful bike for kids aged 5-8.",
-        },
-        {
-          id: "p6",
-          name: "Bike Seat",
-          price: 35,
-          image: "https://via.placeholder.com/200x150?text=Seat",
-          category: "part",
-          address: "951 Yellow St, Sylhet",
-          phone: "01700000012",
-          details: "Comfortable seat, easy to install.",
-        },
-        {
-          id: "b7",
-          name: "Touring Bike",
-          price: 800,
-          image: "https://via.placeholder.com/200x150?text=Touring+Bike",
-          category: "bike",
-          address: "357 White Rd, Dhaka",
-          phone: "01700000013",
-          details: "Perfect for long distance rides.",
-        },
-        {
-          id: "p7",
-          name: "Bike Tire",
-          price: 45,
-          image: "https://via.placeholder.com/200x150?text=Tire",
-          category: "part",
-          address: "258 Black Ave, Chittagong",
-          phone: "01700000014",
-          details: "High grip tire for all terrains.",
-        },
-        {
-          id: "b8",
-          name: "BMX Bike",
-          price: 350,
-          image: "https://via.placeholder.com/200x150?text=BMX+Bike",
-          category: "bike",
-          address: "654 Silver St, Khulna",
-          phone: "01700000015",
-          details: "Sturdy BMX for tricks and stunts.",
-        },
-        {
-          id: "p8",
-          name: "Bike Gloves",
-          price: 15,
-          image: "https://via.placeholder.com/200x150?text=Gloves",
-          category: "part",
-          address: "753 Gold Rd, Rajshahi",
-          phone: "01700000016",
-          details: "Comfortable gloves for long rides.",
-        },
-      ];
-      setProducts(data);
-      setFiltered(data);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        const res = await fetch(`${API_URL}/api/products`);
+        const json = await res.json();
+        // Map image URLs to GridFS endpoint
+        const data = (json.products || []).map((p) => ({
+          ...p,
+          // If productImage exists, use backend endpoint for image
+          image: p.productImage
+            ? `${API_URL}/api/products/image/${p._id}`
+            : "https://via.placeholder.com/200x150?text=No+Image",
+          name: p.productName || p.name, // fallback for old data
+          price: p.price,
+          category: p.category,
+          address: p.address,
+          phone: p.phoneNumber,
+          details: p.details,
+          id: p._id,
+        }));
+        setProducts(data);
+        setFiltered(data);
+      } catch (err) {
+        setProducts([]);
+        setFiltered([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadProducts();
