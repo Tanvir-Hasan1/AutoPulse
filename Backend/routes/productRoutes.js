@@ -96,7 +96,7 @@ router.delete("/delete-product/:productId", productController.deleteProduct);
  * @swagger
  * /api/marketplace/edit-product/{productId}:
  *   patch:
- *     summary: Edit a product by its ID
+ *     summary: Edit a product by its ID (with optional image update)
  *     tags: [Marketplace]
  *     parameters:
  *       - in: path
@@ -121,6 +121,7 @@ router.delete("/delete-product/:productId", productController.deleteProduct);
  *               productImage:
  *                 type: string
  *                 format: binary
+ *                 description: "Optional. If provided, replaces the old image."
  *               category:
  *                 type: string
  *                 example: "Accessories"
@@ -136,6 +137,16 @@ router.delete("/delete-product/:productId", productController.deleteProduct);
  *     responses:
  *       200:
  *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Product updated successfully
+ *                 product:
+ *                   $ref: '#/components/schemas/Product'
  *       404:
  *         description: Product not found
  *       500:
@@ -169,6 +180,38 @@ router.patch(
  *         description: Server error
  */
 router.get("/products", productController.getAllProducts);
+
+/**
+ * @swagger
+ * /api/marketplace/products/{userId}:
+ *   get:
+ *     summary: Get all products posted by a specific user
+ *     tags: [Marketplace]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The MongoDB user ID
+ *     responses:
+ *       200:
+ *         description: List of products posted by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *       400:
+ *         description: User ID is required
+ *       500:
+ *         description: Server error
+ */
+router.get("/products/:userId", productController.getMyProducts);
 
 /**
  * @swagger
