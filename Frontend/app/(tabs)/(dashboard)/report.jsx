@@ -61,9 +61,14 @@ const ReportPage = () => {
   if (error) return <Text style={styles.errorText}>{error}</Text>;
   if (!report) return null;
 
+  // Helper to ensure array and not null
+  const safeArray = (arr) => (Array.isArray(arr) ? arr : []);
+  // Helper to ensure number
+  const safeNumber = (n) => (typeof n === "number" && !isNaN(n) ? n : 0);
+
   const {
-    bikeData,
-    fuelLogs,
+    bikeData = {},
+    fuelLogs = [],
     totalFuel,
     totalSpend,
     avgCostPerLitre,
@@ -72,7 +77,17 @@ const ReportPage = () => {
     fuelConsumptionTrend,
     costBreakdown,
     fuelPriceTrend,
-  } = report;
+  } = report || {};
+
+  // Sanitize all data
+  const _fuelConsumptionTrend = safeArray(fuelConsumptionTrend);
+  const _costBreakdown = safeArray(costBreakdown);
+  const _fuelPriceTrend = safeArray(fuelPriceTrend);
+  const _monthlySpending = safeNumber(monthlySpending);
+  const _totalFuel = safeNumber(totalFuel);
+  const _totalSpend = safeNumber(totalSpend);
+  const _avgCostPerLitre = safeNumber(avgCostPerLitre);
+  const _fuelEfficiency = safeNumber(fuelEfficiency);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,9 +96,10 @@ const ReportPage = () => {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
+            onRefresh={async () => {
+              setRefreshing(true);
+              await fetchReportData();
               setRefreshing(false);
-              fetchReportData();
             }}
           />
         }
@@ -91,28 +107,32 @@ const ReportPage = () => {
         {/* Bike Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Bike Info</Text>
-          <View style={styles.bikeInfoContainer}>
-            <Text style={styles.bikeInfoText}>
-              <Ionicons name="bicycle" size={18} color="#007AFF" />{" "}
-              {bikeData.brand} {bikeData.model} ({bikeData.year})
-            </Text>
-            <Text style={styles.bikeInfoText}>
-              <Ionicons name="pricetag" size={16} color="#007AFF" />{" "}
-              Registration: {bikeData.registrationNumber}
-            </Text>
-            <Text style={styles.bikeInfoText}>
-              <Ionicons name="speedometer" size={16} color="#007AFF" />{" "}
-              Odometer: {bikeData.odometer} km
-            </Text>
-            <Text style={styles.bikeInfoText}>
-              <Ionicons name="calendar" size={16} color="#007AFF" /> Last
-              Service: {bikeData.lastServiceDate || "--"}
-            </Text>
-            <Text style={styles.bikeInfoText}>
-              <Ionicons name="navigate" size={16} color="#007AFF" /> Last
-              Service Odo: {bikeData.lastServiceOdometer || "--"}
-            </Text>
-          </View>
+          {bikeData && bikeData.brand ? (
+            <View style={styles.bikeInfoContainer}>
+              <Text style={styles.bikeInfoText}>
+                <Ionicons name="bicycle" size={18} color="#007AFF" />{" "}
+                {bikeData.brand} {bikeData.model} ({bikeData.year})
+              </Text>
+              <Text style={styles.bikeInfoText}>
+                <Ionicons name="pricetag" size={16} color="#007AFF" />{" "}
+                Registration: {bikeData.registrationNumber}
+              </Text>
+              <Text style={styles.bikeInfoText}>
+                <Ionicons name="speedometer" size={16} color="#007AFF" />{" "}
+                Odometer: {bikeData.odometer} km
+              </Text>
+              <Text style={styles.bikeInfoText}>
+                <Ionicons name="calendar" size={16} color="#007AFF" /> Last
+                Service: {bikeData.lastServiceDate || "--"}
+              </Text>
+              <Text style={styles.bikeInfoText}>
+                <Ionicons name="navigate" size={16} color="#007AFF" /> Last
+                Service Odo: {bikeData.lastServiceOdometer || "--"}
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.bikeInfoText}>No bike data available.</Text>
+          )}
         </View>
 
         {/* Fuel Summary */}
@@ -126,75 +146,113 @@ const ReportPage = () => {
           </View>
         </View>
 
-        {/* Monthly Spending */}
+        {/* Monthly Spending (Bar Chart) */}
         <ChartSection title="Monthly Spending (৳)">
-          <BarChart
-            data={{
-              labels: fuelConsumptionTrend.map((d) => d.month),
-              datasets: [{ data: fuelConsumptionTrend.map((d) => d.litres) }],
-            }}
-            width={CHART_WIDTH}
-            height={220}
-            chartConfig={chartConfig}
-            style={{ borderRadius: 16 }}
-          />
+          {_fuelConsumptionTrend.length > 0 &&
+          _fuelConsumptionTrend.some((d) => typeof d.litres === "number") ? (
+            <BarChart
+              data={{
+                labels: _fuelConsumptionTrend.map((d) => d.month || ""),
+                datasets: [
+                  {
+                    data: _fuelConsumptionTrend.map((d) =>
+                      safeNumber(d.litres)
+                    ),
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              chartConfig={chartConfig}
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <Text style={styles.noDataText}>No data available.</Text>
+          )}
           <Text style={styles.monthlyTotalText}>
-            Last 30 days: ৳{monthlySpending}
+            Last 30 days: ৳{_monthlySpending}
           </Text>
         </ChartSection>
 
-        {/* Fuel Consumption Trend */}
+        {/* Fuel Consumption Trend (Line Chart) */}
         <ChartSection title="Fuel Consumption Trend (L)">
-          <LineChart
-            data={{
-              labels: fuelConsumptionTrend.map((d) => d.month),
-              datasets: [{ data: fuelConsumptionTrend.map((d) => d.litres) }],
-            }}
-            width={CHART_WIDTH}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={{ borderRadius: 16 }}
-          />
+          {_fuelConsumptionTrend.length > 0 &&
+          _fuelConsumptionTrend.some((d) => typeof d.litres === "number") ? (
+            <LineChart
+              data={{
+                labels: _fuelConsumptionTrend.map((d) => d.month || ""),
+                datasets: [
+                  {
+                    data: _fuelConsumptionTrend.map((d) =>
+                      safeNumber(d.litres)
+                    ),
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              chartConfig={chartConfig}
+              bezier
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <Text style={styles.noDataText}>No data available.</Text>
+          )}
         </ChartSection>
 
-        {/* Pie Chart */}
+        {/* Pie Chart: Cost Breakdown */}
         <ChartSection title="Cost Breakdown">
-          <PieChart
-            data={costBreakdown.map((item) => ({
-              name: item.name,
-              population: item.value,
-              color:
-                item.name === "Fuel"
-                  ? "#FF6B6B"
-                  : item.name === "Service"
-                  ? "#4ECDC4"
-                  : "#45B7D1",
-              legendFontColor: "#333",
-              legendFontSize: 12,
-            }))}
-            width={CHART_WIDTH}
-            height={220}
-            chartConfig={chartConfig}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-          />
+          {_costBreakdown.length > 0 &&
+          _costBreakdown.some(
+            (item) => typeof item.value === "number" && item.value > 0
+          ) ? (
+            <PieChart
+              data={_costBreakdown.map((item) => ({
+                name: item.name || "",
+                population: safeNumber(item.value),
+                color:
+                  item.name === "Fuel"
+                    ? "#FF6B6B"
+                    : item.name === "Service"
+                    ? "#4ECDC4"
+                    : "#45B7D1",
+                legendFontColor: "#333",
+                legendFontSize: 12,
+              }))}
+              width={CHART_WIDTH}
+              height={220}
+              chartConfig={chartConfig}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+            />
+          ) : (
+            <Text style={styles.noDataText}>No data available.</Text>
+          )}
         </ChartSection>
 
-        {/* Fuel Price Trend */}
+        {/* Fuel Price Trend (Line Chart) */}
         <ChartSection title="Fuel Price Trend (৳/L)">
-          <LineChart
-            data={{
-              labels: fuelPriceTrend.map((d) => d.date),
-              datasets: [{ data: fuelPriceTrend.map((d) => d.unitCost) }],
-            }}
-            width={CHART_WIDTH}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={{ borderRadius: 16 }}
-          />
+          {_fuelPriceTrend.length > 0 &&
+          _fuelPriceTrend.some((d) => typeof d.unitCost === "number") ? (
+            <LineChart
+              data={{
+                labels: _fuelPriceTrend.map((d) => d.date || ""),
+                datasets: [
+                  {
+                    data: _fuelPriceTrend.map((d) => safeNumber(d.unitCost)),
+                  },
+                ],
+              }}
+              width={CHART_WIDTH}
+              height={220}
+              chartConfig={chartConfig}
+              bezier
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <Text style={styles.noDataText}>No data available.</Text>
+          )}
         </ChartSection>
 
         <View style={{ height: 40 }} />
@@ -205,7 +263,7 @@ const ReportPage = () => {
 
 const SummaryBox = ({ label, value }) => (
   <View style={styles.summaryBox}>
-    <Text style={styles.summaryValue}>{value}</Text>
+    <Text style={styles.summaryValue}>{value ?? "--"}</Text>
     <Text style={styles.summaryLabel}>{label}</Text>
   </View>
 );
@@ -295,6 +353,12 @@ const styles = StyleSheet.create({
     color: "#F44336",
     marginTop: 40,
     textAlign: "center",
+  },
+  noDataText: {
+    fontSize: 15,
+    color: "#999",
+    textAlign: "center",
+    paddingVertical: 32,
   },
 });
 
