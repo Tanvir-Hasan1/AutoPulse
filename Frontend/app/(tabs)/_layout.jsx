@@ -44,12 +44,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Profile"
+        name="(profile)"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+          href: "/(tabs)/(profile)", // Ensure correct routing to the profile group
         }}
       />
     </Tabs>
