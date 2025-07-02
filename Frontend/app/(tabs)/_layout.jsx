@@ -40,7 +40,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="storefront" size={size} color={color} />
           ),
-          href: "/(tabs)/(marketplace)", // Ensure correct routing to the marketplace group
         }}
       />
       <Tabs.Screen
@@ -50,7 +49,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size = 24 }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
-          href: "/(tabs)/(profile)", // Ensure correct routing to the profile group
         }}
       />
     </Tabs>
