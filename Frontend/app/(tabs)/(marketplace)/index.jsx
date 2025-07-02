@@ -95,13 +95,16 @@ export default function Marketplace() {
           price: p.price,
           image:
             p.productImage && p._id
-              ? `${API_BASE_URL}/marketplace/product-image/${p._id}`
+              ? `${API_BASE_URL}/marketplace/product-image/${p._id}${
+                  p.updatedAt ? `?t=${new Date(p.updatedAt).getTime()}` : ""
+                }`
               : null,
           category: p.category,
           address: p.address,
           phone: p.phoneNumber,
           details: p.details,
           createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
           condition: p.condition || "good",
           negotiable: p.negotiable || false,
         }));

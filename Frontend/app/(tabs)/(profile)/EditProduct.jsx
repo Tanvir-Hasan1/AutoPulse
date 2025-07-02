@@ -75,6 +75,7 @@ const EditProduct = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [imageUri, setImageUri] = useState(null);
+  const [imageVersion, setImageVersion] = useState(Date.now());
   const [category, setCategory] = useState(categories[0].value);
   const [condition, setCondition] = useState("all");
   const [address, setAddress] = useState("");
@@ -132,7 +133,7 @@ const EditProduct = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8, // Reduced quality for better performance
+      quality: 0.8,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -194,20 +195,60 @@ const EditProduct = () => {
       formData.append("phoneNumber", fullPhone);
       formData.append("condition", condition);
 
-      // Only append new image if user selected one
+      // Handle image upload - FIXED VERSION
       if (imageUri) {
-        const filename = imageUri.split("/").pop();
-        const match = /\.([a-zA-Z0-9]+)$/.exec(filename || "");
-        const type = match ? `image/${match[1]}` : `image/jpeg`;
+        // Get filename from URI
+        const uriParts = imageUri.split("/");
+        const fileName = uriParts[uriParts.length - 1];
 
-        formData.append("productImage", {
-          uri: imageUri,
-          name: filename || `image_${Date.now()}.jpg`,
-          type,
-        });
+        // Determine file extension and MIME type
+        const fileExtension = fileName.split(".").pop()?.toLowerCase() || "jpg";
+        let mimeType;
+
+        switch (fileExtension) {
+          case "jpg":
+          case "jpeg":
+            mimeType = "image/jpeg";
+            break;
+          case "png":
+            mimeType = "image/png";
+            break;
+          case "gif":
+            mimeType = "image/gif";
+            break;
+          case "webp":
+            mimeType = "image/webp";
+            break;
+          default:
+            mimeType = "image/jpeg";
+        }
+
+        // Create proper file object for FormData
+        const imageFile = {
+          uri:
+            Platform.OS === "ios" ? imageUri.replace("file://", "") : imageUri,
+          type: mimeType,
+          name: fileName || `product_image_${Date.now()}.${fileExtension}`,
+        };
+
+        formData.append("productImage", imageFile);
+
+        console.log("Image file object:", imageFile);
       }
 
       console.log("Sending update request for product ID:", productId);
+      console.log("FormData contents:");
+
+      // Log FormData contents for debugging
+      if (formData._parts) {
+        formData._parts.forEach((part, index) => {
+          console.log(
+            `FormData[${index}]:`,
+            part[0],
+            typeof part[1] === "object" ? "FILE_OBJECT" : part[1]
+          );
+        });
+      }
 
       const response = await fetch(
         `${API_BASE_URL}/marketplace/edit-product/${productId}`,
@@ -215,18 +256,32 @@ const EditProduct = () => {
           method: "PATCH",
           body: formData,
           headers: {
-            // Don't set Content-Type for FormData
             Accept: "application/json",
+            // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
           },
         }
       );
 
-      const resJson = await response.json();
-      console.log("Update response:", resJson);
+      console.log("Response status:", response.status);
+      console.log("Response headers:", response.headers);
+
+      const resText = await response.text();
+      console.log("Raw response:", resText);
+
+      let resJson;
+      try {
+        resJson = JSON.parse(resText);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        throw new Error("Invalid response from server");
+      }
+
+      console.log("Parsed response:", resJson);
 
       setUpdating(false);
 
       if (response.ok) {
+        setImageVersion(Date.now()); // Bust cache for new image
         Alert.alert("Success", "Product updated successfully!", [
           {
             text: "OK",
@@ -262,6 +317,9 @@ const EditProduct = () => {
       phoneNumber,
       countryCode,
       productId,
+      hasNewImage: !!imageUri,
+      imageUri,
+      existingImageUrl,
     });
   };
 
@@ -303,7 +361,17 @@ const EditProduct = () => {
             {/* Image Section */}
             <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
               {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: imageUri }}
+                    style={styles.imagePreview}
+                  />
+                  <View style={styles.imageOverlay}>
+                    <Text style={styles.imageOverlayText}>
+                      Tap to change image
+                    </Text>
+                  </View>
+                </View>
               ) : existingImageUrl ? (
                 <View style={styles.imageContainer}>
                   {imageLoading && (
@@ -313,7 +381,11 @@ const EditProduct = () => {
                   )}
                   {!imageError ? (
                     <Image
-                      source={{ uri: existingImageUrl }}
+                      source={{
+                        uri: existingImageUrl
+                          ? `${existingImageUrl}?t=${imageVersion}`
+                          : undefined,
+                      }}
                       style={[
                         styles.imagePreview,
                         imageLoading && styles.hiddenImage,

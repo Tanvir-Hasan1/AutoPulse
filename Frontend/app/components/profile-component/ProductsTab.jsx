@@ -138,7 +138,11 @@ const ProductsTab = ({
               <Image
                 source={{
                   uri: getProductImageUrl
-                    ? getProductImageUrl(product._id || product.id)
+                    ? `${getProductImageUrl(product._id || product.id)}${
+                        product.updatedAt
+                          ? `?t=${new Date(product.updatedAt).getTime()}`
+                          : ""
+                      }`
                     : product.image,
                 }}
                 style={{
