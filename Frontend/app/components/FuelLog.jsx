@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,8 @@ import {
 } from "react-native";
 import { API_BASE_URL } from "../config"; // e.g. http://192.168.x.x:5000/api
 import { useUser } from "../contexts/UserContext";
+import CalendarModal from "./CalendarModal"; // Adjust the import based on your file structure
+import Toast from "react-native-toast-message";
 
 export default function FuelLog({
   fuelLogs,
@@ -22,7 +25,6 @@ export default function FuelLog({
   setNewFuelLog,
   setFuelLevel,
   fuelLevel,
-  openDatePicker,
   formatDisplayDate,
 }) {
   const { user } = useUser();
@@ -30,6 +32,8 @@ export default function FuelLog({
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showFuelDatePicker, setShowFuelDatePicker] = useState(false); // State to control date picker visibility
 
   const calculateTotalCost = () => {
     const amount = parseFloat(newFuelLog.amount) || 0;
@@ -64,13 +68,24 @@ export default function FuelLog({
       setFuelLogs(logsWithMileage.reverse());
     } catch (error) {
       console.error("Fetch error:", error);
-      Alert.alert("Error", "Could not load fuel logs");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Could not load fuel logs",
+      });
     }
   };
 
   const handleAddFuelLog = async () => {
     if (!newFuelLog.amount || !newFuelLog.unitCost || !newFuelLog.odometer) {
-      Alert.alert("Error", "Please fill all fuel log fields");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill all fuel log fields",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       return;
     }
 
@@ -94,77 +109,68 @@ export default function FuelLog({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to save");
 
-      // Recalculate mileage based on the last fuel log
-      const lastLog = fuelLogs[0]; // Assuming latest log is at the top
-      let mileage = null;
-      if (lastLog && lastLog.odometer && payload.amount > 0) {
-        const distance = payload.odometer - lastLog.odometer;
-        if (distance > 0) {
-          mileage = Math.floor((distance / payload.amount) * 100) / 100;
-        }
-      }
-
-      await fetchFuelLogs(); // Refresh logs to include new entry
+      await fetchFuelLogs();
 
       setNewFuelLog({
         date: new Date().toISOString().split("T")[0],
         amount: "",
         unitCost: "",
         odometer: "",
-        volume: "",
         note: "",
       });
 
-      setFuelLevel(Math.min(100, fuelLevel + (payload.amount / 15) * 100));
-
-      Alert.alert("Success", "Fuel entry saved!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Fuel entry added successfully!",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
     } catch (error) {
-      console.error("Add fuel error:", error);
-      Alert.alert("Error", error.message || "Failed to save fuel log");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to save fuel log",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
   const handleDeleteFuelLog = async (logId) => {
-    Alert.alert(
-      "Delete Fuel Log",
-      "Are you sure you want to delete this fuel log entry?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const res = await fetch(`${API_BASE_URL}/fuel/${logId}`, {
-                method: "DELETE",
-              });
+    try {
+      const res = await fetch(`${API_BASE_URL}/fuel/${logId}`, {
+        method: "DELETE",
+      });
 
-              if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || "Failed to delete fuel log");
-              }
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete fuel log");
+      }
 
-              // Remove the deleted log from the state
-              setFuelLogs(
-                fuelLogs.filter((log) => (log._id || log.id) !== logId)
-              );
-              setSelectedLogId(null);
+      setFuelLogs(fuelLogs.filter((log) => (log._id || log.id) !== logId));
+      setSelectedLogId(null);
 
-              Alert.alert("Success", "Fuel log deleted successfully");
-            } catch (error) {
-              console.error("Delete error:", error);
-              Alert.alert(
-                "Error",
-                error.message || "Failed to delete fuel log"
-              );
-            }
-          },
-        },
-      ]
-    );
+      Toast.show({
+        type: "success",
+        text1: "Deleted",
+        text2: "Fuel log deleted successfully.",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete fuel log",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
+    }
   };
 
   const handleEditFuelLog = (log) => {
@@ -182,7 +188,14 @@ export default function FuelLog({
 
   const handleUpdateFuelLog = async () => {
     if (!editingLog.amount || !editingLog.unitCost || !editingLog.odometer) {
-      Alert.alert("Error", "Please fill all fuel log fields");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill all fuel log fields",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       return;
     }
 
@@ -207,17 +220,27 @@ export default function FuelLog({
 
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
-      // Refresh fuel logs after update (recalculate mileage, etc.)
       await fetchFuelLogs();
-
-      // Reset editing state
       setIsEditing(false);
       setEditingLog(null);
 
-      Alert.alert("Success", "Fuel log updated successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Fuel log updated successfully!",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
     } catch (error) {
-      console.error("Update error:", error);
-      Alert.alert("Error", error.message || "Failed to update fuel log");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to update fuel log",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -236,6 +259,29 @@ export default function FuelLog({
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchFuelLogs();
+    setRefreshing(false);
+  };
+
+  // Open date picker for both add and edit
+  const openDatePicker = () => setShowFuelDatePicker(true);
+
+  // Date select handler for both add and edit (always "YYYY-MM-DD")
+  const handleFuelDateSelect = (date) => {
+    const formattedDate =
+      typeof date === "string"
+        ? date.split("T")[0]
+        : date.toISOString().split("T")[0];
+    if (isEditing) {
+      setEditingLog((prev) => ({ ...prev, date: formattedDate }));
+    } else {
+      setNewFuelLog((prev) => ({ ...prev, date: formattedDate }));
+    }
+    setShowFuelDatePicker(false);
+  };
+
   useEffect(() => {
     if (bikeId) fetchFuelLogs();
   }, [bikeId]);
@@ -248,6 +294,9 @@ export default function FuelLog({
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Add/Edit Fuel Entry Form */}
         <View style={styles.card}>
@@ -264,7 +313,7 @@ export default function FuelLog({
               >
                 <Text style={styles.datePickerText}>
                   {isEditing
-                    ? formatDisplayDate(editingLog.date)
+                    ? formatDisplayDate(editingLog?.date)
                     : formatDisplayDate(newFuelLog.date)}
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6b7280" />
@@ -508,6 +557,14 @@ export default function FuelLog({
             </Pressable>
           ))}
         </View>
+
+        <CalendarModal
+          visible={showFuelDatePicker}
+          onClose={() => setShowFuelDatePicker(false)}
+          onSelect={handleFuelDateSelect}
+          title="Select Fuel Date"
+          selectedDate={isEditing ? editingLog?.date : newFuelLog.date}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

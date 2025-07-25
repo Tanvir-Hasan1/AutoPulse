@@ -11,10 +11,13 @@ import {
   View,
   Modal,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config"; // e.g. http://192.168.x.x:5000/api
 import { useUser } from "../contexts/UserContext";
+import CalendarModal from "./CalendarModal"; // <-- Make sure you have this import
+import Toast from "react-native-toast-message";
 
 const serviceTypes = [
   "Engine Oil Change",
@@ -45,6 +48,9 @@ export default function ServiceLog({
   const [showServiceTypeDropdown, setShowServiceTypeDropdown] = useState(false);
   const [showEditServiceTypeDropdown, setShowEditServiceTypeDropdown] =
     useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  // Add state for CalendarModal visibility if not managed by parent
+  const [showServiceDatePicker, setShowServiceDatePicker] = useState(false);
 
   const fetchServiceLogs = async () => {
     try {
@@ -101,54 +107,61 @@ export default function ServiceLog({
         description: "",
       });
 
-      Alert.alert("Success", "Service entry added successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Service log added successfully!",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
     } catch (error) {
       console.error("Add service error:", error);
-      Alert.alert("Error", error.message || "Failed to save service log");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to add service log",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
   const handleDeleteServiceLog = async (logId) => {
-    Alert.alert(
-      "Delete Service Log",
-      "Are you sure you want to delete this service log entry?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const res = await fetch(`${API_BASE_URL}/service/${logId}`, {
-                method: "DELETE",
-              });
+    try {
+      const res = await fetch(`${API_BASE_URL}/service/${logId}`, {
+        method: "DELETE",
+      });
 
-              if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || "Failed to delete service log");
-              }
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete service log");
+      }
 
-              // Remove the deleted log from the state
-              setServiceLogs(
-                serviceLogs.filter((log) => (log._id || log.id) !== logId)
-              );
-              setSelectedLogId(null);
+      setServiceLogs(
+        serviceLogs.filter((log) => (log._id || log.id) !== logId)
+      );
+      setSelectedLogId(null);
 
-              Alert.alert("Success", "Service log deleted successfully");
-            } catch (error) {
-              console.error("Delete error:", error);
-              Alert.alert(
-                "Error",
-                error.message || "Failed to delete service log"
-              );
-            }
-          },
-        },
-      ]
-    );
+      Toast.show({
+        type: "success",
+        text1: "Deleted",
+        text2: "Service log deleted successfully.",
+        visibilityTime: 2500,
+        position: "bottom",
+        autoHide: true,
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete service log",
+        visibilityTime: 3000,
+        position: "bottom",
+        autoHide: true,
+      });
+    }
   };
 
   const handleEditServiceLog = (log) => {
@@ -166,12 +179,20 @@ export default function ServiceLog({
   };
 
   const handleUpdateServiceLog = async () => {
-    if (!editingLog.type || !editingLog.cost || !editingLog.odometer) {
-      Alert.alert("Error", "Please fill required service log fields");
+    if (!editingLog.cost || !editingLog.odometer || !editingLog.type) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill all required fields",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       return;
     }
 
     const payload = {
+      date: editingLog.date,
       serviceType: editingLog.type,
       cost: parseFloat(editingLog.cost),
       odometer: parseFloat(editingLog.odometer),
@@ -197,14 +218,26 @@ export default function ServiceLog({
       // Refresh service logs after update
       await fetchServiceLogs();
 
-      // Reset editing state
       setIsEditing(false);
       setEditingLog(null);
 
-      Alert.alert("Success", "Service log updated successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Service log updated successfully!",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
     } catch (error) {
-      console.error("Update error:", error);
-      Alert.alert("Error", error.message || "Failed to update service log");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to update service log",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -233,6 +266,22 @@ export default function ServiceLog({
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchServiceLogs();
+    setRefreshing(false);
+  };
+
+  // Date select handler for both add and edit
+  const handleServiceDateSelect = (date) => {
+    if (isEditing) {
+      setEditingLog((prev) => ({ ...prev, date }));
+    } else {
+      setNewServiceLog((prev) => ({ ...prev, date }));
+    }
+    setShowServiceDatePicker(false);
+  };
+
   useEffect(() => {
     if (bikeId) fetchServiceLogs();
   }, [bikeId]);
@@ -245,6 +294,9 @@ export default function ServiceLog({
       <ScrollView
         keyboardShouldPersistTaps="always"
         contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
@@ -256,11 +308,11 @@ export default function ServiceLog({
               <Text style={styles.label}>Date</Text>
               <TouchableOpacity
                 style={styles.datePickerButton}
-                onPress={openDatePicker}
+                onPress={() => setShowServiceDatePicker(true)}
               >
                 <Text style={styles.datePickerText}>
                   {isEditing
-                    ? formatDisplayDate(editingLog.date)
+                    ? formatDisplayDate(editingLog?.date)
                     : formatDisplayDate(newServiceLog.date)}
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6b7280" />
@@ -486,6 +538,15 @@ export default function ServiceLog({
           ))}
         </View>
       </ScrollView>
+
+      {/* Calendar Modal for both add and edit */}
+      <CalendarModal
+        visible={showServiceDatePicker}
+        onClose={() => setShowServiceDatePicker(false)}
+        onSelect={handleServiceDateSelect}
+        title="Select Service Date"
+        selectedDate={isEditing ? editingLog?.date : newServiceLog.date}
+      />
 
       {/* Service Type Dropdown Modal */}
       <Modal

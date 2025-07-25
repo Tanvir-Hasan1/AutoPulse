@@ -246,6 +246,11 @@ export default function ProfileView() {
   );
 }
 
+// Hide the default navigation header/title
+export const options = {
+  headerShown: false,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -179,17 +179,13 @@ const resetPasswordWithOTP = async (req, res) => {
   }
 };
 
-// Change Name
+// Change Name (by user ID only)
 const changeName = async (req, res) => {
-  const { email, password, newName } = req.body;
+  const { id, newName } = req.body;
   try {
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
     }
     user.name = newName;
     await user.save();

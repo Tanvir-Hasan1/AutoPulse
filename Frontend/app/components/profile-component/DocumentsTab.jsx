@@ -14,6 +14,7 @@ import { API_BASE_URL } from "../../config";
 import { useState, useEffect } from "react";
 import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";
+import Toast from "react-native-toast-message";
 
 const DocumentsTab = ({ documents, styles }) => {
   const { user } = useUser();
@@ -125,10 +126,24 @@ const DocumentsTab = ({ documents, styles }) => {
           throw new Error("Unsupported file type");
         }
       } else {
-        Alert.alert("View Document", `Viewing document: ${doc.name}`);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: `Viewing document: ${doc.name}`,
+          position: "bottom",
+          autoHide: true,
+          visibilityTime: 3000,
+        });
       }
     } catch (error) {
-      Alert.alert("Error", error.message || "Failed to load document.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to load document.",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
       setIsLoadingLicense(false);
     }
   };
@@ -165,10 +180,14 @@ const DocumentsTab = ({ documents, styles }) => {
         throw new Error("Unsupported file type");
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error.message || "Failed to load tax token document."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to load tax token document.",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
       setIsLoadingLicense(false);
     }
   };
@@ -202,11 +221,25 @@ const DocumentsTab = ({ documents, styles }) => {
       if (!response.ok) {
         throw new Error(data.message || "Failed to upload license");
       }
-      Alert.alert("Success", data.message || "License uploaded successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "License uploaded successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchLicenseInfo(); // Refresh license info after upload
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert("Error", error.message || "Failed to upload license");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to upload license",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -242,10 +275,14 @@ const DocumentsTab = ({ documents, styles }) => {
         throw new Error("Unsupported file type");
       }
     } catch (error) {
-      Alert.alert(
-        "Error",
-        error.message || "Failed to load registration document."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to load registration document.",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
       setIsLoadingLicense(false);
     }
   };
@@ -263,17 +300,25 @@ const DocumentsTab = ({ documents, styles }) => {
           data.message || "Failed to delete registration document"
         );
       }
-      Alert.alert(
-        "Success",
-        data.message || "Registration deleted successfully"
-      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "Registration deleted successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchRegistrationInfo(); // Refresh registration info after delete
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to delete registration document"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete registration document",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -284,7 +329,14 @@ const DocumentsTab = ({ documents, styles }) => {
       if (doc.name === "Driving License") {
         url = `${API_BASE_URL}/license/delete/${user.userId}`;
       } else {
-        Alert.alert("Delete", `Delete not implemented for ${doc.name}`);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: `Delete not implemented for ${doc.name}`,
+          position: "bottom",
+          autoHide: true,
+          visibilityTime: 3000,
+        });
         return;
       }
       setIsLoadingLicense(true);
@@ -294,11 +346,25 @@ const DocumentsTab = ({ documents, styles }) => {
       if (!response.ok) {
         throw new Error(data.message || "Failed to delete document");
       }
-      Alert.alert("Success", data.message || "Document deleted successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "Document deleted successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchLicenseInfo(); // Refresh license info after delete
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert("Error", error.message || "Failed to delete document");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete document",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -333,22 +399,27 @@ const DocumentsTab = ({ documents, styles }) => {
           data.message || "Failed to upload registration document"
         );
       }
-      Alert.alert(
-        "Success",
-        data.message || "Registration uploaded successfully"
-      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "Registration uploaded successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchRegistrationInfo(); // Refresh registration info after upload
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to upload registration document"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to upload registration document",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
-
-  // Add this function to your DocumentsTab component
-  // Place it after the handleUploadRegistration function
 
   // Handler to upload a new tax token document
   const handleUploadTaxToken = async () => {
@@ -386,14 +457,25 @@ const DocumentsTab = ({ documents, styles }) => {
         throw new Error(data.message || "Failed to upload tax token document");
       }
 
-      Alert.alert("Success", data.message || "Tax token uploaded successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "Tax token uploaded successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchTaxTokenInfo(); // Refresh tax token info after upload
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to upload tax token document"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to upload tax token document",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
   // Handler to delete a tax token document
@@ -407,14 +489,25 @@ const DocumentsTab = ({ documents, styles }) => {
       if (!response.ok) {
         throw new Error(data.message || "Failed to delete tax token document");
       }
-      Alert.alert("Success", data.message || "Tax token deleted successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: data.message || "Tax token deleted successfully",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 2500,
+      });
       fetchTaxTokenInfo(); // Refresh tax token info after delete
     } catch (error) {
       setIsLoadingLicense(false);
-      Alert.alert(
-        "Error",
-        error.message || "Failed to delete tax token document"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to delete tax token document",
+        position: "bottom",
+        autoHide: true,
+        visibilityTime: 3000,
+      });
     }
   };
 

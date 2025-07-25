@@ -87,7 +87,7 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const   selectedBikeId = user.selectedBikeId;
+  const selectedBikeId = user.selectedBikeId;
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedBike =
@@ -143,36 +143,6 @@ const Dashboard = () => {
     fetchDashboardData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBikeId]);
-
-  // useEffect(() => {
-  //   if (!selectedBikeId) return;
-
-  //   setLoading(true);
-  //   setError(null);
-
-  //   // Fetch all dashboard data in parallel
-  //   Promise.all([
-  //     fetch(`${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/status`).then(
-  //       (res) => res.json()
-  //     ),
-  //     fetch(
-  //       `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/upcoming-tasks`
-  //     ).then((res) => res.json()),
-  //     fetch(
-  //       `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/recent-activities`
-  //     ).then((res) => res.json()),
-  //   ])
-  //     .then(([statusData, tasksData, activitiesData]) => {
-  //       setCurrentStatus(statusData);
-  //       setUpcomingTasks(tasksData);
-  //       setRecentActivities(activitiesData);
-  //       setLoading(false);
-  //     })
-  //     .catch((err) => {
-  //       setError("Failed to fetch dashboard data.");
-  //       setLoading(false);
-  //     });
-  // }, [selectedBikeId]);
 
   // Defensive rendering for required objects
   if (!user || !user.bikes || user.bikes.length === 0)
@@ -279,28 +249,6 @@ const Dashboard = () => {
           <Text style={styles.sectionTitle}>Current Status</Text>
           {currentStatus && !loading ? (
             <View style={styles.statusGrid}>
-              <View style={[styles.statusCard, styles.fuelCard]}>
-                <View style={styles.statusHeader}>
-                  <Ionicons name="car" size={24} color="#4CAF50" />
-                  <Text style={styles.statusValue}>
-                    {currentStatus.fuelLevel ?? "--"}%
-                  </Text>
-                </View>
-                <Text style={styles.statusLabel}>Fuel Level</Text>
-                <View style={styles.fuelBar}>
-                  <View
-                    style={[
-                      styles.fuelBarFill,
-                      {
-                        width: `${
-                          currentStatus.fuelLevel ? currentStatus.fuelLevel : 0
-                        }%`,
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-
               <View style={styles.statusCard}>
                 <View style={styles.statusHeader}>
                   <Ionicons name="trending-up" size={24} color="#2196F3" />
