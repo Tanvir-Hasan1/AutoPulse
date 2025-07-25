@@ -250,18 +250,13 @@ export default function ServiceLog({
           <Text style={styles.cardTitle}>
             {isEditing ? "Edit Service Entry" : "Add Service Entry"}
           </Text>
-          <Text style={styles.cardDescription}>
-            {isEditing
-              ? "Update your bike service details"
-              : "Record your bike service details"}
-          </Text>
 
           <View style={styles.inputRow}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Date</Text>
               <TouchableOpacity
                 style={styles.datePickerButton}
-                onPress={isEditing ? () => {} : openDatePicker}
+                onPress={openDatePicker}
               >
                 <Text style={styles.datePickerText}>
                   {isEditing

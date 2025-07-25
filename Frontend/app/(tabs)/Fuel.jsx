@@ -11,12 +11,11 @@ import {
 } from "react-native";
 import CalendarModal from "../components/CalendarModal";
 import FuelLog from "../components/FuelLog";
-import FuelMeter from "../components/FuelMeter";
 import ServiceLog from "../components/ServiceLog";
 import { formatDisplayDate } from "../utils/dateHelpers";
 
 export default function FuelServiceTracker() {
-  const [activeTab, setActiveTab] = useState("meter");
+  const [activeTab, setActiveTab] = useState("fuel");
 
   const [fuelLevel, setFuelLevel] = useState(65);
   const [showFuelDatePicker, setShowFuelDatePicker] = useState(false);
@@ -60,25 +59,6 @@ export default function FuelServiceTracker() {
 
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === "meter" && styles.activeTab]}
-          onPress={() => setActiveTab("meter")}
-        >
-          <Ionicons
-            name="speedometer"
-            size={20}
-            color={activeTab === "meter" ? "#4F46E5" : "#9CA3AF"}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "meter" && styles.activeTabText,
-            ]}
-          >
-            Fuel Meter
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={[styles.tab, activeTab === "fuel" && styles.activeTab]}
           onPress={() => setActiveTab("fuel")}
         >
@@ -118,11 +98,6 @@ export default function FuelServiceTracker() {
       </View>
 
       <View style={{ flex: 1 }}>
-        <View
-          style={{ display: activeTab === "meter" ? "flex" : "none", flex: 1 }}
-        >
-          <FuelMeter fuelLevel={fuelLevel} fuelLogs={fuelLogs} />
-        </View>
         <View
           style={{ display: activeTab === "fuel" ? "flex" : "none", flex: 1 }}
         >

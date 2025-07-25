@@ -260,7 +260,7 @@ export default function FuelLog({
               <Text style={styles.label}>Date</Text>
               <TouchableOpacity
                 style={styles.datePickerButton}
-                onPress={isEditing ? () => {} : openDatePicker}
+                onPress={openDatePicker}
               >
                 <Text style={styles.datePickerText}>
                   {isEditing
