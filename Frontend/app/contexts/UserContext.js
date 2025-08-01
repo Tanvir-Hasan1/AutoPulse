@@ -14,15 +14,24 @@ export const UserProvider = ({ children }) => {
   });
 
   const updateUser = (userData) => {
-    const bikes = userData.bikes || [];
-    setUser({
-      userId: userData.userId || userData._id,
-      name: userData.name,
-      email: userData.email,
-      createdAt: userData.createdAt,
-      updatedAt: userData.updatedAt,
-      bikes,
-      selectedBikeId: bikes.length > 0 ? bikes[0]._id : null,
+    if (typeof userData === "function") {
+      setUser(userData);
+      return;
+    }
+    setUser((prev) => {
+      const bikes = userData.bikes || prev.bikes || [];
+      return {
+        userId: userData.userId || userData._id || prev.userId,
+        name: userData.name || prev.name,
+        email: userData.email || prev.email,
+        createdAt: userData.createdAt || prev.createdAt,
+        updatedAt: userData.updatedAt || prev.updatedAt,
+        bikes,
+        selectedBikeId:
+          userData.selectedBikeId ||
+          (bikes.length > 0 ? bikes[0]._id : null) ||
+          prev.selectedBikeId,
+      };
     });
   };
 

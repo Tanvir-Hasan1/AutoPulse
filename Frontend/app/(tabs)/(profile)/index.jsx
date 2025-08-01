@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useUser } from "../../contexts/UserContext";
 import {
   Platform,
@@ -26,10 +26,34 @@ export default function ProfileView() {
   const router = useRouter();
 
   const { user, updateUser, selectBike } = useUser();
-  console.log("User Context:", user.selectedBikeId);
+  console.log("User Context:", user?.selectedBikeId);
 
-  const bikes = user.bikes;
-  const selectedBikeId = user.selectedBikeId;
+  const bikes = user?.bikes || [];
+  const selectedBikeId = user?.selectedBikeId;
+
+  // Refetch bikes for refresh button
+  const fetchBikes = useCallback(async () => {
+    const userId = user?.userId;
+    if (!userId) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/bikes/user/${userId}`);
+      if (!response.ok) throw new Error("Failed to fetch bikes");
+      const data = await response.json();
+
+      if (data && Array.isArray(data.bikes)) {
+        updateUser((prev) => ({
+          ...prev,
+          bikes: data.bikes,
+          selectedBikeId:
+            prev.selectedBikeId ||
+            (data.bikes.length > 0 ? data.bikes[0]._id : null),
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching bikes:", err);
+    }
+  }, [updateUser]); // Remove user from dependencies, use closure instead
 
   // Handler to set a bike as primary
   const handleSelectBike = (bike) => {
@@ -42,12 +66,26 @@ export default function ProfileView() {
   const [products, setProducts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchProducts = async () => {
-    if (!user?.userId) return;
+  // Initial bikes fetch
+  useEffect(() => {
+    let mounted = true;
+    const initializeData = async () => {
+      if (user?.userId && mounted) {
+        await fetchBikes();
+      }
+    };
+    initializeData();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.userId]); // Removed fetchBikes from dependencies
+
+  const fetchProducts = useCallback(async () => {
+    const userId = user?.userId;
+    if (!userId) return;
+
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/marketplace/products/${user.userId}`
-      );
+      const res = await fetch(`${API_BASE_URL}/marketplace/products/${userId}`);
       const data = await res.json();
       if (data && Array.isArray(data.products)) {
         setProducts(data.products);
@@ -55,13 +93,23 @@ export default function ProfileView() {
         setProducts([]);
       }
     } catch (err) {
+      console.error("Error fetching products:", err);
       setProducts([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [user?.userId]);
+    let mounted = true;
+    const loadProducts = async () => {
+      if (user?.userId && mounted) {
+        await fetchProducts();
+      }
+    };
+    loadProducts();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.userId, fetchProducts]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -119,13 +167,13 @@ export default function ProfileView() {
     const updatedBikes = bikes.map((b) =>
       b._id === bikeId ? { ...b, name: newName } : b
     );
-    updateUser({ ...user, bikes: updatedBikes });
+    updateUser((prev) => ({ ...prev, bikes: updatedBikes }));
   };
 
   // Delete bike
   const handleDeleteBike = (bikeId) => {
     const updatedBikes = bikes.filter((b) => b._id !== bikeId);
-    updateUser({ ...user, bikes: updatedBikes });
+    updateUser((prev) => ({ ...prev, bikes: updatedBikes }));
   };
 
   // Add Edit Profile button above the profile card
@@ -224,12 +272,26 @@ export default function ProfileView() {
 
       <View style={styles.contentContainer}>
         {activeTab === "bikes" && (
-          <BikesTab
-            bikes={bikes}
-            styles={styles}
-            selectedBikeId={selectedBikeId}
-            onSelectBike={handleSelectBike}
-          />
+          <ScrollView
+            style={{ flex: 1 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={async () => {
+                  setRefreshing(true);
+                  await fetchBikes();
+                  setRefreshing(false);
+                }}
+              />
+            }
+          >
+            <BikesTab
+              bikes={bikes}
+              styles={styles}
+              selectedBikeId={selectedBikeId}
+              onSelectBike={handleSelectBike}
+            />
+          </ScrollView>
         )}
         {activeTab === "products" && (
           <ScrollView
