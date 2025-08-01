@@ -170,4 +170,39 @@ router.put("/update", bike.updateBike);
  */
 router.delete("/delete", bike.deleteBike);
 
+/**
+ * @swagger
+ * /api/bikes/user/{userId}:
+ *   get:
+ *     summary: Get all bikes for a specific user
+ *     tags: [Bike]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The user ID
+ *     responses:
+ *       200:
+ *         description: List of user's bikes
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User bikes retrieved successfully
+ *                 bikes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Bike'
+ *       400:
+ *         description: User ID is required
+ *       500:
+ *         description: Server error
+ */
+router.get("/user/:userId", bike.getUserBikes);
+
 module.exports = router;
