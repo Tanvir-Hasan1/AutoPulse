@@ -1,4 +1,6 @@
 import { View, Text, TouchableOpacity } from "react-native";
+import { useState } from "react";
+import EditProfileModal from "./EditProfileModal";
 
 const getInitials = (name) => {
   if (!name) return "";
@@ -7,7 +9,9 @@ const getInitials = (name) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-const ProfileCard = ({ user, styles }) => {
+const ProfileCard = ({ user, styles, onEditProfile }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+
   // Format join date as 'Month Day, Year' if possible
   let joinDateFormatted = user.createdAt;
   if (user.createdAt && !isNaN(Date.parse(user.createdAt))) {
@@ -26,9 +30,17 @@ const ProfileCard = ({ user, styles }) => {
       </View>
       <Text style={styles.userName}>{user.name}</Text>
       <Text style={styles.joinDate}>Joined {joinDateFormatted}</Text>
-      <TouchableOpacity style={styles.editButton}>
+      <TouchableOpacity
+        style={styles.editButton}
+        onPress={() => setModalVisible(true)}
+      >
         <Text style={styles.editButtonText}>Edit Profile</Text>
       </TouchableOpacity>
+      <EditProfileModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        user={user}
+      />
     </View>
   );
 };

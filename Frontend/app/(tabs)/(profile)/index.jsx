@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "../../contexts/UserContext";
 import {
   Platform,
@@ -11,17 +11,19 @@ import {
   View,
   ScrollView,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import ProfileCard from "../../components/profile-component/ProfileCard";
 import BikesTab from "../../components/profile-component/BikesTab";
 import ProductsTab from "../../components/profile-component/ProductsTab";
-import { useEffect } from "react";
 import { API_BASE_URL } from "../../config";
 import DocumentsTab from "../../components/profile-component/DocumentsTab";
 import SettingsTab from "../../components/profile-component/SettingsTab";
+import { useRouter } from "expo-router";
 
 export default function ProfileView() {
   const [activeTab, setActiveTab] = useState("bikes");
+  const router = useRouter();
 
   const { user, updateUser, selectBike } = useUser();
   console.log("User Context:", user.selectedBikeId);
@@ -33,7 +35,6 @@ export default function ProfileView() {
   const handleSelectBike = (bike) => {
     if (!bike || !bike._id) return;
     console.log("Set as Primary clicked for bike:", bike);
-    // Use selectBike from context for proper state update
     selectBike(bike._id);
     // TODO: Optionally, make an API call to persist this change in backend
   };
@@ -113,6 +114,21 @@ export default function ProfileView() {
     }));
   };
 
+  // Edit bike info (for demo, just allow editing name)
+  const handleEditBike = (bikeId, newName) => {
+    const updatedBikes = bikes.map((b) =>
+      b._id === bikeId ? { ...b, name: newName } : b
+    );
+    updateUser({ ...user, bikes: updatedBikes });
+  };
+
+  // Delete bike
+  const handleDeleteBike = (bikeId) => {
+    const updatedBikes = bikes.filter((b) => b._id !== bikeId);
+    updateUser({ ...user, bikes: updatedBikes });
+  };
+
+  // Add Edit Profile button above the profile card
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -122,7 +138,11 @@ export default function ProfileView() {
 
       <Text style={styles.title}>Your Profile</Text>
 
-      <ProfileCard user={user} styles={styles} />
+      <ProfileCard
+        user={user}
+        styles={styles}
+        onEditProfile={() => router.push("/(tabs)/(profile)/editProfile")}
+      />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -245,11 +265,6 @@ export default function ProfileView() {
     </SafeAreaView>
   );
 }
-
-// Hide the default navigation header/title
-export const options = {
-  headerShown: false,
-};
 
 const styles = StyleSheet.create({
   container: {

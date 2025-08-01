@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: "100%",
-    height: 260,
+    height: 400,
     backgroundColor: "#e5e7eb",
     justifyContent: "center",
     alignItems: "center",
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   },
   imageModern: {
     width: "100%",
-    height: 260,
+    height: 400,
     resizeMode: "cover",
   },
   conditionBadge: {

@@ -109,9 +109,9 @@ const getAllUsers = async (req, res) => {
 
 // Update Password without JWT or middleware
 const updatePassword = async (req, res) => {
-  const { email, currentPassword, newPassword } = req.body;
+  const { id, currentPassword, newPassword } = req.body;
   try {
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findById(id).select("+password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -121,6 +121,43 @@ const updatePassword = async (req, res) => {
     }
     user.password = newPassword;
     await user.save();
+
+    // Get client IP address
+    const clientIP = req.ip || req.connection.remoteAddress;
+
+    // Send password change notification email
+    await sendMail({
+      to: user.email,
+      subject: "Password Changed - AutoPulse Security Alert",
+      text: `Dear ${
+        user.name
+      },\n\nYour AutoPulse account password was changed.\n\nChange Details:\nTime: ${new Date().toLocaleString()}\nIP Address: ${clientIP}\n\nIf you did not make this change, please:\n1. Change your password immediately\n2. Contact support\n\nStay secure,\nAutoPulse Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+          <h2 style="color: #4F46E5; text-align: center;">AutoPulse Security Alert</h2>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 16px; color: #1f2937;">Dear ${user.name},</p>
+            <p style="font-size: 16px; color: #1f2937;">Your account password was recently changed.</p>
+          </div>
+          <div style="margin: 20px 0;">
+            <h3 style="color: #374151;">Change Details:</h3>
+            <p style="color: #4b5563; margin: 5px 0;">Time: ${new Date().toLocaleString()}</p>
+            <p style="color: #4b5563; margin: 5px 0;">IP Address: ${clientIP}</p>
+          </div>
+          <div style="background-color: #fee2e2; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #991b1b; font-weight: bold;">If you did not make this change:</p>
+            <ol style="color: #991b1b;">
+              <li>Change your password immediately</li>
+              <li>Contact our support team</li>
+            </ol>
+          </div>
+          <div style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px;">
+            <p>Stay secure,<br>AutoPulse Team</p>
+          </div>
+        </div>
+      `,
+    });
+
     res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
     console.error("Update password error:", error);

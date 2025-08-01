@@ -55,7 +55,63 @@ const getAllBikes = async (req, res) => {
   }
 };
 
+// Update bike information
+const updateBike = async (req, res) => {
+  try {
+    const { id } = req.body;
+    const updateData = {
+      brand: req.body.brand,
+      model: req.body.model,
+      year: req.body.year,
+      registrationNumber: req.body.registrationNumber,
+    };
+
+    const updatedBike = await Bike.findByIdAndUpdate(id, updateData, {
+      new: true,
+    }).populate("user", "name email");
+
+    if (!updatedBike) {
+      return res.status(404).json({ message: "Bike not found" });
+    }
+
+    res.status(200).json({
+      message: "Bike updated successfully",
+      bike: updatedBike,
+    });
+  } catch (error) {
+    console.error("Update bike error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete bike
+const deleteBike = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    const bike = await Bike.findById(id);
+    if (!bike) {
+      return res.status(404).json({ message: "Bike not found" });
+    }
+
+    // Remove bike reference from user's bikes array
+    await User.findByIdAndUpdate(bike.user, { $pull: { bikes: id } });
+
+    // Delete the bike
+    await Bike.findByIdAndDelete(id);
+
+    res.status(200).json({
+      message: "Bike deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete bike error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   registerBike,
   getAllBikes,
+  updateBike,
+  deleteBike,
 };
