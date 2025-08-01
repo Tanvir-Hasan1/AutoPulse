@@ -15,10 +15,59 @@ const registerUser = async (req, res) => {
     const newUser = new User({ name, email, password });
     await newUser.save();
 
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user: newUser });
+    // Send welcome email
+    await sendMail({
+      to: email,
+      subject: "Welcome to AutoPulse! 🏍️",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+          <h2 style="color: #4F46E5; text-align: center;">Welcome to AutoPulse! 🏍️</h2>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 16px; color: #1f2937;">Dear ${name},</p>
+            <p style="font-size: 16px; color: #1f2937;">Welcome to the AutoPulse family! We're thrilled to have you join our community of motorcycle enthusiasts.</p>
+          </div>
+
+          <div style="margin: 20px 0;">
+            <h3 style="color: #374151;">Get Started with AutoPulse:</h3>
+            <ul style="color: #4b5563;">
+              <li>Add your bikes to your garage</li>
+              <li>Track maintenance schedules</li>
+              <li>Store important documents</li>
+              <li>Connect with other riders</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #e0f2fe; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #0369a1; font-weight: bold;">Quick Tips:</p>
+            <ul style="color: #0369a1;">
+              <li>Keep your bike documents up to date</li>
+              <li>Set reminders for maintenance</li>
+              <li>Save emergency contacts</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #374151;">
+              Need help getting started? Check out our quick start guide or contact our support team.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #6b7280; font-size: 14px;">Ride safe and enjoy the journey!</p>
+            <p style="color: #6b7280; font-size: 14px;">The AutoPulse Team 🏍️</p>
+          </div>
+        </div>
+      `,
+      text: `Welcome to AutoPulse! 🏍️\n\nDear ${name},\n\nWe're thrilled to have you join our community. Get started by adding your bikes, tracking maintenance, and storing important documents.\n\nRide safe!\nThe AutoPulse Team`,
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: newUser,
+    });
   } catch (error) {
+    console.error("Registration error:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };

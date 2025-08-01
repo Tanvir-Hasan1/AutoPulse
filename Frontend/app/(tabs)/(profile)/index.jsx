@@ -66,6 +66,32 @@ export default function ProfileView() {
   const [products, setProducts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
+  // State to track bike changes
+  const [bikeChangeCounter, setBikeChangeCounter] = useState(0);
+
+  // Handler for bike changes (update/delete)
+  const handleBikeChange = useCallback(
+    async (updatedBike = null) => {
+      setRefreshing(true);
+      try {
+        if (updatedBike) {
+          // Immediately update the local state
+          updateUser((prev) => ({
+            ...prev,
+            bikes: prev.bikes.map((bike) =>
+              bike._id === updatedBike._id ? updatedBike : bike
+            ),
+          }));
+        }
+        // Then fetch the latest data
+        await fetchBikes();
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [fetchBikes, updateUser]
+  );
+
   // Initial bikes fetch
   useEffect(() => {
     let mounted = true;
@@ -160,20 +186,6 @@ export default function ProfileView() {
       ...prev,
       [key]: !prev[key],
     }));
-  };
-
-  // Edit bike info (for demo, just allow editing name)
-  const handleEditBike = (bikeId, newName) => {
-    const updatedBikes = bikes.map((b) =>
-      b._id === bikeId ? { ...b, name: newName } : b
-    );
-    updateUser((prev) => ({ ...prev, bikes: updatedBikes }));
-  };
-
-  // Delete bike
-  const handleDeleteBike = (bikeId) => {
-    const updatedBikes = bikes.filter((b) => b._id !== bikeId);
-    updateUser((prev) => ({ ...prev, bikes: updatedBikes }));
   };
 
   // Add Edit Profile button above the profile card
@@ -271,38 +283,29 @@ export default function ProfileView() {
       </View>
 
       <View style={styles.contentContainer}>
-        {activeTab === "bikes" && (
-          <ScrollView
-            style={{ flex: 1 }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={async () => {
-                  setRefreshing(true);
-                  await fetchBikes();
-                  setRefreshing(false);
-                }}
-              />
-            }
-          >
+        <ScrollView
+          style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true);
+                await Promise.all([fetchBikes(), fetchProducts()]);
+                setRefreshing(false);
+              }}
+            />
+          }
+        >
+          {activeTab === "bikes" && (
             <BikesTab
               bikes={bikes}
               styles={styles}
               selectedBikeId={selectedBikeId}
               onSelectBike={handleSelectBike}
+              onBikeChange={handleBikeChange}
             />
-          </ScrollView>
-        )}
-        {activeTab === "products" && (
-          <ScrollView
-            style={{ flex: 1 }}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={handleRefresh}
-              />
-            }
-          >
+          )}
+          {activeTab === "products" && (
             <ProductsTab
               products={products}
               styles={styles}
@@ -311,18 +314,18 @@ export default function ProfileView() {
               }
               onProductDeleted={handleRefresh}
             />
-          </ScrollView>
-        )}
-        {activeTab === "documents" && (
-          <DocumentsTab documents={documents} styles={styles} />
-        )}
-        {activeTab === "settings" && (
-          <SettingsTab
-            notificationSettings={notificationSettings}
-            toggleNotification={toggleNotification}
-            styles={styles}
-          />
-        )}
+          )}
+          {activeTab === "documents" && (
+            <DocumentsTab documents={documents} styles={styles} />
+          )}
+          {activeTab === "settings" && (
+            <SettingsTab
+              notificationSettings={notificationSettings}
+              toggleNotification={toggleNotification}
+              styles={styles}
+            />
+          )}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

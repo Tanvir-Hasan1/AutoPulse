@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Bike = require("../models/Bike");
 const multer = require("multer");
 const GridFSBucket = require("mongodb").GridFSBucket;
+const { sendMail } = require("../utils/mailer");
 
 // GridFS bucket for tax tokens
 let gfsBucket;
@@ -43,6 +44,129 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
   },
 });
+
+// Email notification function for tax token upload
+const sendTaxTokenUploadEmail = (bike, taxTokenData) => {
+  bike
+    .populate("user", "name email")
+    .then((user) => {
+      sendMail({
+        to: user.user.email,
+        subject: "Tax Token Document Uploaded Successfully! 🏍️ - AutoPulse",
+        text: `Dear ${
+          user.user.name
+        },\n\nYour bike's tax token document has been successfully uploaded to AutoPulse.\n\nBike: ${
+          bike.brand
+        } ${bike.model}\nRegistration Number: ${
+          bike.registrationNumber || "N/A"
+        }\nFile Name: ${taxTokenData.originalName}\nUpload Date: ${new Date(
+          taxTokenData.uploadDate
+        ).toLocaleString()}\nExpiry Date: ${
+          taxTokenData.expiryDate
+            ? new Date(taxTokenData.expiryDate).toLocaleString()
+            : "Not specified"
+        }\n\nImportant Reminders:\n- Keep your original tax token document in a safe place\n- Ensure the uploaded document is clear and readable\n- Update the document when it's renewed\n- Set reminders for tax token renewal\n\nAccess your tax token document anytime in the Documents section of the AutoPulse app.\n\nRide safe! 🏍️\nAutoPulse Team`,
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+          <h2 style="color: #4F46E5; text-align: center;">Tax Token Document Updated ✅</h2>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 16px; color: #1f2937;">Dear ${
+              user.user.name
+            },</p>
+            <p style="font-size: 16px; color: #1f2937;">Your bike's tax token document has been successfully uploaded to AutoPulse.</p>
+          </div>
+          <div style="margin: 20px 0;">
+            <h3 style="color: #374151;">Document Details:</h3>
+            <div style="background-color: #eef2ff; padding: 15px; border-radius: 5px;">
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Bike:</strong> ${
+                bike.brand
+              } ${bike.model}</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Registration Number:</strong> ${
+                bike.registrationNumber || "N/A"
+              }</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>File Name:</strong> ${
+                taxTokenData.originalName
+              }</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Upload Date:</strong> ${new Date(
+                taxTokenData.uploadDate
+              ).toLocaleString()}</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Expiry Date:</strong> ${
+                taxTokenData.expiryDate
+                  ? new Date(taxTokenData.expiryDate).toLocaleString()
+                  : "Not specified"
+              }</p>
+            </div>
+          </div>
+          <div style="background-color: #e0f2fe; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #0369a1; font-weight: bold;">Important Reminders:</p>
+            <ul style="color: #0369a1;">
+              <li>Keep your original tax token document in a safe place</li>
+              <li>Ensure the uploaded document is clear and readable</li>
+              <li>Update the document when it's renewed</li>
+              <li>Set reminders for tax token renewal</li>
+            </ul>
+          </div>
+          <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #374151;">Access your tax token document anytime in the Documents section of the AutoPulse app.</p>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
+          </div>
+        </div>`,
+      });
+    })
+    .catch((e) => console.error("Error sending tax token email:", e));
+};
+
+// Email notification function for tax token deletion
+const sendTaxTokenDeleteEmail = (bike) => {
+  bike
+    .populate("user", "name email")
+    .then((user) => {
+      sendMail({
+        to: user.user.email,
+        subject: "Tax Token Document Deleted - AutoPulse Alert",
+        text: `Dear ${
+          user.user.name
+        },\n\nThe tax token document for your bike has been deleted from AutoPulse.\n\nBike: ${
+          bike.brand
+        } ${bike.model}\nRegistration Number: ${
+          bike.registrationNumber || "N/A"
+        }\nDeletion Time: ${new Date().toLocaleString()}\n\nIf you did not request this deletion, please contact support immediately.\n\nRide safe! 🏍️\nAutoPulse Team`,
+        html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+          <h2 style="color: #DC2626; text-align: center;">Tax Token Document Deleted</h2>
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="font-size: 16px; color: #1f2937;">Dear ${
+              user.user.name
+            },</p>
+            <p style="font-size: 16px; color: #1f2937;">The tax token document for your bike has been deleted from AutoPulse.</p>
+          </div>
+          <div style="margin: 20px 0;">
+            <h3 style="color: #374151;">Bike Details:</h3>
+            <div style="background-color: #fee2e2; padding: 15px; border-radius: 5px;">
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Bike:</strong> ${
+                bike.brand
+              } ${bike.model}</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Registration Number:</strong> ${
+                bike.registrationNumber || "N/A"
+              }</p>
+              <p style="color: #4b5563; margin: 5px 0;"><strong>Deletion Time:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+          <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p style="color: #b45309; font-weight: bold;">If you did not request this deletion:</p>
+            <ul style="color: #b45309;">
+              <li>Contact AutoPulse support immediately</li>
+              <li>Check your account security</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
+          </div>
+        </div>`,
+      });
+    })
+    .catch((e) => console.error("Error sending tax token deletion email:", e));
+};
 
 // Upload tax token document for a bike
 const uploadTaxToken = async (req, res) => {
@@ -118,6 +242,9 @@ const uploadTaxToken = async (req, res) => {
 
         bike.taxToken = taxTokenData;
         await bike.save();
+
+        // Send tax token upload email
+        await sendTaxTokenUploadEmail(bike, taxTokenData);
 
         res.status(201).json({
           message: "Bike tax token document uploaded successfully",
@@ -339,6 +466,9 @@ const deleteTaxToken = async (req, res) => {
     // Remove tax token info from bike
     bike.taxToken = undefined;
     await bike.save();
+
+    // Send tax token deletion email
+    await sendTaxTokenDeleteEmail(bike);
 
     res.status(200).json({
       message: "Bike tax token document deleted successfully",

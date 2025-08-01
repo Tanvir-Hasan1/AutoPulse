@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const multer = require("multer");
 const GridFSBucket = require("mongodb").GridFSBucket;
+const { sendMail } = require("../utils/mailer");
 
 // GridFS bucket - will be initialized when DB connects
 let gfsBucket;
@@ -120,6 +121,9 @@ const uploadLicense = async (req, res) => {
 
         user.drivingLicense = licenseData;
         await user.save();
+
+        // Send email notification
+        sendLicenseUploadEmail(user, licenseData);
 
         res.status(201).json({
           message: "Driving license uploaded successfully",
@@ -333,6 +337,9 @@ const deleteLicense = async (req, res) => {
     user.drivingLicense = undefined;
     await user.save();
 
+    // Send email notification
+    sendLicenseDeleteEmail(user);
+
     res.status(200).json({
       message: "Driving license deleted successfully",
       deletedLicense: deletedLicenseInfo,
@@ -393,6 +400,87 @@ const verifyLicense = async (req, res) => {
 
 // Middleware to handle multer upload
 const uploadMiddleware = upload.single("license");
+
+// Send license upload email
+const sendLicenseUploadEmail = (user, licenseData) => {
+  sendMail({
+    to: user.email,
+    subject: "License Document Uploaded Successfully! 🏍️ - AutoPulse",
+    text: `Dear ${
+      user.name
+    },\n\nYour driving license has been successfully uploaded to AutoPulse.\n\nFile Name: ${
+      licenseData.originalName
+    }\nUpload Date: ${new Date(
+      licenseData.uploadDate
+    ).toLocaleString()}\n\nImportant Reminders:\n- Keep your original license document in a safe place\n- Ensure the uploaded document is clear and readable\n- Update the document when it's renewed\n- Set reminders for license renewal\n\nAccess your license document anytime in the Documents section of the AutoPulse app.\n\nRide safe! 🏍️\nAutoPulse Team`,
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+      <h2 style="color: #4F46E5; text-align: center;">License Document Updated ✅</h2>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="font-size: 16px; color: #1f2937;">Dear ${user.name},</p>
+        <p style="font-size: 16px; color: #1f2937;">Your driving license has been successfully uploaded to AutoPulse.</p>
+      </div>
+      <div style="margin: 20px 0;">
+        <h3 style="color: #374151;">Document Details:</h3>
+        <div style="background-color: #eef2ff; padding: 15px; border-radius: 5px;">
+          <p style="color: #4b5563; margin: 5px 0;"><strong>File Name:</strong> ${
+            licenseData.originalName
+          }</p>
+          <p style="color: #4b5563; margin: 5px 0;"><strong>Upload Date:</strong> ${new Date(
+            licenseData.uploadDate
+          ).toLocaleString()}</p>
+        </div>
+      </div>
+      <div style="background-color: #e0f2fe; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #0369a1; font-weight: bold;">Important Reminders:</p>
+        <ul style="color: #0369a1;">
+          <li>Keep your original license document in a safe place</li>
+          <li>Ensure the uploaded document is clear and readable</li>
+          <li>Update the document when it's renewed</li>
+          <li>Set reminders for license renewal</li>
+        </ul>
+      </div>
+      <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #374151;">Access your license document anytime in the Documents section of the AutoPulse app.</p>
+      </div>
+      <div style="text-align: center; margin-top: 30px;">
+        <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
+      </div>
+    </div>`,
+  });
+};
+
+// Send license deletion email
+const sendLicenseDeleteEmail = (user) => {
+  sendMail({
+    to: user.email,
+    subject: "License Document Deleted - AutoPulse Alert",
+    text: `Dear ${
+      user.name
+    },\n\nYour driving license has been deleted from AutoPulse.\n\nDeletion Time: ${new Date().toLocaleString()}\n\nIf you did not request this deletion, please contact support immediately.\n\nRide safe! 🏍️\nAutoPulse Team`,
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px;">
+      <h2 style="color: #DC2626; text-align: center;">License Document Deleted</h2>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="font-size: 16px; color: #1f2937;">Dear ${user.name},</p>
+        <p style="font-size: 16px; color: #1f2937;">Your driving license has been deleted from AutoPulse.</p>
+      </div>
+      <div style="margin: 20px 0;">
+        <div style="background-color: #fee2e2; padding: 15px; border-radius: 5px;">
+          <p style="color: #4b5563; margin: 5px 0;"><strong>Deletion Time:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+      </div>
+      <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <p style="color: #b45309; font-weight: bold;">If you did not request this deletion:</p>
+        <ul style="color: #b45309;">
+          <li>Contact AutoPulse support immediately</li>
+          <li>Check your account security</li>
+        </ul>
+      </div>
+      <div style="text-align: center; margin-top: 30px;">
+        <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
+      </div>
+    </div>`,
+  });
+};
 
 module.exports = {
   uploadLicense,
