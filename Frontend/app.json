@@ -1,22 +1,26 @@
 {
   "expo": {
-    "name": "demoApp",
-    "slug": "demoApp",
+    "name": "AutoPulse",
+    "slug": "autopulse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "demoapp",
+    "icon": "./assets/images/Lucid_Origin_Create_a_modern_dynamic_logo_for_AutoPulse_a_moto_0.png",
+    "scheme": "autopulse",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.autopulse.app",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.autopulse.app",
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
