@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useUser } from "../../contexts/UserContext";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 import { useState, useEffect } from "react";
 import { WebView } from "react-native-webview";
 import * as DocumentPicker from "expo-document-picker";

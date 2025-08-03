@@ -26,12 +26,21 @@ function findFiles(dir) {
 // Function to fix imports in a file
 function fixImports(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
-  const relativePath = path.relative(path.dirname(filePath), searchDir);
+  let newContent = content;
 
-  // Fix the import statement
-  const newContent = content.replace(
+  // Calculate relative path to the root config.js
+  const relativePath = path
+    .relative(path.dirname(filePath), __dirname)
+    .replace(/\\/g, "/");
+
+  // Fix the import statement for both ../config and ../../config patterns
+  newContent = newContent.replace(
     /from ['"]\.\.\/config['"]/g,
-    `from '${relativePath.replace(/\\/g, "/")}/config'`
+    `from '${relativePath}/config'`
+  );
+  newContent = newContent.replace(
+    /from ['"]\.\.\/\.\.\/config['"]/g,
+    `from '${relativePath}/config'`
   );
 
   if (content !== newContent) {

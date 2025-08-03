@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../../config';
 import { useUser } from "../contexts/UserContext";
 
 export default function LoginPage() {

@@ -12,7 +12,7 @@ import {
   RefreshControl, // <-- import this
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 
 const BikesTab = ({
   bikes,

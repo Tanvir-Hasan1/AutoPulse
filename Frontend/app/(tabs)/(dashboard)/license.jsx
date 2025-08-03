@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 import { useUser } from "../../contexts/UserContext";
 
 export default function License() {

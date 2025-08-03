@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 import { useUser } from "../../contexts/UserContext";
 import * as ImagePicker from "expo-image-picker";
 

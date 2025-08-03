@@ -18,7 +18,7 @@ import ProductCard from "../../components/marketplace-component/ProductCard";
 import { useRouter } from "expo-router";
 
 import MarketplaceFilterModal from "../../components/marketplace-component/MarketplaceFilterModal";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 
 const categoryOptions = [
   { label: "All", value: "all" },

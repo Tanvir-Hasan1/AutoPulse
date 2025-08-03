@@ -14,7 +14,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from '../config'; // e.g. http://192.168.x.x:5000/api
+import { API_BASE_URL } from '../../config'; // e.g. http://192.168.x.x:5000/api
 import { useUser } from "../contexts/UserContext";
 import CalendarModal from "./CalendarModal"; // <-- Make sure you have this import
 import Toast from "react-native-toast-message";

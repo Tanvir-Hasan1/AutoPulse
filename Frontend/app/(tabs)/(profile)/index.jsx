@@ -16,7 +16,7 @@ import {
 import ProfileCard from "../../components/profile-component/ProfileCard";
 import BikesTab from "../../components/profile-component/BikesTab";
 import ProductsTab from "../../components/profile-component/ProductsTab";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 import DocumentsTab from "../../components/profile-component/DocumentsTab";
 import SettingsTab from "../../components/profile-component/SettingsTab";
 import { useRouter } from "expo-router";

@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../../config';
 
 function ResetPasswordPage() {
   const navigation = useNavigation();

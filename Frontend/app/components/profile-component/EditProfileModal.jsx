@@ -10,7 +10,7 @@ import {
   Alert, // <-- import Alert
 } from "react-native";
 import { useUser } from "../../contexts/UserContext";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 
 export default function EditProfileModal({ visible, onClose, user }) {
   const { updateUser } = useUser();

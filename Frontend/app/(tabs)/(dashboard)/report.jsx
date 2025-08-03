@@ -11,7 +11,7 @@ import {
 import { useUser } from "../../contexts/UserContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LineChart, BarChart, PieChart } from "react-native-chart-kit";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 
 const chartConfig = {
   backgroundGradientFrom: "#fff",

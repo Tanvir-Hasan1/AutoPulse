@@ -9,7 +9,7 @@ import {
   ToastAndroid,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from '../../../config';
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 
