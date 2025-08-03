@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL } from '../config';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

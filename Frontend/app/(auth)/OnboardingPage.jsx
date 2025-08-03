@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import * as Progress from "react-native-progress";
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL } from '../config';
 import { useUser } from "../contexts/UserContext";
 
 const BIKE_BRANDS = [
