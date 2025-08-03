@@ -4,7 +4,7 @@
     "slug": "autopulse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Lucid_Origin_Create_a_modern_dynamic_logo_for_AutoPulse_a_moto_0.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "autopulse",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -41,6 +41,18 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "00fe46b6-b36b-4ca4-936d-b98bdbb9ef76"
+      }
+    },
+    "cli": {
+      "appVersionSource": "remote",
+      "version": {
+        "scheme": "semver"
+      }
     }
   }
 }
