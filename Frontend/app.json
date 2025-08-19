@@ -7,11 +7,14 @@
     "icon": "./assets/images/icon.png",
     "scheme": "autopulse",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.autopulse.app",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select photos."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.autopulse.app",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": ["READ_EXTERNAL_STORAGE"]
     },
     "web": {
       "bundler": "metro",

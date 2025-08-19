@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -12,17 +12,22 @@ import {
   RefreshControl, // <-- import this
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { API_BASE_URL } from '../../../config';
+import { API_BASE_URL } from "../../config";
 
 const BikesTab = ({
   bikes,
   styles,
   selectedBikeId,
   onSelectBike,
-  onBikeUpdated,
-  onBikeDeleted,
+  onBikeChange,
 }) => {
   const router = useRouter();
+  const [localBikes, setLocalBikes] = useState(bikes);
+
+  // Keep local bikes in sync with props
+  useEffect(() => {
+    setLocalBikes(bikes);
+  }, [bikes]);
   const [editingBike, setEditingBike] = useState(null);
   const [editBrand, setEditBrand] = useState("");
   const [editModel, setEditModel] = useState("");
@@ -31,22 +36,12 @@ const BikesTab = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [loadingDeleteId, setLoadingDeleteId] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  // Local bikes state for instant frontend update
-  const [localBikes, setLocalBikes] = useState(bikes);
-
-  // Sync localBikes with bikes prop
-  useEffect(() => {
-    setLocalBikes(bikes);
-  }, [bikes]);
-
   // Redirect to onboarding if no bikes are present
   useEffect(() => {
-    if (localBikes.length === 0) {
+    if (bikes.length === 0) {
       router.replace("/(auth)/OnboardingPage");
     }
-  }, [localBikes]);
+  }, [bikes]);
 
   // Open modal and set bike info
   const openEditModal = (bike) => {
@@ -75,15 +70,19 @@ const BikesTab = ({
       });
       const data = await response.json();
       setLoadingUpdate(false);
+
       if (response.ok && data.bike) {
-        Alert.alert("Success", "Bike updated successfully!");
+        // First update the local state optimistically
+        const updatedBike = data.bike;
+
+        // Immediately pass the updated bike data to parent
+        if (onBikeChange) {
+          await onBikeChange(updatedBike);
+        }
+
         setModalVisible(false);
         setEditingBike(null);
-        // Update local bikes state
-        setLocalBikes((prev) =>
-          prev.map((b) => (b._id === data.bike._id ? data.bike : b))
-        );
-        if (onBikeUpdated) await onBikeUpdated(); // <-- refresh bikes from server
+        Alert.alert("Success", "Bike updated successfully!");
       } else {
         Alert.alert("Error", data.message || "Failed to update bike.");
       }
@@ -102,30 +101,27 @@ const BikesTab = ({
         style: "destructive",
         onPress: async () => {
           setLoadingDeleteId(bike._id);
-          // Optimistically remove bike from UI
-          setLocalBikes((prev) => prev.filter((b) => b._id !== bike._id));
           try {
             const response = await fetch(`${API_BASE_URL}/bikes/delete`, {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ id: bike._id }),
             });
-            const data = await response.json();
-            setLoadingDeleteId(null);
+
             if (response.ok) {
-              Alert.alert("Deleted", "Bike deleted successfully!");
-              if (onBikeDeleted) onBikeDeleted();
-              if (onBikeUpdated) await onBikeUpdated(); // <-- refresh bikes from server
+              // Notify parent about bike change with null to indicate deletion
+              if (onBikeChange) {
+                await onBikeChange();
+              }
+              Alert.alert("Success", "Bike deleted successfully!");
             } else {
-              // If failed, restore bike to UI
-              setLocalBikes((prev) => [...prev, bike]);
-              Alert.alert("Error", data.message || "Failed to delete bike.");
+              const data = await response.json();
+              Alert.alert("Error", data.message || "Failed to delete bike");
             }
           } catch (error) {
-            setLoadingDeleteId(null);
-            // If failed, restore bike to UI
-            setLocalBikes((prev) => [...prev, bike]);
             Alert.alert("Error", "Network error. Please try again.");
+          } finally {
+            setLoadingDeleteId(null);
           }
         },
       },
@@ -134,28 +130,11 @@ const BikesTab = ({
 
   const safeBikes = Array.isArray(localBikes) ? localBikes : [];
 
-  // Refresh handler
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      // You can call a parent fetch function or reload bikes here
-      if (typeof onBikeUpdated === "function") {
-        await onBikeUpdated();
-      }
-    } catch (e) {
-      // Optionally show error
-    }
-    setRefreshing(false);
-  };
-
   return (
     <>
       <ScrollView
         style={styles.tabContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       >
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Your Bikes</Text>
@@ -205,7 +184,15 @@ const BikesTab = ({
                     ) : (
                       <TouchableOpacity
                         style={bikeCardStyles.setPrimaryButton}
-                        onPress={() => onSelectBike && onSelectBike(bike)}
+                        onPress={async () => {
+                          if (onSelectBike) {
+                            await onSelectBike(bike);
+                            // Trigger refresh after setting primary bike
+                            if (onBikeChange) {
+                              await onBikeChange();
+                            }
+                          }
+                        }}
                       >
                         <Text style={bikeCardStyles.setPrimaryText}>
                           Set as Primary
@@ -249,12 +236,7 @@ const BikesTab = ({
         )}
         <TouchableOpacity
           style={styles.addButton}
-          onPress={async () => {
-            await router.push("/(auth)/OnboardingPage");
-            if (typeof onBikeUpdated === "function") {
-              await onBikeUpdated(); // Refetch bikes after returning from onboarding
-            }
-          }}
+          onPress={() => router.push("/(auth)/OnboardingPage")}
         >
           <Ionicons name="add" size={20} color="#4F46E5" />
           <Text style={styles.addButtonText}>Add Another Bike</Text>
