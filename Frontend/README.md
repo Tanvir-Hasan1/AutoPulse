@@ -14,8 +14,6 @@ Welcome to the **AutoPulse Frontend** repository! This project is the mobile and
 - [Project Structure](#project-structure)
 - [Usage Guide](#usage-guide)
 - [Contributing](#contributing)
-- [Troubleshooting](#troubleshooting)
-- [Learn More](#learn-more)
 - [License](#license)
 - [Community & Support](#community--support)
 
@@ -131,9 +129,6 @@ We welcome contributions from the community!
 2. Make your changes and commit with clear messages.
 3. Ensure code passes all linting and tests.
 4. Submit a pull request and describe your changes.
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for more details.
-
 
 ## License
 
