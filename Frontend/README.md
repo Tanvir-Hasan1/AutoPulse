@@ -1,50 +1,183 @@
-# Welcome to your Expo app 👋
+# AutoPulse Frontend
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Welcome to the **AutoPulse Frontend** repository! This project is the mobile and web client for AutoPulse, built with Expo and React Native, following modern industry standards and best practices.
 
-## Get started
+---
 
-1. Install dependencies
+## Table of Contents
 
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [Usage Guide](#usage-guide)
+- [Contributing](#contributing)
+- [Troubleshooting](#troubleshooting)
+- [Learn More](#learn-more)
+- [License](#license)
+- [Community & Support](#community--support)
+
+---
+
+## Project Overview
+
+AutoPulse Frontend delivers a robust, scalable, and cross-platform experience for users, leveraging Expo's powerful mobile development tools and React Native's flexibility. The app is designed to work seamlessly with the AutoPulse Backend.
+
+---
+
+## Features
+
+- 🚀 Fast, responsive UI with React Native and Expo
+- 📱 Runs on Android, iOS, and Web browsers
+- 📊 Interactive charts, calendars, and PDF viewer
+- 🗂️ Modular architecture with reusable components
+- 🔐 Secure local storage and data handling
+- 🧩 Easy navigation via Expo Router
+- ⚡ TypeScript for type safety and maintainability
+- 🧹 Code linting and formatting enforced
+
+---
+
+## Tech Stack
+
+- **React Native** (v0.79.2)
+- **Expo** (v53.x)
+- **TypeScript**
+- **Expo Router**
+- **React Navigation**
+- **Various Expo SDKs** (Camera, File System, Image Picker, etc.)
+- **Supporting libraries** (charting, calendars, PDF, toast notifications)
+
+---
+
+## Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Tanvir-Hasan1/AutoPulse.git
+   cd AutoPulse/Frontend
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **(Optional) Set up environment variables**
+   - If your app requires environment variables, create a `.env` file in the root directory.
+   - Refer to documentation or your team for required keys.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Development
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Running the App
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+You can start the project in multiple environments:
 
-## Get a fresh project
+- **Expo Go app** (quickest for testing)
+- **Android emulator**
+- **iOS simulator**
+- **Web browser**
 
-When you're ready, run:
+Start the development server:
+```bash
+npx expo start
+```
+Follow the on-screen instructions to open the app in your preferred environment.
 
+### Other Scripts
+
+- `npm run android` — Launches Android emulator
+- `npm run ios` — Launches iOS simulator
+- `npm run web` — Runs the app in your browser
+- `npm run lint` — Runs linter for code quality
+- `npm run reset-project` — Resets starter code, see below for details
+
+---
+
+## Project Structure
+
+```
+Frontend/
+├── app/                # Main app screens & routes
+├── components/         # Reusable UI components
+├── constants/          # Application constants
+├── assets/             # Static assets (images, fonts)
+├── hooks/              # Custom React hooks
+├── scripts/            # Helper scripts (e.g., reset-project.js)
+├── .expo/              # Expo internals
+├── package.json        # Project manifest
+├── app.json            # Expo configuration
+├── tsconfig.json       # TypeScript configuration
+├── eslint.config.js    # ESLint configuration
+├── README.md           # This file
+└── ...                 # Additional configuration files
+```
+
+---
+
+## Usage Guide
+
+- Start development by editing files in the `app/` directory.
+- Routing is **file-based** using [expo-router](https://docs.expo.dev/router/introduction/).
+- Reusable logic (hooks, constants) is organized for easy access and scalability.
+- Use the scripts to reset or lint your project as needed.
+
+### Resetting the Project
+
+To create a fresh project state (remove starter code):
 ```bash
 npm run reset-project
 ```
+This moves starter code to `app-example/` and provides a blank `app/` directory for new development.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## Contributing
 
-To learn more about developing your project with Expo, look at the following resources:
+We welcome contributions from the community!
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Fork the repo and create your branch from `main`.
+2. Make your changes and commit with clear messages.
+3. Ensure code passes all linting and tests.
+4. Submit a pull request and describe your changes.
 
-## Join the community
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for more details.
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Troubleshooting
+
+- **Expo issues:** Refer to [Expo troubleshooting guide](https://docs.expo.dev/workflow/common-issues/)
+- **Dependency problems:** Try deleting `node_modules` and running `npm install` again.
+- **Platform-specific errors:** Consult the Expo documentation or reach out to the community.
+
+---
+
+## Learn More
+
+- [Expo Documentation](https://docs.expo.dev/)
+- [Expo Guides](https://docs.expo.dev/guides)
+- [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
+- [React Native Docs](https://reactnative.dev/docs/getting-started)
+
+---
+
+## License
+
+_This project currently does not specify a license._
+
+---
+
+## Community & Support
+
+- [Expo GitHub](https://github.com/expo/expo)
+- [Expo Discord](https://chat.expo.dev)
+- For issues, use the [GitHub Issue Tracker](https://github.com/Tanvir-Hasan1/AutoPulse/issues).
+
+---
+
+**Happy coding with AutoPulse Frontend!**
