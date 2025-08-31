@@ -21,7 +21,7 @@ Welcome to the **AutoPulse Frontend** repository! This project is the mobile and
 
 ## Project Overview
 
-AutoPulse is a comprehensive cross-platform mobile application developed using React Native and Expo that helps bike and vehicle owners efficiently manage their vehicles. The app consolidates multiple vehicle-related tasks into a single, user-friendly platform, providing convenience, organization, and real-time tracking.
+AutoPulse is a comprehensive cross-platform mobile application developed using React Native and Expo that helps bike and vehicle owners efficiently manage their vehicles. The app consolidates multiple vehicle-related tasks into a single, user-friendly platform, providing convenience, organization, and real-time tracking. Comprihensive OTP and MAIL service available.
 
 ---
 
