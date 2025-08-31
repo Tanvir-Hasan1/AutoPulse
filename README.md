@@ -58,24 +58,24 @@ npm run dev
 
 AutoPulse/
 ├── Frontend/
-│   ├── assets/                # Images and static assets
-│   ├── components/            # Reusable UI components
-│   ├── context/               # Context API providers
-│   ├── navigation/            # Navigation setup
-│   ├── screens/               # Screen components
-│   ├── services/              # API calls and business logic
-│   ├── App.js                 # App entry point
-│   └── package.json           # Project dependencies
+│ ├── assets/ # Images and other static assets
+│ ├── components/ # Reusable UI components
+│ ├── context/ # Context API providers for state management
+│ ├── navigation/ # App navigation setup
+│ ├── screens/ # Screen components for different pages
+│ ├── services/ # API calls and business logic
+│ ├── App.js # Entry point of the React Native app
+│ └── package.json # Frontend dependencies
 │
 ├── Backend/
-│   ├── config/               # Configuration files
-│   ├── controllers/          # Request handlers (documents, mail)
-│   ├── middlewares/          # Auth and validation middleware
-│   ├── models/               # Mongoose schemas
-│   ├── routes/               # API routes
-│   ├── utils/                # Utilities (password reset, profile updates)
-│   ├── swagger.js            # Swagger documentation config
-│   ├── server.js             # Backend entry point
-│   └── package.json          # Backend dependencies
-
+│ ├── config/ # Configuration files for frontend/backend integration
+│ ├── controllers/ # Request handlers (documents, email, etc.)
+│ ├── middlewares/ # Middleware for authentication and validation
+│ ├── models/ # Mongoose schemas (users, vehicles, marketplace)
+│ ├── routes/ # API route definitions
+│ ├── utils/ # Utility functions (password reset, profile updates)
+│ ├── swagger.js # Swagger API documentation setup
+│ ├── server.js # Backend entry point
+│ ├── package.json # Backend dependencies
+│ └── package-lock.json # Lock file for backend dependencies
 
