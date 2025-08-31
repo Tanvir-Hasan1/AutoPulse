@@ -23,20 +23,20 @@ Welcome to the **AutoPulse Frontend** repository! This project is the mobile and
 
 ## Project Overview
 
-AutoPulse Frontend delivers a robust, scalable, and cross-platform experience for users, leveraging Expo's powerful mobile development tools and React Native's flexibility. The app is designed to work seamlessly with the AutoPulse Backend.
+AutoPulse is a comprehensive cross-platform mobile application developed using React Native and Expo that helps bike and vehicle owners efficiently manage their vehicles. The app consolidates multiple vehicle-related tasks into a single, user-friendly platform, providing convenience, organization, and real-time tracking.
 
 ---
 
 ## Features
 
-- 🚀 Fast, responsive UI with React Native and Expo
-- 📱 Runs on Android, iOS, and Web browsers
-- 📊 Interactive charts, calendars, and PDF viewer
-- 🗂️ Modular architecture with reusable components
-- 🔐 Secure local storage and data handling
-- 🧩 Easy navigation via Expo Router
-- ⚡ TypeScript for type safety and maintainability
-- 🧹 Code linting and formatting enforced
+🚀 Fast, responsive UI with React Native and Expo
+📱 Runs on Android and iOS devices
+🗂️ Vehicle Documentation Management – store and organize registration, insurance, and other important documents
+⛽ Fuel Consumption Tracking – log fuel usage and monitor trends
+🛣️ Mileage Tracking – track odometer readings and calculate distances for trips and maintenance planning
+🛒 Marketplace for Vehicle Parts – browse, discover, and list parts for sale
+🧩 Easy navigation using Context API and intuitive screens
+⚡ Clean and maintainable codebase using React Native best practices
 
 ---
 
@@ -64,10 +64,6 @@ AutoPulse Frontend delivers a robust, scalable, and cross-platform experience fo
    ```bash
    npm install
    ```
-
-3. **(Optional) Set up environment variables**
-   - If your app requires environment variables, create a `.env` file in the root directory.
-   - Refer to documentation or your team for required keys.
 
 ---
 
@@ -126,15 +122,6 @@ Frontend/
 - Reusable logic (hooks, constants) is organized for easy access and scalability.
 - Use the scripts to reset or lint your project as needed.
 
-### Resetting the Project
-
-To create a fresh project state (remove starter code):
-```bash
-npm run reset-project
-```
-This moves starter code to `app-example/` and provides a blank `app/` directory for new development.
-
----
 
 ## Contributing
 
@@ -147,37 +134,9 @@ We welcome contributions from the community!
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for more details.
 
----
-
-## Troubleshooting
-
-- **Expo issues:** Refer to [Expo troubleshooting guide](https://docs.expo.dev/workflow/common-issues/)
-- **Dependency problems:** Try deleting `node_modules` and running `npm install` again.
-- **Platform-specific errors:** Consult the Expo documentation or reach out to the community.
-
----
-
-## Learn More
-
-- [Expo Documentation](https://docs.expo.dev/)
-- [Expo Guides](https://docs.expo.dev/guides)
-- [Learn Expo Tutorial](https://docs.expo.dev/tutorial/introduction/)
-- [React Native Docs](https://reactnative.dev/docs/getting-started)
-
----
 
 ## License
 
 _This project currently does not specify a license._
-
----
-
-## Community & Support
-
-- [Expo GitHub](https://github.com/expo/expo)
-- [Expo Discord](https://chat.expo.dev)
-- For issues, use the [GitHub Issue Tracker](https://github.com/Tanvir-Hasan1/AutoPulse/issues).
-
----
 
 **Happy coding with AutoPulse Frontend!**
