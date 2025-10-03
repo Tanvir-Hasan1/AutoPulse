@@ -1,8 +1,8 @@
-import { View, Text, TouchableOpacity, Switch, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useUser } from "../../contexts/UserContext";
 import { router } from "expo-router";
+import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useUser } from "../../_contexts/UserContext";
 
 const SettingsTab = ({ notificationSettings, toggleNotification, styles }) => {
   const navigation = useNavigation();

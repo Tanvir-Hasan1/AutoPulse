@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from "react";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import * as ImagePicker from "expo-image-picker";
+import { useEffect, useState } from "react";
 import {
-  View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Platform,
-  Image,
-  KeyboardAvoidingView,
-  ScrollView,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../../contexts/UserContext";
-import * as ImagePicker from "expo-image-picker";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 
 const categories = [
   { label: "Accessories", value: "accessories" },

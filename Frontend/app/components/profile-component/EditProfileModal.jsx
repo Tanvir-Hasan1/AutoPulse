@@ -1,16 +1,16 @@
-import React, { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
-  View,
+  Alert,
+  Animated,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Animated,
-  Alert, // <-- import Alert
+  View,
 } from "react-native";
-import { useUser } from "../../contexts/UserContext";
-import { API_BASE_URL } from "../../config";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 
 export default function EditProfileModal({ visible, onClose, user }) {
   const { updateUser } = useUser();

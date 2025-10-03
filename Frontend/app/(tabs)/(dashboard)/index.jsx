@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
 import { Link } from "expo-router";
-import { useUser, selectBike } from "../../contexts/UserContext";
+import { useEffect, useState } from "react";
+import { useUser } from "../../_contexts/UserContext";
 
+import { Ionicons } from "@expo/vector-icons";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
   Dimensions,
   Modal,
   RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { API_BASE_URL } from "../../config";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { API_BASE_URL } from "../../../config";
 
 const { width } = Dimensions.get("window");
 

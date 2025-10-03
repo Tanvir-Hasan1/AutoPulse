@@ -3,17 +3,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import { API_BASE_URL } from "../config";
+import { API_BASE_URL } from "../../config";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -113,6 +113,7 @@ export default function ForgotPasswordPage() {
           <TextInput
             style={[styles.input, errors.email && styles.inputError]}
             placeholder="Enter your email"
+            placeholderTextColor="#888"
             value={email}
             onChangeText={(text) => {
               setEmail(text);

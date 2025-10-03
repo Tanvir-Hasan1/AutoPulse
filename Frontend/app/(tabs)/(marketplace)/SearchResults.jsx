@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { View, Text, FlatList, StyleSheet, StatusBar } from "react-native";
+import { FlatList, StatusBar, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProductCard from "../../components/marketplace-component/ProductCard";
 

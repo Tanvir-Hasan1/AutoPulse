@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../config";
-import { useUser } from "../contexts/UserContext";
+import { API_BASE_URL } from "../../config";
+import { useUser } from "../_contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,11 +84,12 @@ export default function LoginPage() {
           <FontAwesome
             name="envelope"
             size={16}
-            color="gray"
+            color="blue"
             style={styles.icon}
           />
           <TextInput
             placeholder="name@example.com"
+            placeholderTextColor={"#888"}
             keyboardType="email-address"
             autoCapitalize="none"
             style={styles.input}
@@ -102,11 +103,12 @@ export default function LoginPage() {
           <FontAwesome
             name="lock"
             size={16}
-            color="gray"
+            color="blue"
             style={[styles.icon, { marginLeft: 4 }]}
           />
           <TextInput
             placeholder="Password"
+            placeholderTextColor={"#888"}
             secureTextEntry={!passwordVisible}
             style={[styles.input, { flex: 1 }]}
             value={password}
@@ -197,6 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     fontSize: 16,
+    color: "#000",
   },
   button: {
     backgroundColor: "#4F46E5",

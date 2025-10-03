@@ -1,16 +1,16 @@
-import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  View,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
+  View,
 } from "react-native";
-import { useUser } from "../../contexts/UserContext";
 import Toast from "react-native-toast-message";
-import { useRouter } from "expo-router";
+import { useUser } from "../../_contexts/UserContext";
 
 export default function EditProfile() {
   const { user, updateUser, selectBike } = useUser();

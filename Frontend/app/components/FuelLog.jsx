@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,10 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../config"; // e.g. http://192.168.x.x:5000/api
-import { useUser } from "../contexts/UserContext";
-import CalendarModal from "./CalendarModal"; // Adjust the import based on your file structure
 import Toast from "react-native-toast-message";
+import { API_BASE_URL } from "../../config"; // e.g. http://192.168.x.x:5000/api
+import { useUser } from "../_contexts/UserContext";
+import CalendarModal from "./CalendarModal"; // Adjust the import based on your file structure
 
 export default function FuelLog({
   fuelLogs,

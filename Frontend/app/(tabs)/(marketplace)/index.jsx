@@ -1,24 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import { useEffect, useState } from "react";
 import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
   FlatList,
   Platform,
-  StatusBar,
   RefreshControl,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import ProductCard from "../../components/marketplace-component/ProductCard";
 import { useRouter } from "expo-router";
+import ProductCard from "../../components/marketplace-component/ProductCard";
 
+import { API_BASE_URL } from "../../../config";
 import MarketplaceFilterModal from "../../components/marketplace-component/MarketplaceFilterModal";
-import { API_BASE_URL } from "../../config";
 
 const categoryOptions = [
   { label: "All", value: "all" },

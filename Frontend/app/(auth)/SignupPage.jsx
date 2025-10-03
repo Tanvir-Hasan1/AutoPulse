@@ -12,8 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../config";
-import { useUser } from "../contexts/UserContext";
+import { API_BASE_URL } from "../../config";
+import { useUser } from "../_contexts/UserContext";
 
 export default function Signup() {
   const router = useRouter();
@@ -111,6 +111,7 @@ export default function Signup() {
           <FontAwesome name="user" size={16} color="gray" style={styles.icon} />
           <TextInput
             placeholder="Full Name"
+            placeholderTextColor={"#888"}
             style={styles.input}
             value={fullName}
             onChangeText={setFullName}
@@ -120,12 +121,13 @@ export default function Signup() {
         <View style={styles.inputWrapper}>
           <FontAwesome
             name="envelope"
-            size={16}
+            size={15}
             color="gray"
             style={styles.icon}
           />
           <TextInput
             placeholder="Email"
+            placeholderTextColor={"#888"}
             keyboardType="email-address"
             autoCapitalize="none"
             style={styles.input}
@@ -138,6 +140,7 @@ export default function Signup() {
           <FontAwesome name="lock" size={16} color="gray" style={styles.icon} />
           <TextInput
             placeholder="Password"
+            placeholderTextColor={"#888"}
             secureTextEntry={!showPassword}
             style={styles.input}
             value={password}
@@ -161,6 +164,7 @@ export default function Signup() {
           <FontAwesome name="lock" size={16} color="gray" style={styles.icon} />
           <TextInput
             placeholder="Confirm Password"
+            placeholderTextColor={"#888"}
             secureTextEntry={!showConfirmPassword}
             style={styles.input}
             value={confirmPassword}

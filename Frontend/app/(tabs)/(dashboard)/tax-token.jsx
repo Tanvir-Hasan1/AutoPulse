@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  View,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Text,
-  Alert,
   ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../../contexts/UserContext";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 
 export default function TaxToken() {
   const { user } = useUser?.() || {};

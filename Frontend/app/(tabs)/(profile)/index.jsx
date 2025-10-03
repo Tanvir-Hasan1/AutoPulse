@@ -1,25 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState, useEffect, useCallback } from "react";
-import { useUser } from "../../contexts/UserContext";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   Platform,
-  SafeAreaView,
+  RefreshControl,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  RefreshControl,
-  TextInput,
 } from "react-native";
-import ProfileCard from "../../components/profile-component/ProfileCard";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 import BikesTab from "../../components/profile-component/BikesTab";
-import ProductsTab from "../../components/profile-component/ProductsTab";
-import { API_BASE_URL } from "../../config";
 import DocumentsTab from "../../components/profile-component/DocumentsTab";
+import ProductsTab from "../../components/profile-component/ProductsTab";
+import ProfileCard from "../../components/profile-component/ProfileCard";
 import SettingsTab from "../../components/profile-component/SettingsTab";
-import { useRouter } from "expo-router";
 
 export default function ProfileView() {
   const [activeTab, setActiveTab] = useState("bikes");

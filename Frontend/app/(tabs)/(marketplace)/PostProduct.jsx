@@ -1,21 +1,21 @@
+import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  View,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Platform,
-  Image,
-  KeyboardAvoidingView,
-  ScrollView,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { useRouter } from "expo-router";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../../contexts/UserContext";
-import * as ImagePicker from "expo-image-picker";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 
 const categories = [
   { label: "Accessories", value: "accessories" },

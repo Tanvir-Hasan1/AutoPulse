@@ -1,17 +1,17 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Alert,
-  ToastAndroid,
-} from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { API_BASE_URL } from "../../config";
 import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  ToastAndroid,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { API_BASE_URL } from "../../../config";
 
 const ProductsTab = ({
   products,

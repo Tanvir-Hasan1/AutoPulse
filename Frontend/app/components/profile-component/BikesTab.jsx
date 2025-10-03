@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useRouter } from "expo-router";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  TextInput,
-  Modal,
-  StyleSheet,
-  RefreshControl, // <-- import this
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { API_BASE_URL } from "../../config";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { API_BASE_URL } from "../../../config";
 
 const BikesTab = ({
   bikes,

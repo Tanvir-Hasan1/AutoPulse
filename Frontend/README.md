@@ -1,137 +1,50 @@
-# AutoPulse Frontend
+# Welcome to your Expo app 👋
 
-Welcome to the **AutoPulse Frontend** repository! This project is the mobile and web client for AutoPulse, built with Expo and React Native, following modern industry standards and best practices.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
----
+## Get started
 
-## Table of Contents
+1. Install dependencies
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Development](#development)
-- [Project Structure](#project-structure)
-- [Usage Guide](#usage-guide)
-- [Contributing](#contributing)
-- [License](#license)
-- [Community & Support](#community--support)
-
----
-
-## Project Overview
-
-AutoPulse is a comprehensive cross-platform mobile application developed using React Native and Expo that helps bike and vehicle owners efficiently manage their vehicles. The app consolidates multiple vehicle-related tasks into a single, user-friendly platform, providing convenience, organization, and real-time tracking. Comprihensive OTP and MAIL service available.
-
----
-
-## Features
-
-🚀 Fast, responsive UI with React Native and Expo
-📱 Runs on Android and iOS devices
-🗂️ Vehicle Documentation Management – store and organize registration, insurance, and other important documents
-⛽ Fuel Consumption Tracking – log fuel usage and monitor trends
-🛣️ Mileage Tracking – track odometer readings and calculate distances for trips and maintenance planning
-🛒 Marketplace for Vehicle Parts – browse, discover, and list parts for sale
-🧩 Easy navigation using Context API and intuitive screens
-⚡ Clean and maintainable codebase using React Native best practices
-
----
-
-## Tech Stack
-
-- **React Native** (v0.79.2)
-- **Expo** (v53.x)
-- **TypeScript**
-- **Expo Router**
-- **React Navigation**
-- **Various Expo SDKs** (Camera, File System, Image Picker, etc.)
-- **Supporting libraries** (charting, calendars, PDF, toast notifications)
-
----
-
-## Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Tanvir-Hasan1/AutoPulse.git
-   cd AutoPulse/Frontend
-   ```
-
-2. **Install dependencies**
    ```bash
    npm install
    ```
 
----
+2. Start the app
 
-## Development
+   ```bash
+   npx expo start
+   ```
 
-### Running the App
+In the output, you'll find options to open the app in a
 
-You can start the project in multiple environments:
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-- **Expo Go app** (quickest for testing)
-- **Android emulator**
-- **iOS simulator**
-- **Web browser**
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-Start the development server:
+## Get a fresh project
+
+When you're ready, run:
+
 ```bash
-npx expo start
-```
-Follow the on-screen instructions to open the app in your preferred environment.
-
-### Other Scripts
-
-- `npm run android` — Launches Android emulator
-- `npm run ios` — Launches iOS simulator
-- `npm run web` — Runs the app in your browser
-- `npm run lint` — Runs linter for code quality
-- `npm run reset-project` — Resets starter code, see below for details
-
----
-
-## Project Structure
-
-```
-Frontend/
-├── app/                # Main app screens & routes
-├── components/         # Reusable UI components
-├── constants/          # Application constants
-├── assets/             # Static assets (images, fonts)
-├── hooks/              # Custom React hooks
-├── scripts/            # Helper scripts (e.g., reset-project.js)
-├── .expo/              # Expo internals
-├── package.json        # Project manifest
-├── app.json            # Expo configuration
-├── tsconfig.json       # TypeScript configuration
-├── eslint.config.js    # ESLint configuration
-├── README.md           # This file
-└── ...                 # Additional configuration files
+npm run reset-project
 ```
 
----
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Usage Guide
+## Learn more
 
-- Start development by editing files in the `app/` directory.
-- Routing is **file-based** using [expo-router](https://docs.expo.dev/router/introduction/).
-- Reusable logic (hooks, constants) is organized for easy access and scalability.
-- Use the scripts to reset or lint your project as needed.
+To learn more about developing your project with Expo, look at the following resources:
 
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Contributing
+## Join the community
 
-We welcome contributions from the community!
+Join our community of developers creating universal apps.
 
-1. Fork the repo and create your branch from `main`.
-2. Make your changes and commit with clear messages.
-3. Ensure code passes all linting and tests.
-4. Submit a pull request and describe your changes.
-
-## License
-
-_This project currently does not specify a license._
-
-**Happy coding with AutoPulse Frontend!**
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

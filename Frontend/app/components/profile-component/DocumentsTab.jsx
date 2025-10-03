@@ -1,20 +1,19 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import { useEffect, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Image,
+  Modal,
+  ScrollView,
   Text,
   TouchableOpacity,
-  ScrollView,
-  Alert,
-  Modal,
-  Image,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useUser } from "../../contexts/UserContext";
-import { API_BASE_URL } from "../../config";
-import { useState, useEffect } from "react";
-import { WebView } from "react-native-webview";
-import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
+import { WebView } from "react-native-webview";
+import { API_BASE_URL } from "../../../config";
+import { useUser } from "../../_contexts/UserContext";
 
 const DocumentsTab = ({ documents, styles }) => {
   const { user } = useUser();
