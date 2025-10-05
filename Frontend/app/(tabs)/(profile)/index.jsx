@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
+    width: 60,
+    height: 60,
     borderRadius: 40,
     backgroundColor: "#E5E7EB",
     justifyContent: "center",
@@ -454,19 +454,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  sectionDescription: {
-    fontSize: 14,
-    color: "#6B7280",
   },
   bikeCard: {
     flexDirection: "row",

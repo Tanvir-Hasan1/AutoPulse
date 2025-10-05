@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CalendarModal from "../components/CalendarModal";
 import FuelLog from "../components/FuelLog";
 import ServiceLog from "../components/ServiceLog";
-import { formatDisplayDate } from "../utils/dateHelpers";
+import formatDisplayDate from "../utils/dateHelpers";
 
 export default function FuelServiceTracker() {
   const [activeTab, setActiveTab] = useState("fuel");

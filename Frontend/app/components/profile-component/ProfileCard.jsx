@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity } from "react-native";
 import { useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 import EditProfileModal from "./EditProfileModal";
 
 const getInitials = (name) => {
@@ -31,10 +31,13 @@ const ProfileCard = ({ user, styles, onEditProfile }) => {
       <Text style={styles.userName}>{user.name}</Text>
       <Text style={styles.joinDate}>Joined {joinDateFormatted}</Text>
       <TouchableOpacity
-        style={styles.editButton}
+        style={[
+          styles.editButton,
+          { position: "absolute", top: 10, right: 10 },
+        ]}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={styles.editButtonText}>Edit Profile</Text>
+        <Text style={styles.editButtonText}>Edit</Text>
       </TouchableOpacity>
       <EditProfileModal
         visible={modalVisible}

@@ -355,6 +355,7 @@ export default function ServiceLog({
                     : setNewServiceLog({ ...newServiceLog, cost: text })
                 }
                 placeholder="0.00"
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 autoComplete="off"
                 importantForAutofill="no"
@@ -373,6 +374,7 @@ export default function ServiceLog({
                     : setNewServiceLog({ ...newServiceLog, odometer: text })
                 }
                 placeholder="0"
+                placeholderTextColor="#888"
                 keyboardType="numeric"
                 autoComplete="off"
                 importantForAutofill="no"
@@ -393,6 +395,7 @@ export default function ServiceLog({
                   : setNewServiceLog({ ...newServiceLog, nextService: text })
               }
               placeholder="Optional"
+              placeholderTextColor="#888"
               keyboardType="numeric"
               autoComplete="off"
               importantForAutofill="no"
@@ -412,6 +415,7 @@ export default function ServiceLog({
                   : setNewServiceLog({ ...newServiceLog, description: text })
               }
               placeholder="Service details..."
+              placeholderTextColor="#888"
               multiline
               numberOfLines={3}
             />

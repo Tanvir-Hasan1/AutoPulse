@@ -517,12 +517,6 @@ const DocumentsTab = ({ documents, styles }) => {
 
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Vehicle Documents</Text>
-        <Text style={styles.sectionDescription}>
-          Upload and manage your bike registration, license, and tax documents
-        </Text>
-      </View>
       {documents.map((doc) => {
         const isLicense = doc.name === "Driving License";
         const isRegistration = doc.name === "Registration Certificate (RC)";

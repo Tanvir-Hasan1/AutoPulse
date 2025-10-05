@@ -1,17 +1,15 @@
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 import {
   Modal,
-  View,
-  Text,
-  TouchableOpacity,
   ScrollView,
-  TextInput,
-  Switch,
-  Platform,
   StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from "@expo/vector-icons";
 
 const colors = {
   primary: "#4F46E5",
@@ -86,7 +84,7 @@ export default function MarketplaceFilterModal({
                     keyboardType="numeric"
                     value={filterPriceMin}
                     onChangeText={setFilterPriceMin}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#888"
                   />
                 </View>
                 <View style={styles.priceSeparator}>
@@ -100,7 +98,7 @@ export default function MarketplaceFilterModal({
                     keyboardType="numeric"
                     value={filterPriceMax}
                     onChangeText={setFilterPriceMax}
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor="#888"
                   />
                 </View>
               </View>
@@ -121,7 +119,7 @@ export default function MarketplaceFilterModal({
                   style={styles.input}
                   value={filterLocation}
                   onChangeText={setFilterLocation}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#888"
                 />
               </View>
             </View>
@@ -181,7 +179,7 @@ export default function MarketplaceFilterModal({
                   style={styles.input}
                   value={filterKeywords}
                   onChangeText={setFilterKeywords}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor="#888"
                 />
               </View>
             </View>

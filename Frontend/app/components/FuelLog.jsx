@@ -329,6 +329,7 @@ export default function FuelLog({
                     : setNewFuelLog({ ...newFuelLog, amount: text })
                 }
                 placeholder="0.0"
+                placeholderTextColor="#888"
                 keyboardType="decimal-pad"
               />
             </View>
@@ -346,6 +347,7 @@ export default function FuelLog({
                     : setNewFuelLog({ ...newFuelLog, unitCost: text })
                 }
                 placeholder="0.0"
+                placeholderTextColor={"#888"}
                 keyboardType="decimal-pad"
               />
             </View>
@@ -360,6 +362,7 @@ export default function FuelLog({
                     : setNewFuelLog({ ...newFuelLog, odometer: text })
                 }
                 placeholder="0.0"
+                placeholderTextColor={"#888"}
                 keyboardType="numeric"
               />
             </View>
@@ -377,6 +380,7 @@ export default function FuelLog({
                   : setNewFuelLog({ ...newFuelLog, note: text })
               }
               placeholder="Add any notes about this fuel entry..."
+              placeholderTextColor={"#888"}
               multiline
               numberOfLines={3}
               textAlignVertical="top"

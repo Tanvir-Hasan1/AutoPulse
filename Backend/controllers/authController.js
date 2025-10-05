@@ -217,22 +217,50 @@ const updatePassword = async (req, res) => {
 // Forgot Password - send OTP
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     user.passwordResetOTP = otp;
     user.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
+
+    // HTML email content
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
+        <h2 style="color: #333;">AutoPulse Password Reset</h2>
+        <p style="font-size: 16px; color: #555;">
+          Hello <strong>${user.email}</strong>,
+        </p>
+        <p style="font-size: 16px; color: #555;">
+          You requested a password reset. Use the following OTP to reset your password. This code will expire in <strong>10 minutes</strong>.
+        </p>
+        <p style="font-size: 24px; font-weight: bold; color: #1a73e8; text-align: center; margin: 30px 0;">
+          ${otp}
+        </p>
+        <p style="font-size: 14px; color: #777;">
+          If you did not request this, please ignore this email.
+        </p>
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+        <p style="font-size: 12px; color: #999; text-align: center;">
+          © ${new Date().getFullYear()} AutoPulse. All rights reserved.
+        </p>
+      </div>
+    `;
+
     // Send OTP via email
     await sendMail({
       to: user.email,
       subject: "Your Password Reset Code",
-      text: `Your password reset code is: ${otp}`,
+      html: htmlContent,
     });
+
     res.json({ message: "OTP sent to email" });
   } catch (error) {
     console.error("Forgot password error:", error);

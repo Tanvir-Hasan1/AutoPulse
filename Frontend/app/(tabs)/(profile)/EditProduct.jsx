@@ -444,7 +444,7 @@ const EditProduct = () => {
               <Picker
                 selectedValue={category}
                 onValueChange={(itemValue) => setCategory(itemValue)}
-                style={{ width: "100%" }}
+                style={{ width: "100%", color: "#000" }}
                 dropdownIconColor="#4F46E5"
                 enabled={!updating}
               >
@@ -453,6 +453,7 @@ const EditProduct = () => {
                     key={cat.value}
                     label={cat.label}
                     value={cat.value}
+                    color="#000"
                   />
                 ))}
               </Picker>
@@ -469,7 +470,7 @@ const EditProduct = () => {
               <Picker
                 selectedValue={condition}
                 onValueChange={setCondition}
-                style={{ width: "100%" }}
+                style={{ width: "100%", color: "#000" }}
                 dropdownIconColor="#4F46E5"
                 enabled={!updating}
               >
@@ -478,6 +479,7 @@ const EditProduct = () => {
                     key={option.value}
                     label={option.label}
                     value={option.value}
+                    color="#000"
                   />
                 ))}
               </Picker>
@@ -496,7 +498,7 @@ const EditProduct = () => {
                   <Picker
                     selectedValue={countryCode}
                     onValueChange={(itemValue) => setCountryCode(itemValue)}
-                    style={{ width: "100%" }}
+                    style={{ width: "100%", color: "#000" }}
                     dropdownIconColor="#4F46E5"
                     enabled={!updating}
                   >
@@ -505,6 +507,7 @@ const EditProduct = () => {
                         key={code.value}
                         label={code.label}
                         value={code.value}
+                        color="#000"
                       />
                     ))}
                   </Picker>

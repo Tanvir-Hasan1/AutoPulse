@@ -157,12 +157,6 @@ const BikesTab = ({
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Your Bikes</Text>
-          <Text style={styles.sectionDescription}>
-            Manage your registered bikes
-          </Text>
-        </View>
         {safeBikes.length === 0 ? (
           <View style={{ alignItems: "center", marginVertical: 24 }}>
             <Text style={{ color: "#6B7280" }}>No bikes registered yet.</Text>

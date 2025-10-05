@@ -101,12 +101,6 @@ const ProductsTab = ({
 
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Listed Products</Text>
-        <Text style={styles.sectionDescription}>
-          Products you have posted for sale
-        </Text>
-      </View>
       {products.map((product) => (
         <TouchableOpacity
           key={product._id || product.id}

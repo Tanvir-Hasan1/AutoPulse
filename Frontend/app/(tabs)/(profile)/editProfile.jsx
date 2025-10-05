@@ -113,6 +113,7 @@ export default function EditProfile() {
         value={username}
         onChangeText={setUsername}
         placeholder="Enter username"
+        placeholderTextColor="#888"
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdateUsername}>
         <Text style={styles.buttonText}>Update Username</Text>
@@ -124,6 +125,7 @@ export default function EditProfile() {
         value={password}
         onChangeText={setPassword}
         placeholder="Enter new password"
+        placeholderTextColor="#888"
         secureTextEntry
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdatePassword}>

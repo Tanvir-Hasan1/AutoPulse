@@ -280,7 +280,7 @@ export default function Marketplace() {
             value={search}
             onChangeText={setSearch}
             style={styles.searchBox}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#888"
           />
           {search.length > 0 && (
             <TouchableOpacity
@@ -325,6 +325,7 @@ export default function Marketplace() {
                   key={cat.value}
                   label={cat.label}
                   value={cat.value}
+                  color={activeTab === cat.value ? "#000" : undefined}
                 />
               ))}
             </Picker>

@@ -1,6 +1,5 @@
 // utils/dateHelpers.js
-
-export function formatDisplayDate(dateString) {
+function formatDisplayDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -8,3 +7,5 @@ export function formatDisplayDate(dateString) {
     year: "numeric",
   });
 }
+
+export default formatDisplayDate;
