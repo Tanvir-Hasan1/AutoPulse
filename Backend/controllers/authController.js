@@ -236,7 +236,7 @@ const forgotPassword = async (req, res) => {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
         <h2 style="color: #333;">AutoPulse Password Reset</h2>
         <p style="font-size: 16px; color: #555;">
-          Hello <strong>${user.email}</strong>,
+          Hello <strong>${user.name}</strong>,
         </p>
         <p style="font-size: 16px; color: #555;">
           You requested a password reset. Use the following OTP to reset your password. This code will expire in <strong>10 minutes</strong>.
