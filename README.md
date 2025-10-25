@@ -22,34 +22,28 @@ Key features of AutoPulse include:
 
 The project uses a modular architecture with a clear separation between frontend and backend components. The frontend directory contains assets, reusable components, context providers, navigation setup, screen components, and service modules for API calls. The backend directory includes configuration files, controllers for request handling, middleware for authentication and validation, Mongoose models, API routes, utility functions, Swagger documentation, and the server entry point.
 
-Environment variables such as server port, MongoDB connection URI, SMTP configuration for email services, and JWT secret are used to configure the application securely. The system ensures smooth communication between the frontend and backend while maintaining data integrity and user security.
+
 
 AutoPulse demonstrates professional-grade full-stack development practices, combining modern frontend and backend technologies to deliver a scalable, maintainable, and user-centric mobile application. It is suitable for deployment on real devices and can be extended with additional features or integrated with other systems as needed.
 
 ---
 
 **Tech Stack Overview:**  
-- **Frontend:** React Native, Expo, Context API, React Navigation  
-- **Backend:** Node.js, Express.js, MongoDB, GridFS, JWT, Nodemailer, Swagger  
+- **Frontend:** React Native, Expo, Context API, React Navigation
+- 
+- **Backend:** Node.js, Express.js, MongoDB, GridFS, JWT, Nodemailer, Swagger
+- 
 - **Utilities & Tools:** bcrypt, cors, dotenv, multer, Nodemon  
-
-**Running & Testing Overview:**  
-The application runs by installing all dependencies with `npm install` in both the frontend and backend directories. The frontend is launched using Expo, which enables running the app on Android or iOS devices. The backend server connects to MongoDB using environment variables for configuration, handling all RESTful API requests. Developers can test all API endpoints via **Swagger UI**, providing an interactive interface to verify authentication, vehicle management, fuel tracking, mileage calculation, marketplace operations, and profile management. This setup allows developers to quickly test features, verify integration between frontend and backend, and debug any issues efficiently.
 
 ## install and setup 
 npm install
 
 
 ## Creating .env file in root dir
-PORT=5000
-MONGO_URI=mongodb+srv://general:xhCCXVagqsgqh3rK@autopulse.xxstsz2.mongodb.net/
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=autopulse.services.app@gmail.com
-SMTP_PASS=eewa pefe zwdm jtnn
-SMTP_FROM=autopulse.services.app@gmail.com
-
+PORT=** your specified port **
+MONGO_URI=**your - mongodb altus url
+RESEND_API= ** Your resend Api **
+From = "" your custom domain **
 
 ## run
 npm run dev
