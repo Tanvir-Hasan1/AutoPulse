@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const categories = [
   { label: "Accessories", value: "accessories" },
@@ -58,7 +58,8 @@ const countryCodes = [
 const EditProduct = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const { user } = useUser();
+  const userId = useAuthStore((s) => s.userId);
+  const user = { userId };
 
   // Get product data from route params
   let product = route.params?.product;

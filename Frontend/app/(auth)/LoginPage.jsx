@@ -11,47 +11,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../_contexts/UserContext";
+import api from "../../store/api";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { updateUser, user } = useUser();
+  const login = useAuthStore((s) => s.login);
   const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Please enter your email and password.");
+      return;
+    }
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await api.post("/auth/login", { email, password });
 
-      const data = await response.json();
+      // Store user + tokens in Zustand (persisted to AsyncStorage)
+      login(data.user, data.accessToken, data.refreshToken);
 
-      if (!response.ok) {
-        alert(data.message || "Login failed");
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("Login successful:", data.user);
-      console.log("user name:", data.user.name);
-      console.log("User ID:", data.user._id);
-      console.log("User Email:", data.user.email);
-      console.log("Selected Bike:", data.user.bikes || []);
-
-      // Update user context with the received data
-      updateUser(data.user);
-
-      // Redirect based on bikes
+      // Redirect based on whether user has bikes
       if (!data.user.bikes || data.user.bikes.length === 0) {
         router.replace("/(auth)/OnboardingPage");
       } else {
@@ -59,7 +43,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert(error.message || "Server error. Please try again.");
+      alert(error.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -218,7 +202,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontWeight: "bold",
-
     color: "#4F46E5",
     fontSize: 14,
   },

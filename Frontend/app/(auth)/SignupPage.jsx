@@ -12,12 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../_contexts/UserContext";
+import api from "../../store/api";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function Signup() {
   const router = useRouter();
-  const { updateUser } = useUser();
+  const signup = useAuthStore((s) => s.signup);
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -50,34 +50,16 @@ export default function Signup() {
     try {
       setIsLoading(true);
 
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: fullName,
-          email,
-          password,
-        }),
+      const data = await api.post("/auth/register", {
+        name: fullName,
+        email,
+        password,
       });
 
-      const data = await response.json();
+      // Store user + tokens — token is available immediately after signup
+      signup(data.user, data.accessToken, data.refreshToken);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
-
-      // Store user ID and email in context
-      updateUser({
-        userId: data.user._id || data.user.id,
-        email: data.user.email,
-      });
-
-      // Console log for verification
-      console.log("✅ User stored in context:");
-      console.log("User ID:", data.user._id || data.user.id);
-      console.log("Email:", data.user.email);
+      console.log("✅ Signup successful. User ID:", data.user._id);
 
       Alert.alert("Success", "Account created successfully", [
         {
@@ -265,7 +247,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginLeft: 4,
   },
-
   icon: {
     marginRight: 8,
   },

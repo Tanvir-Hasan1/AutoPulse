@@ -13,11 +13,12 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import { API_BASE_URL } from "../../config"; // e.g. http://192.168.x.x:5000/api
-import { useUser } from "../_contexts/UserContext";
-import CalendarModal from "./CalendarModal"; // Adjust the import based on your file structure
+import api from "../../store/api";
+import { useAuthStore } from "../../store/useAuthStore";
+import CalendarModal from "./CalendarModal";
 
 export default function FuelLog({
+  bikeId: bikeIdProp,
   fuelLogs,
   setFuelLogs,
   newFuelLog,
@@ -26,8 +27,8 @@ export default function FuelLog({
   fuelLevel,
   formatDisplayDate,
 }) {
-  const { user } = useUser();
-  const bikeId = user.selectedBikeId;
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const bikeId = bikeIdProp || selectedBikeId;
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
@@ -35,35 +36,25 @@ export default function FuelLog({
   const [showFuelDatePicker, setShowFuelDatePicker] = useState(false); // State to control date picker visibility
 
   const calculateTotalCost = () => {
-    const amount = parseFloat(newFuelLog.amount) || 0;
-    const unitCost = parseFloat(newFuelLog.unitCost) || 0;
+    const amount = parseFloat(newFuelLog?.amount) || 0;
+    const unitCost = parseFloat(newFuelLog?.unitCost) || 0;
     return (amount * unitCost).toFixed(2);
   };
 
   const fetchFuelLogs = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/fuel/${bikeId}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load fuel logs");
-
-      // Sort logs by date ASC
+      const data = await api.get(`/fuel/${bikeId}`);
       const sorted = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-      // Calculate mileage for each (except the first)
       const logsWithMileage = sorted.map((log, i) => {
         if (i === 0) return log;
-
         const prev = sorted[i - 1];
         const distance = log.odometer - prev.odometer;
         const mileage =
           log.amount > 0 && distance > 0
-            ? Math.floor((distance / log.amount) * 100) / 100 // truncate to 2 decimals
+            ? Math.floor((distance / log.amount) * 100) / 100
             : null;
-
         return { ...log, mileage };
       });
-
-      // Show in reverse order (latest first)
       setFuelLogs(logsWithMileage.reverse());
     } catch (error) {
       console.error("Fetch error:", error);
@@ -76,7 +67,7 @@ export default function FuelLog({
   };
 
   const handleAddFuelLog = async () => {
-    if (!newFuelLog.amount || !newFuelLog.unitCost || !newFuelLog.odometer) {
+    if (!newFuelLog?.amount || !newFuelLog?.unitCost || !newFuelLog?.odometer) {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -90,26 +81,17 @@ export default function FuelLog({
 
     const payload = {
       bike: bikeId,
-      date: newFuelLog.date,
-      amount: parseFloat(newFuelLog.amount),
-      volume: newFuelLog.volume ? parseFloat(newFuelLog.volume) : undefined,
-      unitCost: parseFloat(newFuelLog.unitCost),
-      odometer: parseFloat(newFuelLog.odometer),
-      note: newFuelLog.note || "", // Include note in payload
+      date: newFuelLog?.date,
+      amount: parseFloat(newFuelLog?.amount),
+      volume: newFuelLog?.volume ? parseFloat(newFuelLog.volume) : undefined,
+      unitCost: parseFloat(newFuelLog?.unitCost),
+      odometer: parseFloat(newFuelLog?.odometer),
+      note: newFuelLog?.note || "", // Include note in payload
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/fuel`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save");
-
+      await api.post("/fuel", payload);
       await fetchFuelLogs();
-
       setNewFuelLog({
         date: new Date().toISOString().split("T")[0],
         amount: "",
@@ -117,7 +99,6 @@ export default function FuelLog({
         odometer: "",
         note: "",
       });
-
       Toast.show({
         type: "success",
         text1: "Success",
@@ -140,18 +121,9 @@ export default function FuelLog({
 
   const handleDeleteFuelLog = async (logId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/fuel/${logId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to delete fuel log");
-      }
-
+      await api.delete(`/fuel/${logId}`);
       setFuelLogs(fuelLogs.filter((log) => (log._id || log.id) !== logId));
       setSelectedLogId(null);
-
       Toast.show({
         type: "success",
         text1: "Deleted",
@@ -186,7 +158,7 @@ export default function FuelLog({
   };
 
   const handleUpdateFuelLog = async () => {
-    if (!editingLog.amount || !editingLog.unitCost || !editingLog.odometer) {
+    if (!editingLog?.amount || !editingLog?.unitCost || !editingLog?.odometer) {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -199,30 +171,18 @@ export default function FuelLog({
     }
 
     const payload = {
-      date: editingLog.date, // format: "YYYY-MM-DD"
-      amount: parseFloat(editingLog.amount),
-      unitCost: parseFloat(editingLog.unitCost),
-      odometer: parseFloat(editingLog.odometer),
-      note: editingLog.note || "",
+      date: editingLog?.date, // format: "YYYY-MM-DD"
+      amount: parseFloat(editingLog?.amount),
+      unitCost: parseFloat(editingLog?.unitCost),
+      odometer: parseFloat(editingLog?.odometer),
+      note: editingLog?.note || "",
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/fuel/${editingLog.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Failed to update");
-
+      await api.put(`/fuel/${editingLog.id}`, payload);
       await fetchFuelLogs();
       setIsEditing(false);
       setEditingLog(null);
-
       Toast.show({
         type: "success",
         text1: "Success",
@@ -313,7 +273,7 @@ export default function FuelLog({
                 <Text style={styles.datePickerText}>
                   {isEditing
                     ? formatDisplayDate(editingLog?.date)
-                    : formatDisplayDate(newFuelLog.date)}
+                    : formatDisplayDate(newFuelLog?.date)}
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6b7280" />
               </TouchableOpacity>
@@ -322,7 +282,7 @@ export default function FuelLog({
               <Text style={styles.label}>Amount (L)</Text>
               <TextInput
                 style={styles.input}
-                value={isEditing ? editingLog.amount : newFuelLog.amount}
+                value={isEditing ? editingLog?.amount : newFuelLog?.amount}
                 onChangeText={(text) =>
                   isEditing
                     ? setEditingLog({ ...editingLog, amount: text })
@@ -340,7 +300,7 @@ export default function FuelLog({
               <Text style={styles.label}>Unit Cost (BDT/L)</Text>
               <TextInput
                 style={styles.input}
-                value={isEditing ? editingLog.unitCost : newFuelLog.unitCost}
+                value={isEditing ? editingLog?.unitCost : newFuelLog?.unitCost}
                 onChangeText={(text) =>
                   isEditing
                     ? setEditingLog({ ...editingLog, unitCost: text })
@@ -355,7 +315,7 @@ export default function FuelLog({
               <Text style={styles.label}>Odometer (km)</Text>
               <TextInput
                 style={styles.input}
-                value={isEditing ? editingLog.odometer : newFuelLog.odometer}
+                value={isEditing ? editingLog?.odometer : newFuelLog?.odometer}
                 onChangeText={(text) =>
                   isEditing
                     ? setEditingLog({ ...editingLog, odometer: text })
@@ -373,7 +333,7 @@ export default function FuelLog({
             <Text style={styles.label}>Notes (Optional)</Text>
             <TextInput
               style={styles.notesInput}
-              value={isEditing ? editingLog.note : newFuelLog.note}
+              value={isEditing ? editingLog?.note : newFuelLog?.note}
               onChangeText={(text) =>
                 isEditing
                   ? setEditingLog({ ...editingLog, note: text })
@@ -393,8 +353,8 @@ export default function FuelLog({
               BDT{" "}
               {isEditing
                 ? (
-                    (parseFloat(editingLog.amount) || 0) *
-                    (parseFloat(editingLog.unitCost) || 0)
+                    (parseFloat(editingLog?.amount) || 0) *
+                    (parseFloat(editingLog?.unitCost) || 0)
                   ).toFixed(2)
                 : calculateTotalCost()}
             </Text>
@@ -566,7 +526,7 @@ export default function FuelLog({
           onClose={() => setShowFuelDatePicker(false)}
           onSelect={handleFuelDateSelect}
           title="Select Fuel Date"
-          selectedDate={isEditing ? editingLog?.date : newFuelLog.date}
+          selectedDate={isEditing ? editingLog?.date : newFuelLog?.date}
         />
       </ScrollView>
     </KeyboardAvoidingView>

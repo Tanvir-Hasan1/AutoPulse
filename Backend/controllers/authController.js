@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { sendMail } = require("../utils/mailer");
+const { generateAccessToken, generateRefreshToken } = require("../utils/tokenHelper");
+
 
 // Register User
 const registerUser = async (req, res) => {
@@ -62,8 +65,18 @@ const registerUser = async (req, res) => {
       text: `Welcome to AutoPulse! 🏍️\n\nDear ${name},\n\nWe're thrilled to have you join our community. Get started by adding your bikes, tracking maintenance, and storing important documents.\n\nRide safe!\nThe AutoPulse Team`,
     });
 
+    // Generate access and refresh tokens
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
+
+    // Save refresh token
+    newUser.refreshTokens.push({ token: refreshToken });
+    await newUser.save();
+
     res.status(201).json({
       message: "User registered successfully",
+      accessToken,
+      refreshToken,
       user: newUser,
     });
   } catch (error) {
@@ -117,8 +130,19 @@ const loginUser = async (req, res) => {
       })),
     };
 
+    // Generate access and refresh tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // Save refresh token to user document
+    const userDoc = await User.findById(user._id);
+    userDoc.refreshTokens.push({ token: refreshToken });
+    await userDoc.save();
+
     res.status(200).json({
       message: "Login successful",
+      accessToken,
+      refreshToken,
       user: responseData,
     });
   } catch (error) {
@@ -158,9 +182,10 @@ const getAllUsers = async (req, res) => {
 
 // Update Password without JWT or middleware
 const updatePassword = async (req, res) => {
-  const { id, currentPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
   try {
-    const user = await User.findById(id).select("+password");
+    const user = await User.findById(userId).select("+password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -293,11 +318,12 @@ const resetPasswordWithOTP = async (req, res) => {
   }
 };
 
-// Change Name (by user ID only)
+// Change Name with JWT Bearer Token
 const changeName = async (req, res) => {
-  const { id, newName } = req.body;
+  const { newName } = req.body;
+  const userId = req.user.id;
   try {
-    const user = await User.findById(id);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -312,6 +338,59 @@ const changeName = async (req, res) => {
   }
 };
 
+const refreshTokenController = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token is required" });
+  }
+
+  try {
+    const secret = process.env.JWT_REFRESH_SECRET || `${process.env.JWT_SECRET}_refresh`;
+    const decoded = jwt.verify(refreshToken, secret);
+
+    const user = await User.findOne({ _id: decoded.id, "refreshTokens.token": refreshToken });
+    if (!user) {
+      return res.status(403).json({ message: "Forbidden - Invalid or expired session" });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    user.refreshTokens = user.refreshTokens.filter((t) => t.token !== refreshToken);
+    user.refreshTokens.push({ token: newRefreshToken });
+    await user.save();
+
+    res.status(200).json({
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    return res.status(401).json({ message: "Unauthorized - Invalid or expired refresh token" });
+  }
+};
+
+const logoutUser = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  try {
+    if (refreshToken) {
+      await User.updateOne(
+        { "refreshTokens.token": refreshToken },
+        { $pull: { refreshTokens: { token: refreshToken } } }
+      );
+    } else if (req.user) {
+      await User.findByIdAndUpdate(req.user.id, { $set: { refreshTokens: [] } });
+    }
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -321,4 +400,6 @@ module.exports = {
   forgotPassword,
   resetPasswordWithOTP,
   changeName,
+  refreshTokenController,
+  logoutUser,
 };

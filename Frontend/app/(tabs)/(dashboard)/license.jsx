@@ -11,12 +11,11 @@ import {
   View,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import api from "../../../store/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function License() {
-  const { user } = useUser?.() || {};
-  const userId = user?.userId || user?.id;
+  const userId = useAuthStore((s) => s.userId);
   const [licenseImageUri, setLicenseImageUri] = useState(null);
   const [isLoadingLicense, setIsLoadingLicense] = useState(false);
   const [licenseFileType, setLicenseFileType] = useState(null); // 'image' or 'pdf'
@@ -31,12 +30,13 @@ export default function License() {
     setIsLoadingLicense(true);
 
     try {
+      const token = useAuthStore.getState().accessToken;
       const response = await fetch(
-        `${API_BASE_URL}/license/download/${userId}`,
+        `${process.env.EXPO_PUBLIC_API_BASE_URL}/license/download/${userId}`,
         {
           method: "GET",
           headers: {
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );

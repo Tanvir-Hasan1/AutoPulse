@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const registration = require("../controllers/registrationController");
+const authMiddleware = require("../middlewares/authMiddleware");
+
+// Secure all registration routes
+router.use(authMiddleware);
+
 
 /**
  * @swagger

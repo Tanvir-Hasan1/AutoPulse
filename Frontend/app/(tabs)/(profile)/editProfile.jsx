@@ -10,38 +10,53 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import { useUser } from "../../_contexts/UserContext";
+import api from "../../../store/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function EditProfile() {
-  const { user, updateUser, selectBike } = useUser();
-  const [username, setUsername] = useState(user?.username || "");
+  const updateUser = useAuthStore((s) => s.updateUser);
+  const setBikes = useAuthStore((s) => s.setBikes);
+  const name = useAuthStore((s) => s.name);
+  const bikes = useAuthStore((s) => s.bikes);
+  const [username, setUsername] = useState(name || "");
   const [password, setPassword] = useState("");
-  const [bikes, setBikes] = useState(user?.bikes || []);
+  const [localBikes, setLocalBikes] = useState(bikes || []);
   const router = useRouter();
 
-  // Update username
-  const handleUpdateUsername = () => {
+  // Update name via API
+  const handleUpdateUsername = async () => {
     if (!username.trim()) {
       Toast.show({
         type: "error",
-        text1: "Username required",
-        text2: "Please enter a username.",
+        text1: "Name required",
+        text2: "Please enter your name.",
         position: "bottom",
         autoHide: true,
       });
       return;
     }
-    updateUser({ ...user, username });
-    Toast.show({
-      type: "success",
-      text1: "Username updated",
-      position: "bottom",
-      autoHide: true,
-    });
+    try {
+      await api.put("/auth/change-name", { newName: username });
+      updateUser({ name: username });
+      Toast.show({
+        type: "success",
+        text1: "Name updated",
+        position: "bottom",
+        autoHide: true,
+      });
+    } catch (err) {
+      Toast.show({
+        type: "error",
+        text1: "Update failed",
+        text2: err.message,
+        position: "bottom",
+        autoHide: true,
+      });
+    }
   };
 
-  // Update password
-  const handleUpdatePassword = () => {
+  // Update password via API
+  const handleUpdatePassword = async () => {
     if (password.length < 6) {
       Toast.show({
         type: "error",
@@ -52,51 +67,91 @@ export default function EditProfile() {
       });
       return;
     }
-    // Here you would call your API to update password
-    Toast.show({
-      type: "success",
-      text1: "Password updated",
-      position: "bottom",
-      autoHide: true,
-    });
-    setPassword("");
+    // Prompt for current password
+    Alert.prompt(
+      "Current Password",
+      "Enter your current password to confirm the change",
+      async (currentPassword) => {
+        try {
+          await api.put("/auth/update-password", { currentPassword, newPassword: password });
+          Toast.show({
+            type: "success",
+            text1: "Password updated",
+            position: "bottom",
+            autoHide: true,
+          });
+          setPassword("");
+        } catch (err) {
+          Toast.show({
+            type: "error",
+            text1: "Update failed",
+            text2: err.message,
+            position: "bottom",
+            autoHide: true,
+          });
+        }
+      },
+      "secure-text"
+    );
   };
 
-  // Delete bike
+  // Delete bike via API
   const handleDeleteBike = (bikeId) => {
     Alert.alert("Delete Bike", "Are you sure you want to delete this bike?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
-        onPress: () => {
-          const updatedBikes = bikes.filter((b) => b._id !== bikeId);
-          setBikes(updatedBikes);
-          updateUser({ ...user, bikes: updatedBikes });
-          Toast.show({
-            type: "success",
-            text1: "Bike deleted",
-            position: "bottom",
-            autoHide: true,
-          });
+        onPress: async () => {
+          try {
+            await api.delete("/bikes/delete", { id: bikeId });
+            const updatedBikes = localBikes.filter((b) => b._id !== bikeId);
+            setLocalBikes(updatedBikes);
+            setBikes(updatedBikes);
+            Toast.show({
+              type: "success",
+              text1: "Bike deleted",
+              position: "bottom",
+              autoHide: true,
+            });
+          } catch (err) {
+            Toast.show({
+              type: "error",
+              text1: "Delete failed",
+              text2: err.message,
+              position: "bottom",
+              autoHide: true,
+            });
+          }
         },
       },
     ]);
   };
 
-  // Edit bike info (for demo, just allow editing name)
-  const handleEditBike = (bikeId, newName) => {
-    const updatedBikes = bikes.map((b) =>
-      b._id === bikeId ? { ...b, name: newName } : b
-    );
-    setBikes(updatedBikes);
-    updateUser({ ...user, bikes: updatedBikes });
-    Toast.show({
-      type: "success",
-      text1: "Bike updated",
-      position: "bottom",
-      autoHide: true,
-    });
+  // Edit bike info via API
+  const handleEditBike = async (bikeId, field, value) => {
+    try {
+      await api.put("/bikes/update", { id: bikeId, [field]: value });
+      const updatedBikes = localBikes.map((b) =>
+        b._id === bikeId ? { ...b, [field]: value } : b
+      );
+      setLocalBikes(updatedBikes);
+      setBikes(updatedBikes);
+      Toast.show({
+        type: "success",
+        text1: "Bike updated",
+        position: "bottom",
+        autoHide: true,
+      });
+    } catch (err) {
+      Toast.show({
+        type: "error",
+        text1: "Update failed",
+        text2: err.message,
+        position: "bottom",
+        autoHide: true,
+      });
+    }
   };
 
   return (
@@ -107,16 +162,16 @@ export default function EditProfile() {
 
       <Text style={styles.header}>Edit Profile</Text>
 
-      <Text style={styles.label}>Username</Text>
+      <Text style={styles.label}>Name</Text>
       <TextInput
         style={styles.input}
         value={username}
         onChangeText={setUsername}
-        placeholder="Enter username"
+        placeholder="Enter your name"
         placeholderTextColor="#888"
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdateUsername}>
-        <Text style={styles.buttonText}>Update Username</Text>
+        <Text style={styles.buttonText}>Update Name</Text>
       </TouchableOpacity>
 
       <Text style={styles.label}>New Password</Text>
@@ -133,12 +188,12 @@ export default function EditProfile() {
       </TouchableOpacity>
 
       <Text style={styles.header}>Your Bikes</Text>
-      {bikes.map((bike) => (
+      {localBikes.map((bike) => (
         <View key={bike._id} style={styles.bikeCard}>
           <TextInput
             style={styles.bikeNameInput}
-            value={bike.name}
-            onChangeText={(newName) => handleEditBike(bike._id, newName)}
+            value={bike.model || bike.name}
+            onChangeText={(val) => handleEditBike(bike._id, "model", val)}
           />
           <TouchableOpacity
             style={styles.deleteButton}

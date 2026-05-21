@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
+const authMiddleware = require("../middlewares/authMiddleware");
 const multer = require("multer");
 
 // Multer config for image upload (memory storage)
@@ -65,6 +66,7 @@ const upload = multer({ storage });
  */
 router.post(
   "/post-product/:userId",
+  authMiddleware,
   upload.single("productImage"),
   productController.postProduct
 );
@@ -90,7 +92,7 @@ router.post(
  *       500:
  *         description: Server error
  */
-router.delete("/delete-product/:productId", productController.deleteProduct);
+router.delete("/delete-product/:productId", authMiddleware, productController.deleteProduct);
 
 /**
  * @swagger
@@ -154,6 +156,7 @@ router.delete("/delete-product/:productId", productController.deleteProduct);
  */
 router.patch(
   "/edit-product/:productId",
+  authMiddleware,
   upload.single("productImage"),
   productController.editProduct
 );
@@ -211,7 +214,7 @@ router.get("/products", productController.getAllProducts);
  *       500:
  *         description: Server error
  */
-router.get("/products/:userId", productController.getMyProducts);
+router.get("/products/:userId", authMiddleware, productController.getMyProducts);
 
 /**
  * @swagger

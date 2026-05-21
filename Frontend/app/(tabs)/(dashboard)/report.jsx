@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
-import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import api from "../../../store/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const chartConfig = {
   backgroundGradientFrom: "#fff",
@@ -27,8 +27,7 @@ const { width } = Dimensions.get("window");
 const CHART_WIDTH = width - 40;
 
 const ReportPage = () => {
-  const { user } = useUser();
-  const bikeId = user.selectedBikeId;
+  const bikeId = useAuthStore((s) => s.selectedBikeId);
   const [refreshing, setRefreshing] = useState(false);
 
   const [report, setReport] = useState(null);
@@ -39,8 +38,7 @@ const ReportPage = () => {
     if (!bikeId) return;
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE_URL}/dashboard/bikes/${bikeId}/report`)
-      .then((res) => res.json())
+    api.get(`/dashboard/bikes/${bikeId}/report`)
       .then((data) => {
         setReport(data);
         setLoading(false);

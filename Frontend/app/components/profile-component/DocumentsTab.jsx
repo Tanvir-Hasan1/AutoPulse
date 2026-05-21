@@ -13,10 +13,12 @@ import {
 import Toast from "react-native-toast-message";
 import { WebView } from "react-native-webview";
 import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const DocumentsTab = ({ documents, styles }) => {
-  const { user } = useUser();
+  const userId = useAuthStore((s) => s.userId);
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const user = { userId, selectedBikeId };
   const [licenseOverlayVisible, setLicenseOverlayVisible] = useState(false);
   const [licenseImageUri, setLicenseImageUri] = useState(null);
   const [isLoadingLicense, setIsLoadingLicense] = useState(false);

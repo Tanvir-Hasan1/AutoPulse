@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import api from "../../../store/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 import BikesTab from "../../components/profile-component/BikesTab";
 import DocumentsTab from "../../components/profile-component/DocumentsTab";
 import ProductsTab from "../../components/profile-component/ProductsTab";
@@ -24,42 +24,43 @@ export default function ProfileView() {
   const [activeTab, setActiveTab] = useState("bikes");
   const router = useRouter();
 
-  const { user, updateUser, selectBike } = useUser();
-  console.log("User Context:", user?.selectedBikeId);
+  const userId = useAuthStore((s) => s.userId);
+  const bikes = useAuthStore((s) => s.bikes);
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const setBikes = useAuthStore((s) => s.setBikes);
+  const selectBike = useAuthStore((s) => s.selectBike);
+  const name = useAuthStore((s) => s.name);
+  const email = useAuthStore((s) => s.email);
+  const avatar = useAuthStore((s) => s.avatar);
+  const createdAt = useAuthStore((s) => s.createdAt);
 
-  const bikes = user?.bikes || [];
-  const selectedBikeId = user?.selectedBikeId;
+  const user = {
+    userId,
+    name,
+    email,
+    avatar,
+    createdAt,
+    bikes,
+    selectedBikeId,
+  };
 
   // Refetch bikes for refresh button
   const fetchBikes = useCallback(async () => {
-    const userId = user?.userId;
     if (!userId) return;
-
     try {
-      const response = await fetch(`${API_BASE_URL}/bikes/user/${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch bikes");
-      const data = await response.json();
-
+      const data = await api.get(`/bikes/user/${userId}`);
       if (data && Array.isArray(data.bikes)) {
-        updateUser((prev) => ({
-          ...prev,
-          bikes: data.bikes,
-          selectedBikeId:
-            prev.selectedBikeId ||
-            (data.bikes.length > 0 ? data.bikes[0]._id : null),
-        }));
+        setBikes(data.bikes);
       }
     } catch (err) {
       console.error("Error fetching bikes:", err);
     }
-  }, [updateUser]); // Remove user from dependencies, use closure instead
+  }, [userId, setBikes]);
 
   // Handler to set a bike as primary
   const handleSelectBike = (bike) => {
     if (!bike || !bike._id) return;
-    console.log("Set as Primary clicked for bike:", bike);
     selectBike(bike._id);
-    // TODO: Optionally, make an API call to persist this change in backend
   };
 
   const [products, setProducts] = useState([]);
@@ -74,13 +75,12 @@ export default function ProfileView() {
       setRefreshing(true);
       try {
         if (updatedBike) {
-          // Immediately update the local state
-          updateUser((prev) => ({
-            ...prev,
-            bikes: prev.bikes.map((bike) =>
+          // Immediately update the local state via store
+          setBikes(
+            bikes.map((bike) =>
               bike._id === updatedBike._id ? updatedBike : bike
-            ),
-          }));
+            )
+          );
         }
         // Then fetch the latest data
         await fetchBikes();
@@ -88,14 +88,13 @@ export default function ProfileView() {
         setRefreshing(false);
       }
     },
-    [fetchBikes, updateUser]
+    [fetchBikes, setBikes, bikes]
   );
 
-  // Initial bikes fetch
   useEffect(() => {
     let mounted = true;
     const initializeData = async () => {
-      if (user?.userId && mounted) {
+      if (userId && mounted) {
         await fetchBikes();
       }
     };
@@ -103,15 +102,12 @@ export default function ProfileView() {
     return () => {
       mounted = false;
     };
-  }, [user?.userId]); // Removed fetchBikes from dependencies
+  }, [userId]);
 
   const fetchProducts = useCallback(async () => {
-    const userId = user?.userId;
     if (!userId) return;
-
     try {
-      const res = await fetch(`${API_BASE_URL}/marketplace/products/${userId}`);
-      const data = await res.json();
+      const data = await api.get(`/marketplace/products/${userId}`);
       if (data && Array.isArray(data.products)) {
         setProducts(data.products);
       } else {
@@ -121,7 +117,7 @@ export default function ProfileView() {
       console.error("Error fetching products:", err);
       setProducts([]);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     let mounted = true;
@@ -309,7 +305,7 @@ export default function ProfileView() {
               products={products}
               styles={styles}
               getProductImageUrl={(productId) =>
-                `${API_BASE_URL}/marketplace/product-image/${productId}`
+                `${process.env.EXPO_PUBLIC_API_BASE_URL}/marketplace/product-image/${productId}`
               }
               onProductDeleted={handleRefresh}
             />

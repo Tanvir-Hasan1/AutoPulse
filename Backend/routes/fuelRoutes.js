@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const fuel = require("../controllers/fuelController");
+const authMiddleware = require("../middlewares/authMiddleware");
+
+// Secure all fuel routes
+router.use(authMiddleware);
+
 
 /**
  * @swagger

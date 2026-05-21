@@ -15,9 +15,9 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import { API_BASE_URL } from "../../config"; // e.g. http://192.168.x.x:5000/api
-import { useUser } from "../_contexts/UserContext";
-import CalendarModal from "./CalendarModal"; // <-- Make sure you have this import
+import api from "../../store/api";
+import { useAuthStore } from "../../store/useAuthStore";
+import CalendarModal from "./CalendarModal";
 
 const serviceTypes = [
   "Engine Oil Change",
@@ -32,6 +32,7 @@ const serviceTypes = [
 ];
 
 export default function ServiceLog({
+  bikeId: bikeIdProp,
   serviceLogs,
   setServiceLogs,
   newServiceLog,
@@ -40,8 +41,8 @@ export default function ServiceLog({
   openDatePicker,
   formatDisplayDate,
 }) {
-  const { user } = useUser();
-  const bikeId = user.selectedBikeId;
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const bikeId = bikeIdProp || selectedBikeId;
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
@@ -54,12 +55,7 @@ export default function ServiceLog({
 
   const fetchServiceLogs = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/service/${bikeId}`);
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Failed to load service logs");
-
-      // Sort logs by date DESC (latest first)
+      const data = await api.get(`/service/${bikeId}`);
       const sorted = data.sort((a, b) => new Date(b.date) - new Date(a.date));
       setServiceLogs(sorted);
     } catch (error) {
@@ -69,35 +65,26 @@ export default function ServiceLog({
   };
 
   const handleAddServiceLog = async () => {
-    if (!newServiceLog.type || !newServiceLog.cost || !newServiceLog.odometer) {
+    if (!newServiceLog?.type || !newServiceLog?.cost || !newServiceLog?.odometer) {
       Alert.alert("Error", "Please fill required service log fields");
       return;
     }
 
     const payload = {
       bike: bikeId,
-      date: newServiceLog.date,
-      serviceType: newServiceLog.type,
-      cost: parseFloat(newServiceLog.cost),
-      odometer: parseFloat(newServiceLog.odometer),
-      nextService: newServiceLog.nextService
+      date: newServiceLog?.date,
+      serviceType: newServiceLog?.type,
+      cost: parseFloat(newServiceLog?.cost),
+      odometer: parseFloat(newServiceLog?.odometer),
+      nextService: newServiceLog?.nextService
         ? parseFloat(newServiceLog.nextService)
         : null,
-      description: newServiceLog.description,
+      description: newServiceLog?.description,
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/service`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save");
-
-      await fetchServiceLogs(); // Refresh logs to include new entry
-
+      await api.post("/service", payload);
+      await fetchServiceLogs();
       setNewServiceLog({
         date: new Date().toISOString().split("T")[0],
         type: "",
@@ -106,7 +93,6 @@ export default function ServiceLog({
         nextService: "",
         description: "",
       });
-
       Toast.show({
         type: "success",
         text1: "Success",
@@ -130,20 +116,9 @@ export default function ServiceLog({
 
   const handleDeleteServiceLog = async (logId) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/service/${logId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Failed to delete service log");
-      }
-
-      setServiceLogs(
-        serviceLogs.filter((log) => (log._id || log.id) !== logId)
-      );
+      await api.delete(`/service/${logId}`);
+      setServiceLogs(serviceLogs.filter((log) => (log._id || log.id) !== logId));
       setSelectedLogId(null);
-
       Toast.show({
         type: "success",
         text1: "Deleted",
@@ -179,7 +154,7 @@ export default function ServiceLog({
   };
 
   const handleUpdateServiceLog = async () => {
-    if (!editingLog.cost || !editingLog.odometer || !editingLog.type) {
+    if (!editingLog?.cost || !editingLog?.odometer || !editingLog?.type) {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -192,35 +167,21 @@ export default function ServiceLog({
     }
 
     const payload = {
-      date: editingLog.date,
-      serviceType: editingLog.type,
-      cost: parseFloat(editingLog.cost),
-      odometer: parseFloat(editingLog.odometer),
-      nextService: editingLog.nextService
+      date: editingLog?.date,
+      serviceType: editingLog?.type,
+      cost: parseFloat(editingLog?.cost),
+      odometer: parseFloat(editingLog?.odometer),
+      nextService: editingLog?.nextService
         ? parseFloat(editingLog.nextService)
         : null,
-      description: editingLog.description,
+      description: editingLog?.description,
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/service/${editingLog.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || "Failed to update");
-
-      // Refresh service logs after update
+      await api.put(`/service/${editingLog.id}`, payload);
       await fetchServiceLogs();
-
       setIsEditing(false);
       setEditingLog(null);
-
       Toast.show({
         type: "success",
         text1: "Success",
@@ -313,7 +274,7 @@ export default function ServiceLog({
                 <Text style={styles.datePickerText}>
                   {isEditing
                     ? formatDisplayDate(editingLog?.date)
-                    : formatDisplayDate(newServiceLog.date)}
+                    : formatDisplayDate(newServiceLog?.date)}
                 </Text>
                 <Ionicons name="calendar" size={20} color="#6b7280" />
               </TouchableOpacity>
@@ -331,11 +292,11 @@ export default function ServiceLog({
                 <Text
                   style={[
                     styles.dropdownButtonText,
-                    !(isEditing ? editingLog?.type : newServiceLog.type) &&
+                    !(isEditing ? editingLog?.type : newServiceLog?.type) &&
                       styles.dropdownPlaceholder,
                   ]}
                 >
-                  {(isEditing ? editingLog?.type : newServiceLog.type) ||
+                  {(isEditing ? editingLog?.type : newServiceLog?.type) ||
                     "Select service type"}
                 </Text>
                 <Ionicons name="chevron-down" size={16} color="#6b7280" />
@@ -348,7 +309,7 @@ export default function ServiceLog({
               <Text style={styles.label}>Cost (BDT) *</Text>
               <TextInput
                 style={styles.input}
-                value={isEditing ? editingLog?.cost : newServiceLog.cost}
+                value={isEditing ? editingLog?.cost : newServiceLog?.cost}
                 onChangeText={(text) =>
                   isEditing
                     ? setEditingLog({ ...editingLog, cost: text })
@@ -366,7 +327,7 @@ export default function ServiceLog({
               <TextInput
                 style={styles.input}
                 value={
-                  isEditing ? editingLog?.odometer : newServiceLog.odometer
+                  isEditing ? editingLog?.odometer : newServiceLog?.odometer
                 }
                 onChangeText={(text) =>
                   isEditing
@@ -387,7 +348,7 @@ export default function ServiceLog({
             <TextInput
               style={styles.input}
               value={
-                isEditing ? editingLog?.nextService : newServiceLog.nextService
+                isEditing ? editingLog?.nextService : newServiceLog?.nextService
               }
               onChangeText={(text) =>
                 isEditing
@@ -407,7 +368,7 @@ export default function ServiceLog({
             <TextInput
               style={[styles.input, styles.textArea]}
               value={
-                isEditing ? editingLog?.description : newServiceLog.description
+                isEditing ? editingLog?.description : newServiceLog?.description
               }
               onChangeText={(text) =>
                 isEditing
@@ -549,7 +510,7 @@ export default function ServiceLog({
         onClose={() => setShowServiceDatePicker(false)}
         onSelect={handleServiceDateSelect}
         title="Select Service Date"
-        selectedDate={isEditing ? editingLog?.date : newServiceLog.date}
+        selectedDate={isEditing ? editingLog?.date : newServiceLog?.date}
       />
 
       {/* Service Type Dropdown Modal */}
@@ -589,7 +550,7 @@ export default function ServiceLog({
                   key={type}
                   style={[
                     styles.dropdownItem,
-                    (isEditing ? editingLog?.type : newServiceLog.type) ===
+                    (isEditing ? editingLog?.type : newServiceLog?.type) ===
                       type && styles.dropdownItemSelected,
                   ]}
                   onPress={() => handleServiceTypeSelect(type)}
@@ -597,13 +558,13 @@ export default function ServiceLog({
                   <Text
                     style={[
                       styles.dropdownItemText,
-                      (isEditing ? editingLog?.type : newServiceLog.type) ===
+                      (isEditing ? editingLog?.type : newServiceLog?.type) ===
                         type && styles.dropdownItemTextSelected,
                     ]}
                   >
                     {type}
                   </Text>
-                  {(isEditing ? editingLog?.type : newServiceLog.type) ===
+                  {(isEditing ? editingLog?.type : newServiceLog?.type) ===
                     type && (
                     <Ionicons name="checkmark" size={20} color="#4F46E5" />
                   )}

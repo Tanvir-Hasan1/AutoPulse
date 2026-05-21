@@ -12,11 +12,10 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function TaxToken() {
-  const { user } = useUser?.() || {};
-  const selectedBikeId = user?.selectedBikeId;
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
   const [fileUri, setFileUri] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fileType, setFileType] = useState(null); // 'image' or 'pdf'

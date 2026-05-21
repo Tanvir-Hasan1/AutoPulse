@@ -1,16 +1,37 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
-import { ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
-import { useUser } from "../../_contexts/UserContext";
+import { Alert, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const SettingsTab = ({ notificationSettings, toggleNotification, styles }) => {
-  const navigation = useNavigation();
-  const { clearUser } = useUser();
+  const logout = useAuthStore((s) => s.logout);
 
   const handleSignOut = () => {
-    clearUser();
-    router.replace("/(auth)/LoginPage");
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear Zustand state
+              logout();
+              // Also clear persisted auth data from AsyncStorage
+              await AsyncStorage.removeItem("autopulse-auth");
+            } catch (e) {
+              console.error("Error during sign out:", e);
+            } finally {
+              // Always navigate to login, regardless of errors
+              router.replace("/(auth)/LoginPage");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (

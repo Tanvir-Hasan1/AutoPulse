@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const license = require("../controllers/licenseController");
+const authMiddleware = require("../middlewares/authMiddleware");
+
+// Secure all license routes
+router.use(authMiddleware);
+
 
 /**
  * @swagger

@@ -1,6 +1,7 @@
 import { Link } from "expo-router";
 import { useEffect, useState } from "react";
-import { useUser } from "../../_contexts/UserContext";
+import api from "../../../store/api";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -14,7 +15,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { API_BASE_URL } from "../../../config";
 
 const { width } = Dimensions.get("window");
 
@@ -24,10 +24,12 @@ export const unstable_settings = {
 export const hideHeader = true;
 
 const Dashboard = () => {
-  const { user, selectBike } = useUser();
-  const userId = user?.userId || user?.id;
-  const userName = user?.name;
-  console.log("##Dashboard:", user);
+  const userId = useAuthStore((s) => s.userId);
+  const userName = useAuthStore((s) => s.name);
+  const bikes = useAuthStore((s) => s.bikes);
+  const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const selectBike = useAuthStore((s) => s.selectBike);
+  const getSelectedBike = useAuthStore((s) => s.getSelectedBike);
   const [refreshing, setRefreshing] = useState(false);
 
   // Demo quick actions with updated license action
@@ -87,21 +89,14 @@ const Dashboard = () => {
   };
 
   // Dashboard Header
-  const selectedBikeId = user.selectedBikeId;
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedBike =
-    user?.bikes?.find(
+    bikes?.find(
       (bike) => bike.id === selectedBikeId || bike._id === selectedBikeId
-    ) || user?.bikes?.[0];
-
-  useEffect(() => {
-    if (!user.selectedBikeId) return;
-    // fetch dashboard/report data for selectedBike
-  }, [user.selectedBikeId]);
+    ) || bikes?.[0];
 
   const handleBikeSelect = (bikeId) => {
-    // setSelectedBikeId(bikeId); // 🚀 Use selectedBikeId for future API calls
     selectBike(bikeId);
     setModalVisible(false);
   };
@@ -119,15 +114,9 @@ const Dashboard = () => {
     setError(null);
     try {
       const [statusData, tasksData, activitiesData] = await Promise.all([
-        fetch(`${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/status`).then(
-          (res) => res.json()
-        ),
-        fetch(
-          `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/upcoming-tasks`
-        ).then((res) => res.json()),
-        fetch(
-          `${API_BASE_URL}/dashboard/bikes/${selectedBikeId}/recent-activities`
-        ).then((res) => res.json()),
+        api.get(`/dashboard/bikes/${selectedBikeId}/status`),
+        api.get(`/dashboard/bikes/${selectedBikeId}/upcoming-tasks`),
+        api.get(`/dashboard/bikes/${selectedBikeId}/recent-activities`),
       ]);
       setCurrentStatus(statusData);
       setUpcomingTasks(tasksData);
@@ -145,7 +134,7 @@ const Dashboard = () => {
   }, [selectedBikeId]);
 
   // Defensive rendering for required objects
-  if (!user || !user.bikes || user.bikes.length === 0)
+  if (!bikes || bikes.length === 0)
     return (
       <SafeAreaView style={styles.container}>
         <Text style={{ margin: 20 }}>No bikes found for this user.</Text>
@@ -226,7 +215,7 @@ const Dashboard = () => {
               >
                 Select Your Bike
               </Text>
-              {user.bikes.map((bike) => (
+              {bikes.map((bike) => (
                 <TouchableOpacity
                   key={bike.id || bike._id}
                   onPress={() => handleBikeSelect(bike.id || bike._id)}

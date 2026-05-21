@@ -1,5 +1,4 @@
 // config.js
 
-const LOCAL_IP = "https://autopulse-tn4w.onrender.com/"; // manually update this if IP changes
-
-export const API_BASE_URL = `${LOCAL_IP}/api`;
+// Set EXPO_PUBLIC_API_BASE_URL in your .env file
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;

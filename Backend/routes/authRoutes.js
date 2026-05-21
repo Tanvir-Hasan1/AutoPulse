@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../controllers/authController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 /**
  * @swagger
@@ -103,7 +104,7 @@ router.post("/login", auth.loginUser);
  *       500:
  *         description: Server error
  */
-router.get("/user/:email", auth.getUserByEmail);
+router.get("/user/:email", authMiddleware, auth.getUserByEmail);
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.get("/user/:email", auth.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.get("/users", auth.getAllUsers);
+router.get("/users", authMiddleware, auth.getAllUsers);
 
 /**
  * @swagger
@@ -153,7 +154,7 @@ router.get("/users", auth.getAllUsers);
  *       500:
  *         description: Server error
  */
-router.put("/update-password", auth.updatePassword);
+router.put("/update-password", authMiddleware, auth.updatePassword);
 
 /**
  * @swagger
@@ -249,6 +250,69 @@ router.post("/reset-password", auth.resetPasswordWithOTP);
  *       500:
  *         description: Server error
  */
-router.put("/change-name", auth.changeName);
+router.put("/change-name", authMiddleware, auth.changeName);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       400:
+ *         description: Refresh token is required
+ *       401:
+ *         description: Invalid or expired refresh token
+ *       403:
+ *         description: Invalid or expired session
+ */
+router.post("/refresh", auth.refreshTokenController);
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout user and invalidate session
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", authMiddleware, auth.logoutUser);
 
 module.exports = router;

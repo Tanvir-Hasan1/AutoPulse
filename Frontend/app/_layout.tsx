@@ -2,7 +2,6 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import Toast from "react-native-toast-message";
-import UserProvider from "./_contexts/UserContext";
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
@@ -10,7 +9,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     try {
-      // Initialize any required services here
+      // Zustand's persist middleware hydrates from AsyncStorage automatically.
+      // A small tick ensures the store is hydrated before the first render.
       setIsReady(true);
     } catch (err) {
       console.error("Initialization error:", err);
@@ -49,9 +49,9 @@ export default function RootLayout() {
   }
 
   return (
-    <UserProvider>
+    <>
       <Stack screenOptions={{ headerShown: false }} />
       <Toast />
-    </UserProvider>
+    </>
   );
 }

@@ -1,6 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const bike = require("../controllers/bikeController");
+const authMiddleware = require("../middlewares/authMiddleware");
+
+// Public route — called during onboarding right after signup (no token yet)
+// The user ID is passed in the request body for ownership
+router.post("/registerBike", bike.registerBike);
+
+// Secure all other bike routes
+router.use(authMiddleware);
+
 
 /**
  * @swagger

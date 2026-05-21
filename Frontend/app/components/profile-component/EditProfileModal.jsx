@@ -10,10 +10,10 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function EditProfileModal({ visible, onClose, user }) {
-  const { updateUser } = useUser();
+  const updateUser = useAuthStore((s) => s.updateUser);
   const [username, setUsername] = useState(user?.username || "");
   const [prevPassword, setPrevPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

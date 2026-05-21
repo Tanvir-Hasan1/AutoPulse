@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
-import { useUser } from "../../_contexts/UserContext";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const categories = [
   { label: "Accessories", value: "accessories" },
@@ -67,7 +67,8 @@ export default function PostProduct() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
-  const { user } = useUser();
+  const userId = useAuthStore((s) => s.userId);
+  const user = { userId };
 
   // Updated pickImage function - removed deprecated MediaTypeOptions
   const pickImage = async () => {

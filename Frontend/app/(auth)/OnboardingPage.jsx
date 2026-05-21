@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import * as Progress from "react-native-progress";
-import { API_BASE_URL } from "../../config";
-import { useUser } from "../_contexts/UserContext";
+import api from "../../store/api";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const BIKE_BRANDS = [
   "Royal Enfield",
@@ -57,7 +57,9 @@ const BIKE_MODELS = {
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { user } = useUser();
+  const userId = useAuthStore((s) => s.userId);
+  const addBike = useAuthStore((s) => s.addBike);
+
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,7 +75,7 @@ export default function OnboardingScreen() {
     setBikeData((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === "brand" && { model: "" }), // Reset model if brand changes
+      ...(field === "brand" && { model: "" }),
     }));
   };
 
@@ -86,7 +88,7 @@ export default function OnboardingScreen() {
   };
 
   const submitBikeData = async () => {
-    if (!user.userId || !user.email) {
+    if (!userId) {
       Alert.alert("Error", "User information not found. Please sign up again.");
       router.replace("/(auth)/SignupPage");
       return;
@@ -95,14 +97,8 @@ export default function OnboardingScreen() {
     try {
       setIsLoading(true);
 
-      // Console log for verification
-      console.log("🚲 Submitting bike data:");
-      console.log("User ID from context:", user.userId);
-      console.log("Email from context:", user.email);
-      console.log("Bike data:", bikeData);
-
       const payload = {
-        user: user.userId,
+        user: userId,
         brand: bikeData.brand,
         model: bikeData.model,
         year: bikeData.year,
@@ -110,23 +106,17 @@ export default function OnboardingScreen() {
         odometer: parseInt(bikeData.odometer),
       };
 
-      console.log("📤 API Payload:", payload);
+      console.log("📤 Registering bike:", payload);
 
-      const response = await fetch(`${API_BASE_URL}/bikes/registerBike`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      // Uses the api helper (token auto-attached, but also works as public route)
+      const data = await api.post("/bikes/registerBike", payload);
 
-      const data = await response.json();
+      console.log("✅ Bike registered:", data.bike);
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to save bike data");
+      // Add the new bike to the Zustand store immediately
+      if (data.bike) {
+        addBike(data.bike);
       }
-
-      console.log("✅ Bike data saved successfully:", data);
 
       Alert.alert("Success", "Bike setup completed successfully!", [
         {

@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const taxToken = require("../controllers/taxTokenController");
+const authMiddleware = require("../middlewares/authMiddleware");
+
+// Secure all tax token routes
+router.use(authMiddleware);
+
 
 /**
  * @swagger

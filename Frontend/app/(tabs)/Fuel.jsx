@@ -13,8 +13,10 @@ import CalendarModal from "../components/CalendarModal";
 import FuelLog from "../components/FuelLog";
 import ServiceLog from "../components/ServiceLog";
 import formatDisplayDate from "../utils/dateHelpers";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function FuelServiceTracker() {
+  const bikeId = useAuthStore((s) => s.selectedBikeId);
   const [activeTab, setActiveTab] = useState("fuel");
 
   const [fuelLevel, setFuelLevel] = useState(65);
@@ -102,6 +104,7 @@ export default function FuelServiceTracker() {
           style={{ display: activeTab === "fuel" ? "flex" : "none", flex: 1 }}
         >
           <FuelLog
+            bikeId={bikeId}
             fuelLogs={fuelLogs}
             setFuelLogs={setFuelLogs}
             newFuelLog={newFuelLog}
@@ -120,6 +123,7 @@ export default function FuelServiceTracker() {
           }}
         >
           <ServiceLog
+            bikeId={bikeId}
             serviceLogs={serviceLogs}
             setServiceLogs={setServiceLogs}
             newServiceLog={newServiceLog}

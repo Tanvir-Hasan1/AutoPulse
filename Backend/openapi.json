@@ -1,0 +1,3431 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AutoPulse API",
+    "version": "1.0.0",
+    "description": "API for managing driving license uploads and operations"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          },
+          "name": {
+            "type": "string",
+            "description": "User full name",
+            "example": "Tanvir Hasan"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email address",
+            "example": "t@gmail.com"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "Avatar URL or path",
+            "example": ""
+          },
+          "bikes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bike"
+            },
+            "description": "List of user's bikes"
+          },
+          "drivingLicense": {
+            "type": "object",
+            "properties": {
+              "fileId": {
+                "type": "string",
+                "description": "GridFS file ID",
+                "example": "685db385b85dc63148492c3d"
+              },
+              "filename": {
+                "type": "string",
+                "description": "Generated filename",
+                "example": "license_685d4cabcc39dcbd6a017198_1750971269305.pdf"
+              },
+              "originalName": {
+                "type": "string",
+                "description": "Original uploaded filename",
+                "example": "driving licence.pdf"
+              },
+              "uploadDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Upload timestamp",
+                "example": "2025-06-26T20:54:29.325Z"
+              },
+              "fileSize": {
+                "type": "integer",
+                "description": "File size in bytes",
+                "example": 101977
+              },
+              "contentType": {
+                "type": "string",
+                "description": "MIME type of the file",
+                "example": "application/pdf"
+              },
+              "isVerified": {
+                "type": "boolean",
+                "description": "Verification status",
+                "example": false
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-26T13:35:39.965Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-26T20:54:29.330Z"
+          }
+        }
+      },
+      "Bike": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          },
+          "user": {
+            "type": "string",
+            "example": "685d4cabcc39dcbd6a017198"
+          },
+          "brand": {
+            "type": "string",
+            "example": "Suzuki"
+          },
+          "model": {
+            "type": "string",
+            "example": "Gixxer"
+          },
+          "year": {
+            "type": "string",
+            "example": "2025"
+          },
+          "registrationNumber": {
+            "type": "string",
+            "example": "DH-LA-65-9421"
+          },
+          "odometer": {
+            "type": "integer",
+            "example": 9500
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-26T13:45:43.514Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-26T13:45:43.514Z"
+          }
+        }
+      },
+      "AuthRegisterResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User registered successfully"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "AuthLoginResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "AuthUsersList": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/User"
+            }
+          }
+        }
+      },
+      "License": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "GridFS file ID",
+            "example": "685da8f69b99ef0301fb275d"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Generated filename",
+            "example": "license_685d4cabcc39dcbd6a017198_1750968566045.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "description": "Original uploaded filename",
+            "example": "linux commands.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Upload timestamp",
+            "example": "2025-06-26T20:09:26.066Z"
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "File size in bytes",
+            "example": 992116
+          },
+          "contentType": {
+            "type": "string",
+            "description": "MIME type of the file",
+            "example": "application/pdf"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "Verification status",
+            "example": false
+          }
+        }
+      },
+      "UploadLicense": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          },
+          "fileId": {
+            "type": "string",
+            "description": "GridFS file ID",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Generated filename",
+            "example": "license_685d4cabcc39dcbd6a017198_1750969352190.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "description": "Original uploaded filename",
+            "example": "Screenshot 2025-06-26 232810.png"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Upload timestamp",
+            "example": "2025-06-26T20:22:32.225Z"
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "File size in bytes",
+            "example": 28310
+          },
+          "contentType": {
+            "type": "string",
+            "description": "MIME type of the file",
+            "example": "image/png"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "Verification status",
+            "example": false
+          }
+        }
+      },
+      "LicenseStatus": {
+        "type": "object",
+        "properties": {
+          "hasLicense": {
+            "type": "string",
+            "description": "License ID if exists, or boolean false if no license",
+            "example": "685da8349b99ef0301fb2757"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "Verification status",
+            "example": false
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Upload timestamp",
+            "example": "2025-06-26T20:06:12.732Z"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Original filename",
+            "example": "driving licence.pdf"
+          }
+        }
+      },
+      "DeletedLicense": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "description": "GridFS file ID",
+            "example": "685da7c39b99ef0301fb274f"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Generated filename",
+            "example": "license_685d4cabcc39dcbd6a017198_1750968259421.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "description": "Original uploaded filename",
+            "example": "driving licence.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Upload timestamp",
+            "example": "2025-06-26T20:04:19.584Z"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "error": {
+            "type": "string",
+            "description": "Detailed error information"
+          }
+        }
+      },
+      "RegistrationDoc": {
+        "type": "object",
+        "properties": {
+          "bikeId": {
+            "type": "string",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          },
+          "fileId": {
+            "type": "string",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "filename": {
+            "type": "string",
+            "example": "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "bike_registration.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T20:22:32.225Z"
+          },
+          "fileSize": {
+            "type": "integer",
+            "example": 28310
+          },
+          "contentType": {
+            "type": "string",
+            "example": "application/pdf"
+          }
+        }
+      },
+      "UploadRegistration": {
+        "type": "object",
+        "properties": {
+          "bikeId": {
+            "type": "string",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          },
+          "fileId": {
+            "type": "string",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "filename": {
+            "type": "string",
+            "example": "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "bike_registration.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T20:22:32.225Z"
+          },
+          "fileSize": {
+            "type": "integer",
+            "example": 28310
+          },
+          "contentType": {
+            "type": "string",
+            "example": "application/pdf"
+          }
+        }
+      },
+      "BikeInfo": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          },
+          "brand": {
+            "type": "string",
+            "example": "Suzuki"
+          },
+          "model": {
+            "type": "string",
+            "example": "Gixxer"
+          },
+          "year": {
+            "type": "string",
+            "example": "2025"
+          },
+          "registrationNumber": {
+            "type": "string",
+            "example": "DH-LA-65-9421"
+          },
+          "odometer": {
+            "type": "integer",
+            "example": 9500
+          }
+        }
+      },
+      "Registration": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "filename": {
+            "type": "string",
+            "example": "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "bike_registration.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T20:22:32.225Z"
+          },
+          "fileSize": {
+            "type": "integer",
+            "example": 28310
+          },
+          "contentType": {
+            "type": "string",
+            "example": "application/pdf"
+          }
+        }
+      },
+      "RegistrationStatus": {
+        "type": "object",
+        "properties": {
+          "hasRegistration": {
+            "type": "string",
+            "description": "Registration file ID if exists, or boolean false if no registration",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T20:22:32.225Z"
+          },
+          "filename": {
+            "type": "string",
+            "example": "bike_registration.pdf"
+          }
+        }
+      },
+      "DeletedRegistration": {
+        "type": "object",
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "example": "685dac080cbde4aba4fb7fd6"
+          },
+          "filename": {
+            "type": "string",
+            "example": "registration_685d4f07cc39dcbd6a0171a0_1750969352190.pdf"
+          },
+          "originalName": {
+            "type": "string",
+            "example": "bike_registration.pdf"
+          },
+          "uploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T20:22:32.225Z"
+          }
+        }
+      },
+      "ServiceLog": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6860a1b2c3d4e5f678901234"
+          },
+          "bike": {
+            "type": "string",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-27"
+          },
+          "serviceType": {
+            "type": "string",
+            "example": "Oil Change"
+          },
+          "cost": {
+            "type": "number",
+            "example": 500
+          },
+          "odometer": {
+            "type": "number",
+            "example": 12000
+          },
+          "nextService": {
+            "type": "number",
+            "example": 13000
+          },
+          "description": {
+            "type": "string",
+            "example": "Changed oil and filter"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-27T10:00:00.000Z"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "60d21b4667d0d8992e610c85"
+          },
+          "productName": {
+            "type": "string",
+            "example": "Helmet"
+          },
+          "price": {
+            "type": "number",
+            "example": 1200
+          },
+          "productImage": {
+            "type": "object",
+            "properties": {
+              "fileId": {
+                "type": "string",
+                "example": "60d21b4667d0d8992e610c99"
+              },
+              "filename": {
+                "type": "string",
+                "example": "helmet.jpg"
+              },
+              "originalName": {
+                "type": "string",
+                "example": "helmet.jpg"
+              },
+              "uploadDate": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-07-01T10:00:00.000Z"
+              },
+              "fileSize": {
+                "type": "number",
+                "example": 204800
+              },
+              "contentType": {
+                "type": "string",
+                "example": "image/jpeg"
+              }
+            }
+          },
+          "category": {
+            "type": "string",
+            "example": "Accessories"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "01700000000"
+          },
+          "address": {
+            "type": "string",
+            "example": "Dhaka, Bangladesh"
+          },
+          "details": {
+            "type": "string",
+            "example": "High quality helmet for bikers."
+          },
+          "user": {
+            "type": "string",
+            "example": "685d4cabcc39dcbd6a017198"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-01T10:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-01T10:00:00.000Z"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Tanvir Hasan"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "t@gmail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthRegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User already exists"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login a user",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "t@gmail.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/user/{email}": {
+      "get": {
+        "summary": "Get user by email (for testing)",
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "email",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "User email"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/users": {
+      "get": {
+        "summary": "Get all users (for testing)",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUsersList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/update-password": {
+      "put": {
+        "summary": "Update user password",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
+                "properties": {
+                  "currentPassword": {
+                    "type": "string"
+                  },
+                  "newPassword": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          },
+          "401": {
+            "description": "Current password is incorrect or unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Forgot password",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "t@gmail.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset link sent"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "summary": "Reset password with OTP",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "otp",
+                  "newPassword"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "t@gmail.com"
+                  },
+                  "otp": {
+                    "type": "string",
+                    "example": "123456"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "description": "Invalid OTP or request"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/auth/change-name": {
+      "put": {
+        "summary": "Update user name",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "newName"
+                ],
+                "properties": {
+                  "newName": {
+                    "type": "string",
+                    "example": "John Doe"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Name updated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/bikes/registerBike": {
+      "post": {
+        "summary": "Register a new bike",
+        "tags": [
+          "Bike"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user",
+                  "brand",
+                  "model",
+                  "year",
+                  "registrationNumber"
+                ],
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "description": "User ID",
+                    "example": "685d4cabcc39dcbd6a017198"
+                  },
+                  "brand": {
+                    "type": "string",
+                    "example": "Suzuki"
+                  },
+                  "model": {
+                    "type": "string",
+                    "example": "Gixxer"
+                  },
+                  "year": {
+                    "type": "string",
+                    "example": "2025"
+                  },
+                  "registrationNumber": {
+                    "type": "string",
+                    "example": "DH-LA-65-9421"
+                  },
+                  "odometer": {
+                    "type": "number",
+                    "example": 9500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Bike created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike created successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/Bike"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "All required fields must be provided"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/bikes/getAllBikes": {
+      "get": {
+        "summary": "Get all bikes",
+        "tags": [
+          "Bike"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all bikes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bike"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/bikes/update": {
+      "put": {
+        "summary": "Update bike information",
+        "tags": [
+          "Bike"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Bike ID",
+                    "example": "685d4cabcc39dcbd6a017198"
+                  },
+                  "brand": {
+                    "type": "string",
+                    "example": "Yamaha"
+                  },
+                  "model": {
+                    "type": "string",
+                    "example": "MT-15"
+                  },
+                  "year": {
+                    "type": "string",
+                    "example": "2024"
+                  },
+                  "registrationNumber": {
+                    "type": "string",
+                    "example": "DHK-123-456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bike updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike updated successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/Bike"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/bikes/delete": {
+      "delete": {
+        "summary": "Delete a bike",
+        "tags": [
+          "Bike"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Bike ID",
+                    "example": "685d4cabcc39dcbd6a017198"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bike deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/bikes/user/{userId}": {
+      "get": {
+        "summary": "Get all bikes for a specific user",
+        "tags": [
+          "Bike"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of user's bikes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User bikes retrieved successfully"
+                    },
+                    "bikes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Bike"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID is required"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/fuel": {
+      "post": {
+        "summary": "Create a new fuel log",
+        "tags": [
+          "Fuel"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bike",
+                  "date",
+                  "amount",
+                  "unitCost",
+                  "odometer"
+                ],
+                "properties": {
+                  "bike": {
+                    "type": "string",
+                    "description": "Bike ID",
+                    "example": "685d4f07cc39dcbd6a0171a0"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-06-27"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "example": 10
+                  },
+                  "unitCost": {
+                    "type": "number",
+                    "example": 120
+                  },
+                  "odometer": {
+                    "type": "number",
+                    "example": 9600
+                  },
+                  "note": {
+                    "type": "string",
+                    "example": "Full tank"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Fuel log saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Fuel log saved successfully"
+                    },
+                    "fuelLog": {
+                      "$ref": "#/components/schemas/FuelLog"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "404": {
+            "description": "Bike not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/fuel/{bikeId}": {
+      "get": {
+        "summary": "Get all fuel logs for a specific bike",
+        "tags": [
+          "Fuel"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bike ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of fuel logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FuelLog"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/fuel/{fuelLogId}": {
+      "delete": {
+        "summary": "Delete a fuel log by ID",
+        "tags": [
+          "Fuel"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fuelLogId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Fuel log ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fuel log deleted"
+          },
+          "404": {
+            "description": "Fuel log not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a fuel log by ID",
+        "tags": [
+          "Fuel"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "fuelLogId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Fuel log ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "example": 12
+                  },
+                  "unitCost": {
+                    "type": "number",
+                    "example": 125
+                  },
+                  "odometer": {
+                    "type": "number",
+                    "example": 9700
+                  },
+                  "note": {
+                    "type": "string",
+                    "example": "Partial fill"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fuel log updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FuelLog"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fuel log not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/fuel/test": {
+      "get": {
+        "summary": "Test route for fuel",
+        "tags": [
+          "Fuel"
+        ],
+        "responses": {
+          "200": {
+            "description": "Fuel route is working",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Fuel route is working ✅"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/license/upload/{userId}": {
+      "post": {
+        "summary": "Upload a driving license",
+        "tags": [
+          "License"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "license": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PDF or image file (max 10MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "License uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Driving license uploaded successfully"
+                    },
+                    "license": {
+                      "$ref": "#/components/schemas/UploadLicense"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Driving license uploaded successfully",
+                  "license": {
+                    "userId": "685d4cabcc39dcbd6a017198",
+                    "fileId": "685dac080cbde4aba4fb7fd6",
+                    "filename": "license_685d4cabcc39dcbd6a017198_1750969352190.pdf",
+                    "originalName": "Screenshot 2025-06-26 232810.png",
+                    "uploadDate": "2025-06-26T20:22:32.225Z",
+                    "fileSize": 28310,
+                    "contentType": "image/png",
+                    "isVerified": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid file type, size, or missing file)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/license/info/{userId}": {
+      "get": {
+        "summary": "Get license information",
+        "tags": [
+          "License"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "License information retrieved successfully"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    },
+                    "license": {
+                      "$ref": "#/components/schemas/License"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "License information retrieved successfully",
+                  "user": {
+                    "userId": "685d4cabcc39dcbd6a017198",
+                    "name": "Tanvir Hasan",
+                    "email": "t@gmail.com"
+                  },
+                  "license": {
+                    "fileId": "685da8f69b99ef0301fb275d",
+                    "filename": "license_685d4cabcc39dcbd6a017198_1750968566045.pdf",
+                    "originalName": "linux commands.pdf",
+                    "uploadDate": "2025-06-26T20:09:26.066Z",
+                    "fileSize": 992116,
+                    "contentType": "application/pdf",
+                    "isVerified": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or license not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/license/download/{userId}": {
+      "get": {
+        "summary": "Download license file",
+        "tags": [
+          "License"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "attachment; filename=\"filename.ext\""
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "MIME type of the file"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or license not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/license/verify/{userId}": {
+      "get": {
+        "summary": "Verify license status",
+        "tags": [
+          "License"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License verification status retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "License verification status retrieved"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    },
+                    "licenseStatus": {
+                      "$ref": "#/components/schemas/LicenseStatus"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "License verification status retrieved",
+                  "user": {
+                    "userId": "685d4cabcc39dcbd6a017198",
+                    "name": "Tanvir Hasan",
+                    "email": "t@gmail.com"
+                  },
+                  "licenseStatus": {
+                    "hasLicense": "685da8349b99ef0301fb2757",
+                    "isVerified": false,
+                    "uploadDate": "2025-06-26T20:06:12.732Z",
+                    "filename": "driving licence.pdf"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/license/delete/{userId}": {
+      "delete": {
+        "summary": "Delete license",
+        "tags": [
+          "License"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the user",
+            "example": "685d4cabcc39dcbd6a017198"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Driving license deleted successfully"
+                    },
+                    "deletedLicense": {
+                      "$ref": "#/components/schemas/DeletedLicense"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Driving license deleted successfully",
+                  "deletedLicense": {
+                    "fileId": "685da7c39b99ef0301fb274f",
+                    "filename": "license_685d4cabcc39dcbd6a017198_1750968259421.pdf",
+                    "originalName": "driving licence.pdf",
+                    "uploadDate": "2025-06-26T20:04:19.584Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or license not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/marketplace/post-product/{userId}": {
+      "post": {
+        "summary": "Post a new bike-related product (userId as URL param)",
+        "tags": [
+          "Marketplace"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB user ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productName",
+                  "price",
+                  "productImage",
+                  "category",
+                  "phoneNumber",
+                  "address"
+                ],
+                "properties": {
+                  "productName": {
+                    "type": "string",
+                    "example": "Helmet"
+                  },
+                  "price": {
+                    "type": "number",
+                    "example": 1200
+                  },
+                  "productImage": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "Accessories"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "example": "01700000000"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "Dhaka, Bangladesh"
+                  },
+                  "details": {
+                    "type": "string",
+                    "example": "High quality helmet for bikers."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product posted successfully"
+          },
+          "400": {
+            "description": "Product image is required"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/marketplace/delete-product/{productId}": {
+      "delete": {
+        "summary": "Delete a product by its ID",
+        "tags": [
+          "Marketplace"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB product ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/marketplace/edit-product/{productId}": {
+      "patch": {
+        "summary": "Edit a product by its ID (with optional image update)",
+        "tags": [
+          "Marketplace"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB product ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productName": {
+                    "type": "string",
+                    "example": "Helmet"
+                  },
+                  "price": {
+                    "type": "number",
+                    "example": 1200
+                  },
+                  "productImage": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional. If provided, replaces the old image."
+                  },
+                  "category": {
+                    "type": "string",
+                    "example": "Accessories"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "example": "01700000000"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "Dhaka, Bangladesh"
+                  },
+                  "details": {
+                    "type": "string",
+                    "example": "High quality helmet for bikers."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Product updated successfully"
+                    },
+                    "product": {
+                      "$ref": "#/components/schemas/Product"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/marketplace/products": {
+      "get": {
+        "summary": "Get all product posts",
+        "tags": [
+          "Marketplace"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/marketplace/products/{userId}": {
+      "get": {
+        "summary": "Get all products posted by a specific user",
+        "tags": [
+          "Marketplace"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products posted by the user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "products": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID is required"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/marketplace/product-image/{productId}": {
+      "get": {
+        "summary": "Get product image by productId",
+        "tags": [
+          "Marketplace"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The MongoDB product ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product image file",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product image not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/registration/upload/{bikeId}": {
+      "post": {
+        "summary": "Upload a bike registration document",
+        "tags": [
+          "Registration"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "registration": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PDF or image file (max 10MB)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration document uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike registration document uploaded successfully"
+                    },
+                    "registration": {
+                      "$ref": "#/components/schemas/UploadRegistration"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Bike registration document uploaded successfully",
+                  "registration": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "registration_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Bike registration.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "fileSize": 361395,
+                    "contentType": "application/pdf"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid file type, size, or missing file)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/registration/info/{bikeId}": {
+      "get": {
+        "summary": "Get registration information",
+        "tags": [
+          "Registration"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Registration information retrieved successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/BikeInfo"
+                    },
+                    "registration": {
+                      "$ref": "#/components/schemas/Registration"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Registration information retrieved successfully",
+                  "bike": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "brand": "Honda",
+                    "model": "CBR600RR",
+                    "year": 2023,
+                    "plateNumber": "ABC-1234",
+                    "owner": {
+                      "_id": "685d4cabcc39dcbd6a017198",
+                      "name": "John Doe",
+                      "email": "john@example.com"
+                    }
+                  },
+                  "registration": {
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "registration_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Bike registration.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "fileSize": 361395,
+                    "contentType": "application/pdf"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or registration not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/registration/download/{bikeId}": {
+      "get": {
+        "summary": "Download registration file",
+        "tags": [
+          "Registration"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "attachment; filename=\"filename.ext\""
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "MIME type of the file"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or registration not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/registration/status/{bikeId}": {
+      "get": {
+        "summary": "Check registration status",
+        "tags": [
+          "Registration"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Registration status retrieved successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/BikeInfo"
+                    },
+                    "registrationStatus": {
+                      "$ref": "#/components/schemas/RegistrationStatus"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Registration status retrieved successfully",
+                  "bike": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "brand": "Honda",
+                    "model": "CBR600RR",
+                    "year": 2023,
+                    "plateNumber": "ABC-1234",
+                    "owner": {
+                      "_id": "685d4cabcc39dcbd6a017198",
+                      "name": "John Doe",
+                      "email": "john@example.com"
+                    }
+                  },
+                  "registrationStatus": {
+                    "hasRegistration": true,
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "filename": "Bike registration.pdf"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/registration/delete/{bikeId}": {
+      "delete": {
+        "summary": "Delete registration",
+        "tags": [
+          "Registration"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike registration document deleted successfully"
+                    },
+                    "deletedRegistration": {
+                      "$ref": "#/components/schemas/DeletedRegistration"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Bike registration document deleted successfully",
+                  "deletedRegistration": {
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "registration_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Bike registration.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or registration not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/service": {
+      "post": {
+        "summary": "Create a new service log",
+        "tags": [
+          "Service"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "bike",
+                  "date",
+                  "serviceType",
+                  "cost",
+                  "odometer"
+                ],
+                "properties": {
+                  "bike": {
+                    "type": "string",
+                    "description": "Bike ID",
+                    "example": "685d4f07cc39dcbd6a0171a0"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-06-27"
+                  },
+                  "serviceType": {
+                    "type": "string",
+                    "example": "Oil Change"
+                  },
+                  "cost": {
+                    "type": "number",
+                    "example": 500
+                  },
+                  "odometer": {
+                    "type": "number",
+                    "example": 12000
+                  },
+                  "nextService": {
+                    "type": "number",
+                    "example": 13000
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Changed oil and filter"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Service log saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Service log saved successfully"
+                    },
+                    "serviceLog": {
+                      "$ref": "#/components/schemas/ServiceLog"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "404": {
+            "description": "Bike not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/service/{bikeId}": {
+      "get": {
+        "summary": "Get all service logs for a specific bike",
+        "tags": [
+          "Service"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Bike ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of service logs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceLog"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/service/{serviceLogId}": {
+      "delete": {
+        "summary": "Delete a service log by ID",
+        "tags": [
+          "Service"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceLogId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Service log ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Service log deleted"
+          },
+          "404": {
+            "description": "Service log not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a service log by ID",
+        "tags": [
+          "Service"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceLogId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Service log ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "serviceType": {
+                    "type": "string",
+                    "example": "Oil Change"
+                  },
+                  "cost": {
+                    "type": "number",
+                    "example": 600
+                  },
+                  "odometer": {
+                    "type": "number",
+                    "example": 12500
+                  },
+                  "nextService": {
+                    "type": "number",
+                    "example": 13500
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Changed oil, filter, and spark plug"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Service log updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceLog"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Service log not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/tax-tokens/upload/{bikeId}": {
+      "post": {
+        "summary": "Upload a bike tax token document",
+        "tags": [
+          "Tax Tokens"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "taxToken": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PDF or image file (max 10MB)"
+                  },
+                  "expiryDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Tax token expiry date",
+                    "example": "2025-12-31"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tax token document uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike tax token document uploaded successfully"
+                    },
+                    "taxToken": {
+                      "$ref": "#/components/schemas/UploadTaxToken"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Bike tax token document uploaded successfully",
+                  "taxToken": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "taxtoken_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Tax token.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "fileSize": 361395,
+                    "contentType": "application/pdf",
+                    "expiryDate": "2025-12-31T00:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid file type, size, or missing file)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-tokens/info/{bikeId}": {
+      "get": {
+        "summary": "Get tax token information",
+        "tags": [
+          "Tax Tokens"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tax token information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Tax token information retrieved successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/BikeInfo"
+                    },
+                    "taxToken": {
+                      "$ref": "#/components/schemas/TaxToken"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Tax token information retrieved successfully",
+                  "bike": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "brand": "Honda",
+                    "model": "CBR600RR",
+                    "year": 2023,
+                    "registrationNumber": "ABC-1234",
+                    "owner": {
+                      "_id": "685d4cabcc39dcbd6a017198",
+                      "name": "John Doe",
+                      "email": "john@example.com"
+                    }
+                  },
+                  "taxToken": {
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "taxtoken_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Tax token.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "fileSize": 361395,
+                    "contentType": "application/pdf",
+                    "expiryDate": "2025-12-31T00:00:00.000Z",
+                    "isExpired": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or tax token not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-tokens/download/{bikeId}": {
+      "get": {
+        "summary": "Download tax token file",
+        "tags": [
+          "Tax Tokens"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File download",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/bmp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "attachment; filename=\"filename.ext\""
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "MIME type of the file"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or tax token not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-tokens/status/{bikeId}": {
+      "get": {
+        "summary": "Check tax token status",
+        "tags": [
+          "Tax Tokens"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tax token status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Tax token status retrieved successfully"
+                    },
+                    "bike": {
+                      "$ref": "#/components/schemas/BikeInfo"
+                    },
+                    "taxTokenStatus": {
+                      "$ref": "#/components/schemas/TaxTokenStatus"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Tax token status retrieved successfully",
+                  "bike": {
+                    "bikeId": "685d4f07cc39dcbd6a0171a0",
+                    "brand": "Honda",
+                    "model": "CBR600RR",
+                    "year": 2023,
+                    "registrationNumber": "ABC-1234",
+                    "owner": {
+                      "_id": "685d4cabcc39dcbd6a017198",
+                      "name": "John Doe",
+                      "email": "john@example.com"
+                    }
+                  },
+                  "taxTokenStatus": {
+                    "hasTaxToken": true,
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "filename": "Tax token.pdf",
+                    "expiryDate": "2025-12-31T00:00:00.000Z",
+                    "isExpired": false,
+                    "daysUntilExpiry": 187
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-tokens/delete/{bikeId}": {
+      "delete": {
+        "summary": "Delete tax token",
+        "tags": [
+          "Tax Tokens"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bikeId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "MongoDB ObjectId of the bike",
+            "example": "685d4f07cc39dcbd6a0171a0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tax token deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Bike tax token document deleted successfully"
+                    },
+                    "deletedTaxToken": {
+                      "$ref": "#/components/schemas/DeletedTaxToken"
+                    }
+                  }
+                },
+                "example": {
+                  "message": "Bike tax token document deleted successfully",
+                  "deletedTaxToken": {
+                    "fileId": "685e0e3e16972f595709fe94",
+                    "filename": "taxtoken_685d4f07cc39dcbd6a0171a0_1750994494636.pdf",
+                    "originalName": "Tax token.pdf",
+                    "uploadDate": "2025-06-27T03:21:34.718Z",
+                    "expiryDate": "2025-12-31T00:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid bike ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike or tax token not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Service",
+      "description": "Bike service log management"
+    }
+  ]
+}
