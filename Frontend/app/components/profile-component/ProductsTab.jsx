@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
 
+import api from "../../../store/api";
+
 const ProductsTab = ({
   products,
   styles,
@@ -61,27 +63,16 @@ const ProductsTab = ({
     setDeletingId(productId);
     let deleteFailed = false;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/marketplace/delete-product/${productId}`,
-        {
-          method: "DELETE",
-        }
-      );
-      let data = {};
-      try {
-        data = await res.json();
-      } catch (jsonErr) {
-        console.log("Failed to parse JSON response:", jsonErr);
-      }
-      console.log("Delete response:", res.status, data);
-      if (res.ok && data.message?.includes("success")) {
+      const data = await api.delete(`/marketplace/delete-product/${productId}`);
+      console.log("Delete response:", data);
+      if (data && data.message?.includes("success")) {
         ToastAndroid.show("Product deleted successfully", ToastAndroid.SHORT);
         if (onProductDeleted) onProductDeleted(productId);
       } else {
         deleteFailed = true;
         Alert.alert(
           "Delete Failed",
-          data.message || `Could not delete product. [${res.status}]`
+          data?.message || `Could not delete product.`
         );
       }
     } catch (err) {

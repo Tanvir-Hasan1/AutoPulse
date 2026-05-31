@@ -10,12 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { WebView } from "react-native-webview";
+import Pdf from 'react-native-pdf';
 import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function Registration() {
   const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const token = useAuthStore((s) => s.accessToken);
   const [fileUri, setFileUri] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fileType, setFileType] = useState(null); // 'image' or 'pdf'
@@ -33,6 +34,7 @@ export default function Registration() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         }
       );
@@ -42,12 +44,8 @@ export default function Registration() {
       }
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("pdf")) {
-        // Use Google Docs Viewer for PDF preview in WebView
         const pdfUrl = `${API_BASE_URL}/registration/download/${selectedBikeId}`;
-        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-          pdfUrl
-        )}`;
-        setFileUri(googleDocsUrl);
+        setFileUri(pdfUrl);
         setFileType("pdf");
         setIsLoading(false);
       } else if (contentType && contentType.startsWith("image/")) {
@@ -98,15 +96,11 @@ export default function Registration() {
         </ScrollView>
       )}
       {fileType === "pdf" && fileUri && (
-        <WebView
-          source={{ uri: fileUri }}
+        <Pdf
+          source={{ uri: fileUri, headers: { Authorization: `Bearer ${token}` } }}
           style={styles.pdf}
-          originWhitelist={["*"]}
-          useWebKit
-          javaScriptEnabled
-          domStorageEnabled
-          startInLoadingState
-          scalesPageToFit
+          trustAllCerts={false}
+          onError={(error) => console.log('PDF Render Error:', error)}
         />
       )}
       {/* Loading Modal for Registration */}

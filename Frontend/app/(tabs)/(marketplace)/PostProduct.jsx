@@ -217,12 +217,14 @@ export default function PostProduct() {
           type,
         });
       }
+      const token = useAuthStore.getState().accessToken;
       const response = await fetch(
         `${API_BASE_URL}/marketplace/post-product/${user.userId}`,
         {
           method: "POST",
           headers: {
             // 'Content-Type' should NOT be set for FormData in React Native fetch
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: formData,
         }

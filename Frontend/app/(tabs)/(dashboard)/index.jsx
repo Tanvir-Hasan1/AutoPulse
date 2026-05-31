@@ -4,6 +4,7 @@ import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import {
   Dimensions,
   Modal,
@@ -13,15 +14,53 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Pressable
 } from "react-native";
+import Animated, { FadeInDown, FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Progress from 'react-native-progress';
 
 const { width } = Dimensions.get("window");
 
 export const unstable_settings = {
-  initialRouteName: "index", // optional
+  initialRouteName: "index",
 };
 export const hideHeader = true;
+
+// Animated button with scale and haptic feedback
+const InteractiveCard = ({ children, onPress, style, delay = 0 }) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.96);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
+
+  return (
+    <Animated.View entering={FadeInDown.delay(delay).springify()} style={style}>
+      <Animated.View style={animatedStyle}>
+        <Pressable
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={(e) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            if (onPress) onPress(e);
+          }}
+        >
+          {children}
+        </Pressable>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
 
 const Dashboard = () => {
   const userId = useAuthStore((s) => s.userId);
@@ -32,42 +71,45 @@ const Dashboard = () => {
   const getSelectedBike = useAuthStore((s) => s.getSelectedBike);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Demo quick actions with updated license action
   const quickActions = [
     {
       id: 1,
       title: "License",
       icon: "card-outline",
-      color: "#4CAF50",
-      href: "/(tabs)/(dashboard)/license", // Custom onPress instead of href
+      colors: ["#11998e", "#38ef7d"], // Gradient fallback colors
+      color: "#38ef7d",
+      href: "/(tabs)/(dashboard)/license",
     },
     {
       id: 2,
       title: "Registration",
       icon: "document-text-outline",
-      color: "#FF9800",
+      colors: ["#ff9966", "#ff5e62"],
+      color: "#ff5e62",
       href: "/(tabs)/(dashboard)/registration",
     },
     {
       id: 3,
       title: "Tax Token",
       icon: "cash-outline",
-      color: "#2196F3",
+      colors: ["#4facfe", "#00f2fe"],
+      color: "#4facfe",
       href: "/(tabs)/(dashboard)/tax-token",
     },
     {
       id: 4,
       title: "Reports",
       icon: "analytics",
-      color: "#9C27B0",
+      colors: ["#a18cd1", "#fbc2eb"],
+      color: "#a18cd1",
       href: "/(tabs)/(dashboard)/report",
     },
   ];
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
+    switch (priority?.toLowerCase()) {
       case "high":
-        return "#F44336";
+        return "#FF4B4B";
       case "medium":
         return "#FF9800";
       case "low":
@@ -78,7 +120,7 @@ const Dashboard = () => {
   };
 
   const getActivityIcon = (type) => {
-    switch (type) {
+    switch (type?.toLowerCase()) {
       case "fuel":
         return "car";
       case "service":
@@ -88,7 +130,6 @@ const Dashboard = () => {
     }
   };
 
-  // Dashboard Header
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedBike =
@@ -97,11 +138,11 @@ const Dashboard = () => {
     ) || bikes?.[0];
 
   const handleBikeSelect = (bikeId) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     selectBike(bikeId);
     setModalVisible(false);
   };
 
-  //Other data
   const [currentStatus, setCurrentStatus] = useState(null);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
@@ -130,10 +171,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBikeId]);
 
-  // Defensive rendering for required objects
   if (!bikes || bikes.length === 0)
     return (
       <SafeAreaView style={styles.container}>
@@ -149,141 +188,137 @@ const Dashboard = () => {
     );
   }
 
+  // Calculate progress for next service
+  const totalKm = currentStatus?.totalKm || 0;
+  const nextServiceDue = currentStatus?.nextServiceDue || 0;
+  const serviceProgress = nextServiceDue > 0 ? Math.min(totalKm / nextServiceDue, 1) : 0;
+  const kmToService = nextServiceDue - totalKm > 0 ? nextServiceDue - totalKm : 0;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setRefreshing(true);
               fetchDashboardData();
             }}
+            tintColor="#4F46E5"
           />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.welcomeText}>Welcome {userName}</Text>
-            <TouchableOpacity
-              onPress={() => setModalVisible(true)}
-              style={{ flexDirection: "row", alignItems: "center" }}
-            >
-              <Text style={styles.bikeInfo}>
-                {selectedBike.brand} {selectedBike.model} ({selectedBike.year})
-              </Text>
-              <Ionicons
-                name="chevron-down"
-                size={16}
-                color="#333"
-                style={{ marginLeft: 4 }}
-              />
-            </TouchableOpacity>
-            <Text style={styles.registerNumber}>
-              {selectedBike.registrationNumber}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.notificationIcon}>
-            <Ionicons name="notifications-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
+        {/* Header - Curved Dark */}
+        <Animated.View entering={FadeInUp.duration(600)} style={styles.header}>
+          <SafeAreaView edges={["top"]} style={styles.headerContent}>
+            <View style={styles.headerLeft}>
+              <Text style={styles.greetingText}>Hello, {userName?.split(' ')[0]} 👋</Text>
 
-        {/* Bike Selection Modal */}
-        <Modal visible={modalVisible} transparent animationType="fade">
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onPress={() => setModalVisible(false)}
-            activeOpacity={1}
-          >
-            <View
-              style={{
-                backgroundColor: "white",
-                padding: 16,
-                borderRadius: 8,
-                width: 300,
-              }}
-            >
-              <Text
-                style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setModalVisible(true);
+                }}
+                style={styles.bikeSelector}
+                activeOpacity={0.7}
               >
-                Select Your Bike
+                <View style={styles.bikeSelectorTextContainer}>
+                  <Text style={styles.bikeBrandModel}>
+                    {selectedBike.brand} {selectedBike.model}
+                  </Text>
+                  <Text style={styles.bikeYearBadge}>{selectedBike.year}</Text>
+                </View>
+                <Ionicons name="chevron-down-circle" size={20} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.registerNumberText}>
+                {selectedBike.registrationNumber}
               </Text>
-              {bikes.map((bike) => (
-                <TouchableOpacity
-                  key={bike.id || bike._id}
-                  onPress={() => handleBikeSelect(bike.id || bike._id)}
-                  style={{ paddingVertical: 10 }}
-                >
-                  <Text>
-                    {bike.brand} {bike.model} ({bike.year})
-                  </Text>
-                  <Text style={{ fontSize: 12, color: "#555" }}>
-                    {bike.registrationNumber}
-                  </Text>
-                </TouchableOpacity>
-              ))}
             </View>
-          </TouchableOpacity>
-        </Modal>
+            <TouchableOpacity
+              style={styles.notificationBtn}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+            >
+              <Ionicons name="notifications" size={22} color="#fff" />
+              <View style={styles.notificationDot} />
+            </TouchableOpacity>
+          </SafeAreaView>
+        </Animated.View>
 
         {/* Current Status Cards */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Current Status</Text>
+          <Text style={styles.sectionTitle}>Overview</Text>
           {currentStatus && !loading ? (
-            <View style={styles.statusGrid}>
-              <View style={styles.statusCard}>
-                <View style={styles.statusHeader}>
-                  <Ionicons name="trending-up" size={24} color="#2196F3" />
-                  <Text style={styles.statusValue}>
-                    {currentStatus.fuelEconomy ?? "--"}
-                  </Text>
+            <View>
+              {/* Next Service Full Width Card */}
+              <InteractiveCard delay={100} style={[styles.statusCard, { width: '100%', marginBottom: 16 }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1, paddingRight: 16 }}>
+                    <Text style={styles.statusLabel}>Next Service</Text>
+                    <Text style={[styles.statusValue, { fontSize: 24, marginTop: 4 }]}>
+                      {kmToService.toLocaleString()} <Text style={{ fontSize: 14, color: '#888', fontWeight: '500' }}>km left</Text>
+                    </Text>
+                  </View>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(156, 39, 176, 0.1)', height: 50, width: 50, borderRadius: 16 }]}>
+                    <Ionicons name="construct" size={24} color="#9C27B0" />
+                  </View>
                 </View>
-                <Text style={styles.statusLabel}>Fuel Economy (km/l)</Text>
-              </View>
+                <View style={{ marginTop: 16 }}>
+                  <Progress.Bar
+                    progress={serviceProgress}
+                    width={null}
+                    height={8}
+                    color={serviceProgress > 0.8 ? '#FF4B4B' : serviceProgress > 0.5 ? '#FF9800' : '#4CAF50'}
+                    unfilledColor="#f0f0f0"
+                    borderWidth={0}
+                    borderRadius={4}
+                  />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                    <Text style={{ fontSize: 12, color: '#aaa', fontWeight: '500' }}>0 km</Text>
+                    <Text style={{ fontSize: 12, color: '#aaa', fontWeight: '500' }}>{nextServiceDue.toLocaleString()} km</Text>
+                  </View>
+                </View>
+              </InteractiveCard>
 
-              <View style={styles.statusCard}>
-                <View style={styles.statusHeader}>
-                  <Ionicons name="cash" size={24} color="#E91E63" />
-                  <Text style={styles.statusValue}>
-                    ৳{currentStatus.costPerKm ?? "--"}
-                  </Text>
-                </View>
-                <Text style={styles.statusLabel}>Cost per KM</Text>
-              </View>
+              {/* Grid Cards */}
+              <View style={styles.statusGrid}>
+                <InteractiveCard delay={200} style={styles.statusCard}>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(33, 150, 243, 0.1)' }]}>
+                    <Ionicons name="trending-up" size={24} color="#2196F3" />
+                  </View>
+                  <Text style={styles.statusValue}>{currentStatus.fuelEconomy ?? "--"}</Text>
+                  <Text style={styles.statusLabel}>Avg KM/L</Text>
+                </InteractiveCard>
 
-              <View style={styles.statusCard}>
-                <View style={styles.statusHeader}>
-                  <Ionicons name="speedometer" size={24} color="#FF9800" />
-                  <Text style={styles.statusValue}>
-                    {currentStatus.totalKm
-                      ? currentStatus.totalKm.toLocaleString()
-                      : "--"}
-                  </Text>
-                </View>
-                <Text style={styles.statusLabel}>Total KM</Text>
-              </View>
+                <InteractiveCard delay={300} style={styles.statusCard}>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(233, 30, 99, 0.1)' }]}>
+                    <Ionicons name="cash" size={24} color="#E91E63" />
+                  </View>
+                  <Text style={styles.statusValue}>৳{currentStatus.costPerKm ?? "--"}</Text>
+                  <Text style={styles.statusLabel}>Per KM</Text>
+                </InteractiveCard>
 
-              <View style={styles.statusCard}>
-                <View style={styles.statusHeader}>
-                  <Ionicons name="construct" size={24} color="#9C27B0" />
-                  <Text style={styles.statusValue}>
-                    {currentStatus.nextServiceDue && currentStatus.totalKm
-                      ? currentStatus.nextServiceDue - currentStatus.totalKm
-                      : "--"}
-                  </Text>
-                </View>
-                <Text style={styles.statusLabel}>KM to Service</Text>
+                <InteractiveCard delay={400} style={styles.statusCard}>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255, 152, 0, 0.1)' }]}>
+                    <Ionicons name="speedometer" size={24} color="#FF9800" />
+                  </View>
+                  <Text style={styles.statusValue}>{totalKm.toLocaleString()}</Text>
+                  <Text style={styles.statusLabel}>Total KM</Text>
+                </InteractiveCard>
+
+                <InteractiveCard delay={500} style={styles.statusCard}>
+                  <View style={[styles.iconWrapper, { backgroundColor: 'rgba(76, 175, 80, 0.1)' }]}>
+                    <Ionicons name="calendar" size={24} color="#4CAF50" />
+                  </View>
+                  <Text style={styles.statusValue}>{upcomingTasks.length}</Text>
+                  <Text style={styles.statusLabel}>Pending Tasks</Text>
+                </InteractiveCard>
               </View>
             </View>
           ) : (
-            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+            <Text style={{ color: "#aaa" }}>Fetching data...</Text>
           )}
         </View>
 
@@ -291,20 +326,20 @@ const Dashboard = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <Link key={action.id} href={action.href} asChild>
-                <TouchableOpacity style={styles.quickActionCard}>
-                  <View
-                    style={[
-                      styles.quickActionIcon,
-                      { backgroundColor: action.color },
-                    ]}
+            {quickActions.map((action, index) => (
+              <Animated.View key={action.id} entering={FadeInDown.delay(300 + (index * 100)).springify()} style={{ width: '23%' }}>
+                <Link href={action.href} asChild>
+                  <Pressable
+                    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                    style={styles.quickActionCard}
                   >
-                    <Ionicons name={action.icon} size={24} color="white" />
-                  </View>
-                  <Text style={styles.quickActionText}>{action.title}</Text>
-                </TouchableOpacity>
-              </Link>
+                    <View style={[styles.quickActionIcon, { backgroundColor: action.color + '15' }]}>
+                      <Ionicons name={action.icon} size={26} color={action.color} />
+                    </View>
+                    <Text style={styles.quickActionText} numberOfLines={1}>{action.title}</Text>
+                  </Pressable>
+                </Link>
+              </Animated.View>
             ))}
           </View>
         </View>
@@ -313,39 +348,42 @@ const Dashboard = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Upcoming Tasks</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
           {upcomingTasks && upcomingTasks.length > 0 ? (
-            upcomingTasks.map((task) => (
-              <View key={task.id || task._id} style={styles.taskCard}>
+            upcomingTasks.map((task, index) => (
+              <InteractiveCard key={task.id || task._id} delay={500 + (index * 100)} style={styles.taskCard}>
                 <View style={styles.taskInfo}>
                   <View style={styles.taskHeader}>
                     <Text style={styles.taskTitle}>{task.title}</Text>
                     <View
                       style={[
                         styles.priorityBadge,
-                        { backgroundColor: getPriorityColor(task.priority) },
+                        { backgroundColor: getPriorityColor(task.priority) + '20' }, // 20 hex alpha
                       ]}
                     >
-                      <Text style={styles.priorityText}>
+                      <Text style={[styles.priorityText, { color: getPriorityColor(task.priority) }]}>
                         {task.priority?.toUpperCase()}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.taskDetails}>
-                    <Ionicons name="time-outline" size={16} color="#666" />
+                    <Ionicons name="time-outline" size={16} color="#888" />
                     <Text style={styles.taskDue}>Due in {task.dueIn}</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.taskAction}>
-                  <Ionicons name="chevron-forward" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
+                <View style={styles.taskAction}>
+                  <Ionicons name="chevron-forward" size={20} color="#ccc" />
+                </View>
+              </InteractiveCard>
             ))
           ) : (
-            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+            <View style={styles.emptyCard}>
+              <Ionicons name="checkmark-circle-outline" size={32} color="#ddd" />
+              <Text style={styles.emptyText}>All caught up on tasks!</Text>
+            </View>
           )}
         </View>
 
@@ -353,20 +391,17 @@ const Dashboard = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Activities</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
           {recentActivities && recentActivities.length > 0 ? (
-            recentActivities.map((activity) => (
-              <View
-                key={activity.id || activity._id}
-                style={styles.activityCard}
-              >
+            recentActivities.map((activity, index) => (
+              <Animated.View key={activity.id || activity._id} entering={FadeInDown.delay(700 + (index * 100)).springify()} style={styles.activityCard}>
                 <View style={styles.activityIcon}>
                   <Ionicons
                     name={getActivityIcon(activity.type)}
-                    size={20}
+                    size={22}
                     color="#666"
                   />
                 </View>
@@ -377,62 +412,174 @@ const Dashboard = () => {
                   <Text style={styles.activityDate}>{activity.date}</Text>
                 </View>
                 <Text style={styles.activityAmount}>{activity.amount}</Text>
-              </View>
+              </Animated.View>
             ))
           ) : (
-            <Text style={{ color: "#aaa" }}>No entry found.</Text>
+            <View style={styles.emptyCard}>
+              <Ionicons name="time-outline" size={32} color="#ddd" />
+              <Text style={styles.emptyText}>No recent activities.</Text>
+            </View>
           )}
         </View>
 
-        {/* Bottom spacing */}
-        <View style={styles.bottomSpacing} />
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Bike Selection Modal */}
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setModalVisible(false);
+          }}
+          activeOpacity={1}
+        >
+          <Animated.View entering={FadeInDown.duration(300).springify()} style={styles.modalContent}>
+            <View style={styles.modalDragHandle} />
+            <Text style={styles.modalTitle}>Select Your Bike</Text>
+            {bikes.map((bike) => (
+              <TouchableOpacity
+                key={bike.id || bike._id}
+                onPress={() => handleBikeSelect(bike.id || bike._id)}
+                style={[
+                  styles.modalItem,
+                  (bike.id || bike._id) === selectedBikeId && styles.modalItemSelected
+                ]}
+              >
+                <View style={styles.modalItemIcon}>
+                  <Ionicons
+                    name="bicycle"
+                    size={24}
+                    color={(bike.id || bike._id) === selectedBikeId ? "#fff" : "#4F46E5"}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[
+                    styles.modalItemTitle,
+                    (bike.id || bike._id) === selectedBikeId && { color: "#fff" }
+                  ]}>
+                    {bike.brand} {bike.model} <Text style={{ fontWeight: 'normal', fontSize: 14 }}>({bike.year})</Text>
+                  </Text>
+                  <Text style={[
+                    styles.modalItemSub,
+                    (bike.id || bike._id) === selectedBikeId && { color: "rgba(255,255,255,0.8)" }
+                  ]}>
+                    {bike.registrationNumber}
+                  </Text>
+                </View>
+                {(bike.id || bike._id) === selectedBikeId && (
+                  <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
+
+    </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F7F9FC",
   },
   header: {
+    backgroundColor: "#1E1E2D",
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    paddingBottom: 30,
+    paddingTop: 10,
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: 20,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    paddingHorizontal: 24,
+    paddingTop: 20,
   },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
+  headerLeft: {
+    flex: 1,
   },
-  bikeInfo: {
+  greetingText: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 2,
-  },
-  registerNumber: {
-    fontSize: 14,
-    color: "#999",
+    color: "rgba(255, 255, 255, 0.7)",
+    marginBottom: 8,
     fontWeight: "500",
   },
-  notificationIcon: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#f5f5f5",
+  bikeSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  bikeSelectorTextContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  bikeBrandModel: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#ffffff",
+    marginRight: 8,
+  },
+  bikeYearBadge: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  registerNumberText: {
+    fontSize: 14,
+    color: "#4F46E5",
+    fontWeight: "600",
+    letterSpacing: 1,
+    backgroundColor: "rgba(79, 70, 229, 0.15)",
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginTop: 6,
+  },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF4B4B",
+    borderWidth: 1,
+    borderColor: "#1E1E2D",
   },
   section: {
-    padding: 20,
+    paddingHorizontal: 20,
+    marginTop: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
+    color: "#1E1E2D",
     marginBottom: 16,
+    letterSpacing: -0.5,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -441,9 +588,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   seeAllText: {
-    color: "#2196F3",
+    color: "#4F46E5",
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   statusGrid: {
     flexDirection: "row",
@@ -453,80 +600,67 @@ const styles = StyleSheet.create({
   statusCard: {
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 12,
-    width: (width - 60) / 2,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 20,
+    width: (width - 56) / 2,
+    marginBottom: 16,
+    shadowColor: "rgba(0,0,0,0.05)",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  fuelCard: {
-    width: width - 40,
-  },
-  statusHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  iconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   statusValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1E1E2D",
+    marginBottom: 4,
   },
   statusLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 8,
-  },
-  fuelBar: {
-    height: 6,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  fuelBarFill: {
-    height: "100%",
-    backgroundColor: "#4CAF50",
-    borderRadius: 3,
+    fontSize: 13,
+    color: "#888",
+    fontWeight: "500",
   },
   quickActionsGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "space-between",
+    alignItems: "flex-start",
   },
   quickActionCard: {
     alignItems: "center",
-    width: (width - 60) / 2,
-    marginBottom: 16,
   },
   quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   quickActionText: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#1E1E2D",
     textAlign: "center",
   },
   taskCard: {
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowColor: "rgba(0,0,0,0.03)",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
     elevation: 3,
   },
   taskInfo: {
@@ -535,135 +669,160 @@ const styles = StyleSheet.create({
   taskHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start", // changed from center to flex-start so long text wraps nicely
     marginBottom: 8,
   },
   taskTitle: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: "700",
+    color: "#1E1E2D",
     flex: 1,
+    marginRight: 8,
   },
   priorityBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
     marginLeft: 8,
   },
   priorityText: {
-    color: "white",
     fontSize: 10,
-    fontWeight: "bold",
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
   taskDetails: {
     flexDirection: "row",
     alignItems: "center",
   },
   taskDue: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 4,
+    fontSize: 13,
+    color: "#888",
+    marginLeft: 6,
+    fontWeight: "500",
   },
   taskAction: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F7F9FC",
+    justifyContent: "center",
+    alignItems: "center",
   },
   activityCard: {
     backgroundColor: "white",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowColor: "rgba(0,0,0,0.03)",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
     elevation: 3,
   },
   activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f5f5f5",
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#F7F9FC",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
   activityInfo: {
     flex: 1,
   },
   activityDescription: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
+    fontSize: 15,
+    color: "#1E1E2D",
+    fontWeight: "600",
     marginBottom: 4,
   },
   activityDate: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#888",
+    fontWeight: "500",
   },
   activityAmount: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#4CAF50",
+    fontWeight: "700",
+    color: "#1E1E2D",
   },
-  bottomSpacing: {
-    height: 20,
-  },
-  // License Overlay Styles
-  licenseOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  licenseContainer: {
-    width: width * 0.95,
-    height: "90%",
-    backgroundColor: "#000",
-    borderRadius: 12,
-    overflow: "hidden",
-    position: "relative",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    zIndex: 10,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    borderRadius: 20,
-    padding: 8,
-  },
-  licenseScrollContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  licenseImage: {
-    width: width * 0.9,
-    height: "100%",
-    maxHeight: 600,
-  },
-  // Loading Overlay Styles
-  loadingOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingContainer: {
+  emptyCard: {
     backgroundColor: "white",
-    padding: 24,
-    borderRadius: 12,
+    padding: 30,
+    borderRadius: 20,
     alignItems: "center",
-    minWidth: 150,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderStyle: "dashed",
   },
-  loadingText: {
+  emptyText: {
     marginTop: 12,
-    fontSize: 16,
-    color: "#333",
+    fontSize: 15,
+    color: "#888",
     fontWeight: "500",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    padding: 24,
+    paddingBottom: 40,
+    maxHeight: "80%",
+  },
+  modalDragHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#ddd",
+    borderRadius: 3,
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1E1E2D",
+    marginBottom: 20,
+  },
+  modalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+    backgroundColor: "#F7F9FC",
+  },
+  modalItemSelected: {
+    backgroundColor: "#4F46E5",
+  },
+  modalItemIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  modalItemTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1E1E2D",
+    marginBottom: 4,
+  },
+  modalItemSub: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "500",
+  }
 });
 
 export default Dashboard;

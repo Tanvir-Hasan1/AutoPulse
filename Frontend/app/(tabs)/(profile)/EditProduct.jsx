@@ -251,6 +251,7 @@ const EditProduct = () => {
         });
       }
 
+      const token = useAuthStore.getState().accessToken;
       const response = await fetch(
         `${API_BASE_URL}/marketplace/edit-product/${productId}`,
         {
@@ -258,6 +259,7 @@ const EditProduct = () => {
           body: formData,
           headers: {
             Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
           },
         }

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../store/api";
 
 export default function EditProfileModal({ visible, onClose, user }) {
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -77,24 +78,17 @@ export default function EditProfileModal({ visible, onClose, user }) {
     }
     try {
       console.log("Updating username for user:", user); // <-- log user object
-      const response = await fetch(`${API_BASE_URL}/auth/change-name`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: user.userId,
-          newName: username,
-        }),
+      const data = await api.put(`/auth/change-name`, {
+        id: user.userId,
+        newName: username,
       });
-      const data = await response.json();
-      if (response.ok && data.name) {
+      if (data && data.name) {
         updateUser({ ...user, name: data.name });
         Alert.alert("Success", "Name updated successfully!");
         clearFields();
         onClose();
       } else {
-        Alert.alert("Error", data.message || "Failed to update name.");
+        Alert.alert("Error", data?.message || "Failed to update name.");
       }
     } catch (error) {
       Alert.alert("Error", "Network error. Please try again.");
@@ -143,25 +137,18 @@ export default function EditProfileModal({ visible, onClose, user }) {
 
     setLoading(true); // Start loading
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/update-password`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: user.userId,
-          currentPassword: prevPassword,
-          newPassword: newPassword,
-        }),
+      const data = await api.put(`/auth/update-password`, {
+        id: user.userId,
+        currentPassword: prevPassword,
+        newPassword: newPassword,
       });
-      const data = await response.json();
       setLoading(false); // Stop loading
-      if (response.ok && data.message) {
+      if (data && data.message) {
         Alert.alert("Success", data.message);
         clearFields();
         onClose();
       } else {
-        Alert.alert("Error", data.message || "Failed to update password.");
+        Alert.alert("Error", data?.message || "Failed to update password.");
       }
     } catch (error) {
       setLoading(false); // Stop loading

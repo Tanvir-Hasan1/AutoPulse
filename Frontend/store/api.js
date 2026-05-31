@@ -32,18 +32,24 @@ const request = async (endpoint, options = {}) => {
 
   const response = await fetch(url, { ...options, headers });
 
-  // Auto-logout on 401
-  if (response.status === 401) {
-    logout();
-    throw new Error("Session expired. Please log in again.");
-  }
-
   // Try to parse JSON regardless of status
   let data;
   try {
     data = await response.json();
   } catch {
     data = null;
+  }
+
+  // Auto-logout on 401, unless it's a specific auth validation error
+  if (response.status === 401) {
+    const isAuthError =
+      data?.message === "Invalid credentials" ||
+      data?.message === "Current password is incorrect";
+
+    if (!isAuthError) {
+      logout();
+      throw new Error("Session expired. Please log in again.");
+    }
   }
 
   if (!response.ok) {
@@ -88,17 +94,40 @@ const api = {
     }),
 
   /** For multipart/form-data uploads (images, files) */
-  upload: (endpoint, formData, options = {}) => {
+  upload: async (endpoint, formData, options = {}) => {
     const token = useAuthStore.getState().accessToken;
-    return request(endpoint, {
+    const logout = useAuthStore.getState().logout;
+
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    };
+
+    const url = `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
-      headers: {
-        // Don't set Content-Type — let browser/RN set it with boundary
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-      },
+      headers,
+      ...options,
     });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (response.status === 401) {
+      logout();
+      throw new Error("Session expired. Please log in again.");
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.message || `Upload failed (${response.status})`);
+    }
+
+    return data;
   },
 };
 

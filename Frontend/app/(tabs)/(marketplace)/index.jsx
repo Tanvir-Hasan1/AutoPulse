@@ -19,6 +19,7 @@ import ProductCard from "../../components/marketplace-component/ProductCard";
 
 import { API_BASE_URL } from "../../../config";
 import MarketplaceFilterModal from "../../components/marketplace-component/MarketplaceFilterModal";
+import api from "../../../store/api";
 
 const categoryOptions = [
   { label: "All", value: "all" },
@@ -85,8 +86,7 @@ export default function Marketplace() {
         setIsLoading(true);
       }
 
-      const response = await fetch(`${API_BASE_URL}/marketplace/products`);
-      const json = await response.json();
+      const json = await api.get(`/marketplace/products`);
       if (json.products && Array.isArray(json.products)) {
         // Map API data to UI data
         const mapped = json.products.map((p) => ({
@@ -95,9 +95,8 @@ export default function Marketplace() {
           price: p.price,
           image:
             p.productImage && p._id
-              ? `${API_BASE_URL}/marketplace/product-image/${p._id}${
-                  p.updatedAt ? `?t=${new Date(p.updatedAt).getTime()}` : ""
-                }`
+              ? `${API_BASE_URL}/marketplace/product-image/${p._id}${p.updatedAt ? `?t=${new Date(p.updatedAt).getTime()}` : ""
+              }`
               : null,
           category: p.category,
           address: p.address,
@@ -814,5 +813,21 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#374151",
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    marginTop: 8,
   },
 });

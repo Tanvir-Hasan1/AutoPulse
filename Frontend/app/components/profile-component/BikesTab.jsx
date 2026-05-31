@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
+import api from "../../../store/api";
 
 const BikesTab = ({
   bikes,
@@ -62,20 +63,15 @@ const BikesTab = ({
   const handleUpdateBike = async () => {
     setLoadingUpdate(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/bikes/update`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingBike._id,
-          brand: editBrand,
-          model: editModel,
-          year: editYear,
-          registrationNumber: editRegNum,
-        }),
+      const data = await api.put(`/bikes/update`, {
+        id: editingBike._id,
+        brand: editBrand,
+        model: editModel,
+        year: editYear,
+        registrationNumber: editRegNum,
       });
-      const data = await response.json();
       setLoadingUpdate(false);
-      if (response.ok && data.bike) {
+      if (data && data.bike) {
         Alert.alert("Success", "Bike updated successfully!");
         setModalVisible(false);
         setEditingBike(null);
@@ -85,7 +81,7 @@ const BikesTab = ({
         );
         if (onBikeUpdated) await onBikeUpdated(); // <-- refresh bikes from server
       } else {
-        Alert.alert("Error", data.message || "Failed to update bike.");
+        Alert.alert("Error", data?.message || "Failed to update bike.");
       }
     } catch (error) {
       setLoadingUpdate(false);
@@ -105,21 +101,16 @@ const BikesTab = ({
           // Optimistically remove bike from UI
           setLocalBikes((prev) => prev.filter((b) => b._id !== bike._id));
           try {
-            const response = await fetch(`${API_BASE_URL}/bikes/delete`, {
-              method: "DELETE",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: bike._id }),
-            });
-            const data = await response.json();
+            const data = await api.delete(`/bikes/delete`, { id: bike._id });
             setLoadingDeleteId(null);
-            if (response.ok) {
+            if (data) {
               Alert.alert("Deleted", "Bike deleted successfully!");
               if (onBikeDeleted) onBikeDeleted();
               if (onBikeUpdated) await onBikeUpdated(); // <-- refresh bikes from server
             } else {
               // If failed, restore bike to UI
               setLocalBikes((prev) => [...prev, bike]);
-              Alert.alert("Error", data.message || "Failed to delete bike.");
+              Alert.alert("Error", data?.message || "Failed to delete bike.");
             }
           } catch (error) {
             setLoadingDeleteId(null);

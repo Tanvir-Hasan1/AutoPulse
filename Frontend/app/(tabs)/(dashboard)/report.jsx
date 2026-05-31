@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import {
   Dimensions,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";

@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { WebView } from "react-native-webview";
+import Pdf from 'react-native-pdf';
+import { API_BASE_URL } from "../../../config";
 import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
@@ -32,7 +33,7 @@ export default function License() {
     try {
       const token = useAuthStore.getState().accessToken;
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_BASE_URL}/license/download/${userId}`,
+        `${API_BASE_URL}/license/download/${userId}`,
         {
           method: "GET",
           headers: {
@@ -48,14 +49,8 @@ export default function License() {
 
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("pdf")) {
-        // Use Google Docs Viewer for PDF preview in WebView
-        const pdfUrl =
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-        // const pdfUrl = `${API_BASE_URL}/license/download/${userId}`;
-        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-          pdfUrl
-        )}`;
-        setLicenseImageUri(googleDocsUrl);
+        const pdfUrl = `${API_BASE_URL}/license/download/${userId}`;
+        setLicenseImageUri(pdfUrl);
         setLicenseFileType("pdf");
         setIsLoadingLicense(false);
       } else if (contentType && contentType.startsWith("image/")) {
@@ -104,15 +99,11 @@ export default function License() {
         </ScrollView>
       )}
       {licenseFileType === "pdf" && licenseImageUri && (
-        <WebView
-          source={{ uri: licenseImageUri }}
+        <Pdf
+          source={{ uri: licenseImageUri, headers: { Authorization: `Bearer ${useAuthStore.getState().accessToken}` } }}
           style={styles.pdf}
-          originWhitelist={["*"]}
-          useWebKit
-          javaScriptEnabled
-          domStorageEnabled
-          startInLoadingState
-          scalesPageToFit
+          trustAllCerts={false}
+          onError={(error) => console.log('PDF Render Error:', error)}
         />
       )}
 

@@ -20,6 +20,34 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(cors());
 
+// API Request Logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Intercept res.json to capture the response body
+  const originalJson = res.json;
+  let responseBody;
+  res.json = function (body) {
+    responseBody = body;
+    return originalJson.call(this, body);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    let logMessage = `[API] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} (${duration}ms)`;
+    
+    // Append error message if status is 4xx or 5xx
+    if (res.statusCode >= 400 && responseBody && responseBody.message) {
+      logMessage += ` | Error: ${responseBody.message}`;
+    } else if (res.statusCode >= 400 && responseBody && responseBody.error) {
+      logMessage += ` | Error: ${responseBody.error}`;
+    }
+    
+    console.log(logMessage);
+  });
+  next();
+});
+
 // Swagger Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 // Routes

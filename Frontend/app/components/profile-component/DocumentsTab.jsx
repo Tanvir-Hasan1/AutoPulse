@@ -9,15 +9,22 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { WebView } from "react-native-webview";
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import * as IntentLauncher from 'expo-intent-launcher';
+import Pdf from 'react-native-pdf';
 import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../store/api";
 
 const DocumentsTab = ({ documents, styles }) => {
   const userId = useAuthStore((s) => s.userId);
   const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
+  const token = useAuthStore((s) => s.accessToken);
   const user = { userId, selectedBikeId };
   const [licenseOverlayVisible, setLicenseOverlayVisible] = useState(false);
   const [licenseImageUri, setLicenseImageUri] = useState(null);
@@ -34,11 +41,9 @@ const DocumentsTab = ({ documents, styles }) => {
   const fetchLicenseInfo = async () => {
     try {
       setLicenseLoading(true);
-      const url = `${API_BASE_URL}/license/info/${user.userId}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const data = await api.get(`/license/info/${user.userId}`);
       setLicenseLoading(false);
-      if (response.ok && data.license && data.license.fileId) {
+      if (data && data.license && data.license.fileId) {
         setLicenseInfo(data.license);
       } else {
         setLicenseInfo(null);
@@ -53,11 +58,9 @@ const DocumentsTab = ({ documents, styles }) => {
   const fetchRegistrationInfo = async () => {
     try {
       setRegistrationLoading(true);
-      const url = `${API_BASE_URL}/registration/info/${user.selectedBikeId}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const data = await api.get(`/registration/info/${user.selectedBikeId}`);
       setRegistrationLoading(false);
-      if (response.ok && data.registration && data.registration.fileId) {
+      if (data && data.registration && data.registration.fileId) {
         setRegistrationInfo(data.registration);
       } else {
         setRegistrationInfo(null);
@@ -72,11 +75,9 @@ const DocumentsTab = ({ documents, styles }) => {
   const fetchTaxTokenInfo = async () => {
     try {
       setTaxTokenLoading(true);
-      const url = `${API_BASE_URL}/tax-token/info/${user.selectedBikeId}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const data = await api.get(`/tax-token/info/${user.selectedBikeId}`);
       setTaxTokenLoading(false);
-      if (response.ok && data.taxToken && data.taxToken.fileId) {
+      if (data && data.taxToken && data.taxToken.fileId) {
         setTaxTokenInfo(data.taxToken);
       } else {
         setTaxTokenInfo(null);
@@ -98,18 +99,19 @@ const DocumentsTab = ({ documents, styles }) => {
     try {
       if (doc.name === "Driving License" && user.selectedBikeId) {
         setIsLoadingLicense(true);
+        const token = useAuthStore.getState().accessToken;
         const url = `${API_BASE_URL}/license/download/${user.userId}`;
-        const response = await fetch(url, { method: "GET" });
+        const response = await fetch(url, { 
+          method: "GET",
+          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+        });
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Failed to download license");
         }
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("pdf")) {
-          const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-            url
-          )}`;
-          setLicenseImageUri(googleDocsUrl);
+          setLicenseImageUri(url);
           setLicenseFileType("pdf");
           setLicenseOverlayVisible(true);
           setIsLoadingLicense(false);
@@ -153,20 +155,21 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleViewTaxToken = async () => {
     try {
       setIsLoadingLicense(true);
+      const token = useAuthStore.getState().accessToken;
       const url = `${API_BASE_URL}/tax-token/download/${user.selectedBikeId}`;
-      const response = await fetch(url, { method: "GET" });
+      const response = await fetch(url, { 
+        method: "GET",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
       if (!response.ok) {
         throw new Error("Failed to download tax token document");
       }
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("pdf")) {
-        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-          url
-        )}`;
-        setLicenseImageUri(googleDocsUrl);
-        setLicenseFileType("pdf");
-        setLicenseOverlayVisible(true);
-        setIsLoadingLicense(false);
+          setLicenseImageUri(url);
+          setLicenseFileType("pdf");
+          setLicenseOverlayVisible(true);
+          setIsLoadingLicense(false);
       } else if (contentType && contentType.startsWith("image/")) {
         const blob = await response.blob();
         const reader = new FileReader();
@@ -209,19 +212,8 @@ const DocumentsTab = ({ documents, styles }) => {
         name: file.name || "license.pdf",
         type: file.mimeType || "application/pdf",
       });
-      const url = `${API_BASE_URL}/license/upload/${user.userId}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        body: formData,
-      });
-      const data = await response.json();
+      const data = await api.upload(`/license/upload/${user.userId}`, formData);
       setIsLoadingLicense(false);
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to upload license");
-      }
       Toast.show({
         type: "success",
         text1: "Success",
@@ -248,20 +240,21 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleViewRegistration = async () => {
     try {
       setIsLoadingLicense(true);
+      const token = useAuthStore.getState().accessToken;
       const url = `${API_BASE_URL}/registration/download/${user.selectedBikeId}`;
-      const response = await fetch(url, { method: "GET" });
+      const response = await fetch(url, { 
+        method: "GET",
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
       if (!response.ok) {
         throw new Error("Failed to download registration document");
       }
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("pdf")) {
-        const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-          url
-        )}`;
-        setLicenseImageUri(googleDocsUrl);
-        setLicenseFileType("pdf");
-        setLicenseOverlayVisible(true);
-        setIsLoadingLicense(false);
+          setLicenseImageUri(url);
+          setLicenseFileType("pdf");
+          setLicenseOverlayVisible(true);
+          setIsLoadingLicense(false);
       } else if (contentType && contentType.startsWith("image/")) {
         const blob = await response.blob();
         const reader = new FileReader();
@@ -292,15 +285,8 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleDeleteRegistration = async () => {
     try {
       setIsLoadingLicense(true);
-      const url = `${API_BASE_URL}/registration/delete/${user.selectedBikeId}`;
-      const response = await fetch(url, { method: "DELETE" });
-      const data = await response.json();
+      const data = await api.delete(`/registration/delete/${user.selectedBikeId}`);
       setIsLoadingLicense(false);
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to delete registration document"
-        );
-      }
       Toast.show({
         type: "success",
         text1: "Success",
@@ -328,7 +314,7 @@ const DocumentsTab = ({ documents, styles }) => {
     try {
       let url = "";
       if (doc.name === "Driving License") {
-        url = `${API_BASE_URL}/license/delete/${user.userId}`;
+        url = `/license/delete/${user.userId}`;
       } else {
         Toast.show({
           type: "error",
@@ -341,16 +327,12 @@ const DocumentsTab = ({ documents, styles }) => {
         return;
       }
       setIsLoadingLicense(true);
-      const response = await fetch(url, { method: "DELETE" });
-      const data = await response.json();
+      const data = await api.delete(url);
       setIsLoadingLicense(false);
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete document");
-      }
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: data.message || "Document deleted successfully",
+        text2: data?.message || "Document deleted successfully",
         position: "bottom",
         autoHide: true,
         visibilityTime: 2500,
@@ -385,21 +367,8 @@ const DocumentsTab = ({ documents, styles }) => {
         name: file.name || "registration.pdf",
         type: file.mimeType || "application/pdf",
       });
-      const url = `${API_BASE_URL}/registration/upload/${user.selectedBikeId}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        body: formData,
-      });
-      const data = await response.json();
+      const data = await api.upload(`/registration/upload/${user.selectedBikeId}`, formData);
       setIsLoadingLicense(false);
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to upload registration document"
-        );
-      }
       Toast.show({
         type: "success",
         text1: "Success",
@@ -442,21 +411,8 @@ const DocumentsTab = ({ documents, styles }) => {
         type: file.mimeType || "application/pdf",
       });
 
-      const url = `${API_BASE_URL}/tax-token/upload/${user.selectedBikeId}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
+      const data = await api.upload(`/tax-token/upload/${user.selectedBikeId}`, formData);
       setIsLoadingLicense(false);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to upload tax token document");
-      }
 
       Toast.show({
         type: "success",
@@ -483,13 +439,8 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleDeleteTaxToken = async () => {
     try {
       setIsLoadingLicense(true);
-      const url = `${API_BASE_URL}/tax-token/delete/${user.selectedBikeId}`;
-      const response = await fetch(url, { method: "DELETE" });
-      const data = await response.json();
+      const data = await api.delete(`/tax-token/delete/${user.selectedBikeId}`);
       setIsLoadingLicense(false);
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete tax token document");
-      }
       Toast.show({
         type: "success",
         text1: "Success",
@@ -713,15 +664,14 @@ const DocumentsTab = ({ documents, styles }) => {
               </ScrollView>
             )}
             {licenseFileType === "pdf" && licenseImageUri && (
-              <WebView
-                source={{ uri: licenseImageUri }}
+              <Pdf
+                source={{ uri: licenseImageUri, headers: { Authorization: `Bearer ${token}` } }}
+                trustAllCerts={false}
                 style={{ flex: 1, width: "100%", height: "100%" }}
-                originWhitelist={["*"]}
-                useWebKit
-                javaScriptEnabled
-                domStorageEnabled
-                startInLoadingState
-                scalesPageToFit
+                onError={(error) => {
+                  console.log('PDF Render Error:', error);
+                  Toast.show({ type: "error", text1: "Error", text2: "Failed to render PDF" });
+                }}
               />
             )}
           </View>
