@@ -30,7 +30,7 @@ const createServiceLog = async (req, res) => {
       cost,
       odometer,
       nextService, // Optional
-      description, // Optional
+      Description: description, // Maps lowercase description from req.body to schema's Description
     });
 
     await newServiceLog.save();
@@ -84,7 +84,16 @@ const deleteServiceLog = async (req, res) => {
 const updateServiceLog = async (req, res) => {
   try {
     const { serviceLogId } = req.params;
-    const updateData = req.body;
+    const { date, serviceType, cost, odometer, nextService, description } = req.body;
+
+    const updateData = {
+      date,
+      serviceType,
+      cost,
+      odometer,
+      nextService,
+      Description: description,
+    };
 
     const updatedLog = await ServiceLog.findByIdAndUpdate(
       serviceLogId,

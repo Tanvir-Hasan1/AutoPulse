@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlatList, StatusBar, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ProductCard from "../../components/marketplace-component/ProductCard";
+import ProductCard from "../../../components/marketplace-component/ProductCard";
 
 const colors = {
   primary: "#4F46E5",

@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../../../config";
-import { useAuthStore } from "../../../store/useAuthStore";
-import api from "../../../store/api";
+import { API_BASE_URL } from "../../config";
+import { useAuthStore } from "../../store/useAuthStore";
+import api from "../../store/api";
 
 export default function EditProfileModal({ visible, onClose, user }) {
   const updateUser = useAuthStore((s) => s.updateUser);

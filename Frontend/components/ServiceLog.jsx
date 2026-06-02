@@ -15,8 +15,8 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import api from "../../store/api";
-import { useAuthStore } from "../../store/useAuthStore";
+import api from "../store/api";
+import { useAuthStore } from "../store/useAuthStore";
 import CalendarModal from "./CalendarModal";
 
 const serviceTypes = [

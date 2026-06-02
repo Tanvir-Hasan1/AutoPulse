@@ -9,9 +9,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CalendarModal from "../components/CalendarModal";
-import FuelLog from "../components/FuelLog";
-import ServiceLog from "../components/ServiceLog";
+import CalendarModal from "../../components/CalendarModal";
+import FuelLog from "../../components/FuelLog";
+import ServiceLog from "../../components/ServiceLog";
 import formatDisplayDate from "../utils/dateHelpers";
 import { useAuthStore } from "../../store/useAuthStore";
 

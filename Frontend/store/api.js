@@ -1,134 +1,153 @@
 /**
- * Centralized API helper for AutoPulse.
+ * Centralized API helper for AutoPulse (Using Axios).
  *
  * Automatically:
  *  - Prefixes every request with API_BASE_URL
  *  - Attaches Authorization: Bearer <token> from the Zustand store
- *  - Parses JSON responses
+ *  - Parses JSON responses automatically via Axios
  *  - Throws on non-2xx status (with the server's message if available)
- *  - Calls logout() on 401 Unauthorized
+ *  - Retries the request if 401 Unauthorized occurs using the refresh token
+ *  - Calls logout() and navigates to login if session cannot be recovered
  */
 
+import axios from "axios";
+import { router } from "expo-router";
 import { API_BASE_URL } from "../config";
 import { useAuthStore } from "./useAuthStore";
 
-/**
- * Core fetch wrapper.
- * @param {string} endpoint  — e.g. "/bikes/user/123"
- * @param {RequestInit} options — standard fetch options
- * @returns {Promise<any>} parsed JSON body
- */
-const request = async (endpoint, options = {}) => {
-  const token = useAuthStore.getState().accessToken;
-  const logout = useAuthStore.getState().logout;
-
-  const headers = {
+const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
+  },
+});
 
-  const url = `${API_BASE_URL}${endpoint}`;
+let isRefreshing = false;
+let failedQueue = [];
 
-  const response = await fetch(url, { ...options, headers });
-
-  // Try to parse JSON regardless of status
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    data = null;
-  }
-
-  // Auto-logout on 401, unless it's a specific auth validation error
-  if (response.status === 401) {
-    const isAuthError =
-      data?.message === "Invalid credentials" ||
-      data?.message === "Current password is incorrect";
-
-    if (!isAuthError) {
-      logout();
-      throw new Error("Session expired. Please log in again.");
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
     }
-  }
-
-  if (!response.ok) {
-    throw new Error(data?.message || `Request failed (${response.status})`);
-  }
-
-  return data;
+  });
+  failedQueue = [];
 };
+
+// Request Interceptor: Attach token
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = useAuthStore.getState().accessToken;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Handle 401 & Refresh Token
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // To mimic original wrapper, return just the data payload
+    return response.data;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    const data = error.response?.data;
+    const status = error.response?.status;
+    const endpoint = originalRequest.url;
+
+    if (status === 401 && !originalRequest._retry) {
+      const isAuthError =
+        data?.message === "Invalid credentials" ||
+        data?.message === "Current password is incorrect" ||
+        (endpoint && endpoint.includes("/auth/refresh")) ||
+        (endpoint && endpoint.includes("/auth/login"));
+
+      if (!isAuthError) {
+        if (isRefreshing) {
+          // If already refreshing, wait for it to finish and retry
+          return new Promise(function (resolve, reject) {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return axiosInstance(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        const currentRefreshToken = useAuthStore.getState().refreshToken;
+
+        if (currentRefreshToken) {
+          try {
+            const refreshRes = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+              refreshToken: currentRefreshToken,
+            });
+
+            const { accessToken, refreshToken: newRefreshToken } = refreshRes.data;
+            useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+            
+            processQueue(null, accessToken);
+
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            return axiosInstance(originalRequest);
+          } catch (refreshErr) {
+            processQueue(refreshErr, null);
+            console.log("Token refresh failed:", refreshErr);
+            // Fall through to logout
+          } finally {
+            isRefreshing = false;
+          }
+        }
+
+        // Token refresh failed or missing refresh token
+        useAuthStore.getState().logout();
+        router.replace("/(auth)/LoginPage");
+        throw new Error("Session expired. Please log in again.");
+      }
+    }
+
+    // Pass the actual error message like the original fetch implementation did
+    if (data && data.message) {
+      throw new Error(data.message);
+    }
+    
+    throw new Error(error.message || `Request failed (${status})`);
+  }
+);
 
 // ── Convenience methods ────────────────────────────────────────────────────────
 
 const api = {
-  get: (endpoint, options = {}) =>
-    request(endpoint, { method: "GET", ...options }),
+  get: (endpoint, options = {}) => axiosInstance.get(endpoint, options),
 
-  post: (endpoint, body, options = {}) =>
-    request(endpoint, {
-      method: "POST",
-      body: JSON.stringify(body),
-      ...options,
-    }),
+  post: (endpoint, body, options = {}) => axiosInstance.post(endpoint, body, options),
 
-  put: (endpoint, body, options = {}) =>
-    request(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(body),
-      ...options,
-    }),
+  put: (endpoint, body, options = {}) => axiosInstance.put(endpoint, body, options),
 
-  patch: (endpoint, body, options = {}) =>
-    request(endpoint, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      ...options,
-    }),
+  patch: (endpoint, body, options = {}) => axiosInstance.patch(endpoint, body, options),
 
-  delete: (endpoint, body, options = {}) =>
-    request(endpoint, {
-      method: "DELETE",
-      ...(body ? { body: JSON.stringify(body) } : {}),
-      ...options,
-    }),
+  delete: (endpoint, body, options = {}) => 
+    axiosInstance.delete(endpoint, { data: body, ...options }),
 
   /** For multipart/form-data uploads (images, files) */
-  upload: async (endpoint, formData, options = {}) => {
-    const token = useAuthStore.getState().accessToken;
-    const logout = useAuthStore.getState().logout;
-
-    const headers = {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
-
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-      headers,
+  upload: (endpoint, formData, options = {}) =>
+    axiosInstance.post(endpoint, formData, {
       ...options,
-    });
-
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
-    }
-
-    if (response.status === 401) {
-      logout();
-      throw new Error("Session expired. Please log in again.");
-    }
-
-    if (!response.ok) {
-      throw new Error(data?.message || `Upload failed (${response.status})`);
-    }
-
-    return data;
-  },
+      headers: {
+        ...options.headers,
+        "Content-Type": "multipart/form-data",
+      },
+    }),
 };
 
 export default api;

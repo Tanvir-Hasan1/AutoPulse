@@ -167,10 +167,12 @@ export default function OnboardingScreen() {
               mode="dropdown"
               selectedValue={bikeData.brand}
               onValueChange={(value) => handleChange("brand", value)}
+              style={{ color: "#000000", backgroundColor: "#ffffff" }}
+              dropdownIconColor="#000000"
             >
-              <Picker.Item label="Select brand" value="" />
+              <Picker.Item label="Select brand" value="" color="#000000" />
               {BIKE_BRANDS.map((brand) => (
-                <Picker.Item key={brand} label={brand} value={brand} />
+                <Picker.Item key={brand} label={brand} value={brand} color="#000000" />
               ))}
             </Picker>
           </View>
@@ -182,11 +184,13 @@ export default function OnboardingScreen() {
               selectedValue={bikeData.model}
               enabled={bikeData.brand !== ""}
               onValueChange={(value) => handleChange("model", value)}
+              style={{ color: "#000000", backgroundColor: "#ffffff" }}
+              dropdownIconColor="#000000"
             >
-              <Picker.Item label="Select model" value="" />
+              <Picker.Item label="Select model" value="" color="#000000" />
               {bikeData.brand &&
                 BIKE_MODELS[bikeData.brand]?.map((model) => (
-                  <Picker.Item key={model} label={model} value={model} />
+                  <Picker.Item key={model} label={model} value={model} color="#000000" />
                 ))}
             </Picker>
           </View>
@@ -201,8 +205,10 @@ export default function OnboardingScreen() {
               mode="dropdown"
               selectedValue={bikeData.year}
               onValueChange={(value) => handleChange("year", value)}
+              style={{ color: "#000000", backgroundColor: "#ffffff" }}
+              dropdownIconColor="#000000"
             >
-              <Picker.Item label="Select year" value="" />
+              <Picker.Item label="Select year" value="" color="#000000" />
               {Array.from(
                 { length: 25 },
                 (_, i) => new Date().getFullYear() - i
@@ -211,6 +217,7 @@ export default function OnboardingScreen() {
                   key={year}
                   label={year.toString()}
                   value={year.toString()}
+                  color="#000000"
                 />
               ))}
             </Picker>
@@ -220,6 +227,7 @@ export default function OnboardingScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. KA-01-AB-1234"
+            placeholderTextColor="#000000"
             value={bikeData.registrationNumber}
             onChangeText={(text) => handleChange("registrationNumber", text)}
           />
@@ -233,6 +241,7 @@ export default function OnboardingScreen() {
             style={styles.input}
             keyboardType="numeric"
             placeholder="e.g. 12345"
+            placeholderTextColor="#000000"
             value={bikeData.odometer}
             onChangeText={(text) => handleChange("odometer", text)}
           />
@@ -288,7 +297,7 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
   pickerWrapper: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#ffffff",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#d1d5db",
@@ -304,6 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
     height: 55,
+    color: "#000000",
   },
   buttonRow: {
     flexDirection: "row",

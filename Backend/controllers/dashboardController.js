@@ -12,30 +12,28 @@ exports.getBikeStatus = async (req, res) => {
     const bike = await Bike.findById(bikeId);
     if (!bike) return res.status(404).json({ message: "Bike not found" });
 
-    // Get all fuel and service logs
-    const fuelLogs = await Fuel.find({ bike: bikeId });
-    const serviceLogs = await Service.find({ bike: bikeId });
+    // Get all fuel and service logs (natively sorted in DB)
+    const fuelLogs = await Fuel.find({ bike: bikeId }).sort({ odometer: 1 });
+    const serviceLogs = await Service.find({ bike: bikeId }).sort({ date: -1, odometer: -1 });
 
     // Calculate fuelEconomy as per frontend logic
     let fuelEconomy = null;
     if (fuelLogs.length >= 2) {
-      // Sort logs by odometer ascending
-      const sortedLogs = [...fuelLogs].sort((a, b) => a.odometer - b.odometer);
       let totalKm = 0;
       let totalFuel = 0;
-      for (let i = 1; i < sortedLogs.length; i++) {
-        const km = sortedLogs[i].odometer - sortedLogs[i - 1].odometer;
-        if (km > 0 && sortedLogs[i].amount > 0) {
+      for (let i = 1; i < fuelLogs.length; i++) {
+        const km = fuelLogs[i].odometer - fuelLogs[i - 1].odometer;
+        if (km > 0 && fuelLogs[i].amount > 0) {
           totalKm += km;
-          totalFuel += sortedLogs[i].amount;
+          totalFuel += fuelLogs[i].amount;
         }
       }
       fuelEconomy =
         totalFuel > 0 ? Number((totalKm / totalFuel).toFixed(1)) : null;
     }
 
-    // Get last and next service
-    const latestService = serviceLogs.sort((a, b) => b.date - a.date)[0];
+    // Get last and next service (the first one since it's sorted descending)
+    const latestService = serviceLogs[0];
 
     // Calculate costPerKm (total fuel+service cost / total km)
     const totalFuelCost = fuelLogs.reduce(
@@ -48,9 +46,13 @@ exports.getBikeStatus = async (req, res) => {
     );
     const totalCost = totalFuelCost + totalServiceCost;
 
+    const maxFuelOdo = fuelLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const maxServiceOdo = serviceLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const currentTotalKm = Math.max(bike.odometer || 0, maxFuelOdo, maxServiceOdo);
+
     let costPerKm = null;
-    if (bike.odometer && bike.odometer > 0) {
-      costPerKm = Number((totalCost / bike.odometer).toFixed(2));
+    if (currentTotalKm > 0) {
+      costPerKm = Number((totalCost / currentTotalKm).toFixed(2));
     }
 
     // Fuel level: random per fetch
@@ -59,7 +61,7 @@ exports.getBikeStatus = async (req, res) => {
     res.json({
       fuelLevel,
       fuelEconomy,
-      totalKm: bike.odometer,
+      totalKm: currentTotalKm,
       lastServiceKm: latestService?.odometer || null,
       nextServiceDue: latestService?.nextService || null,
       costPerKm,
@@ -70,48 +72,75 @@ exports.getBikeStatus = async (req, res) => {
 };
 
 // 2. Upcoming Tasks Endpoint
+// 2. Upcoming Tasks Endpoint
 exports.getUpcomingTasks = async (req, res) => {
   try {
     const { bikeId } = req.params;
-    // Find next service due
-    const latestService = await Service.findOne({ bike: bikeId }).sort({
-      date: -1,
-    });
     const bike = await Bike.findById(bikeId);
     if (!bike) return res.status(404).json({ message: "Bike not found" });
 
-    const tasks = [];
+    // Fetch all fuel and service logs to calculate current odometer mileage dynamically
+    const fuelLogs = await Fuel.find({ bike: bikeId }, "odometer");
+    const serviceLogs = await Service.find({ bike: bikeId }).sort({ date: -1, odometer: -1 });
 
-    if (latestService && latestService.nextService) {
-      const dueInKm = latestService.nextService - bike.odometer;
-      tasks.push({
-        id: 1,
-        title: latestService.serviceType || "Service",
-        dueIn: `${dueInKm > 0 ? dueInKm : 0} km`,
-        priority: dueInKm < 500 ? "high" : "medium",
-        type: "service",
-      });
+    const maxFuelOdo = fuelLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const maxServiceOdo = serviceLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const currentTotalKm = Math.max(bike.odometer || 0, maxFuelOdo, maxServiceOdo);
+
+    const tasks = [];
+    let taskIdCounter = 1;
+
+    // Group to get the latest service log for each unique serviceType category
+    const latestLogsByType = {};
+    for (const log of serviceLogs) {
+      if (!latestLogsByType[log.serviceType]) {
+        latestLogsByType[log.serviceType] = log;
+      }
+    }
+
+    // Add dynamic upcoming tasks for each service category's nextService distance
+    for (const [type, log] of Object.entries(latestLogsByType)) {
+      if (log.nextService) {
+        const dueInKm = log.nextService - currentTotalKm;
+        const remainingKm = dueInKm > 0 ? dueInKm : 0;
+        
+        tasks.push({
+          id: taskIdCounter++,
+          title: type, // e.g. "Engine Oil Change", "Brake Service", etc.
+          dueIn: remainingKm === 0 ? "Due now" : `${remainingKm} km`,
+          dueInKm: remainingKm,
+          priority: remainingKm < 500 ? "high" : remainingKm < 1500 ? "medium" : "low",
+          type: "service",
+        });
+      }
     }
 
     // Example: Add chain lube every 1000km
-    if (bike.odometer % 1000 > 900) {
+    const currentLubeProgress = currentTotalKm % 1000;
+    if (currentLubeProgress > 900) {
+      const dueInKm = 1000 - currentLubeProgress;
       tasks.push({
-        id: 2,
+        id: taskIdCounter++,
         title: "Chain Lubrication",
-        dueIn: `${1000 - (bike.odometer % 1000)} km`,
+        dueIn: `${dueInKm} km`,
+        dueInKm: dueInKm,
         priority: "medium",
         type: "maintenance",
       });
     }
 
-    // Example: Tire pressure check every 2 weeks (logic can be improved)
+    // Example: Tire pressure check (static low-priority reminder)
     tasks.push({
-      id: 3,
+      id: taskIdCounter++,
       title: "Tire Pressure Check",
-      dueIn: "1 week", // Simplified for demo
+      dueIn: "1 week",
+      dueInKm: 9999, // push to bottom of sorted list
       priority: "low",
       type: "maintenance",
     });
+
+    // Sort tasks so the most urgent (lowest remaining mileage) are first
+    tasks.sort((a, b) => a.dueInKm - b.dueInKm);
 
     res.json(tasks);
   } catch (err) {
@@ -279,6 +308,10 @@ exports.getBikeReport = async (req, res) => {
       { name: "Parts", value: partsCost },
     ];
 
+    const maxFuelOdo = allFuelLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const maxServiceOdo = allServiceLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
+    const currentTotalKm = Math.max(bike.odometer || 0, maxFuelOdo, maxServiceOdo);
+
     res.json({
       bikeData: {
         _id: bike._id,
@@ -286,7 +319,7 @@ exports.getBikeReport = async (req, res) => {
         model: bike.model,
         year: bike.year,
         registrationNumber: bike.registrationNumber,
-        odometer: bike.odometer,
+        odometer: currentTotalKm,
         lastServiceDate: lastService?.date
           ? lastService.date.toISOString().split("T")[0]
           : null,

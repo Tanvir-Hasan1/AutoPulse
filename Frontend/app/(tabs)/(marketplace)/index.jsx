@@ -15,10 +15,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useRouter } from "expo-router";
-import ProductCard from "../../components/marketplace-component/ProductCard";
+import ProductCard from "../../../components/marketplace-component/ProductCard";
 
 import { API_BASE_URL } from "../../../config";
-import MarketplaceFilterModal from "../../components/marketplace-component/MarketplaceFilterModal";
+import MarketplaceFilterModal from "../../../components/marketplace-component/MarketplaceFilterModal";
 import api from "../../../store/api";
 
 const categoryOptions = [

@@ -14,11 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
-import BikesTab from "../../components/profile-component/BikesTab";
-import DocumentsTab from "../../components/profile-component/DocumentsTab";
-import ProductsTab from "../../components/profile-component/ProductsTab";
-import ProfileCard from "../../components/profile-component/ProfileCard";
-import SettingsTab from "../../components/profile-component/SettingsTab";
+import BikesTab from "../../../components/profile-component/BikesTab";
+import DocumentsTab from "../../../components/profile-component/DocumentsTab";
+import ProductsTab from "../../../components/profile-component/ProductsTab";
+import ProfileCard from "../../../components/profile-component/ProfileCard";
+import SettingsTab from "../../../components/profile-component/SettingsTab";
 
 export default function ProfileView() {
   const [activeTab, setActiveTab] = useState("bikes");
