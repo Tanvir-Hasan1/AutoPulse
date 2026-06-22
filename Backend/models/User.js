@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
     },
     avatar: { type: String, default: "" },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
     bikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Bike" }],
     drivingLicense: {
       fileId: { type: mongoose.Schema.Types.ObjectId },

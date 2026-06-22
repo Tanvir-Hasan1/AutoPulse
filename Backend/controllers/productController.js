@@ -279,10 +279,10 @@ const editProduct = async (req, res) => {
   }
 };
 
-// Get all product posts
+// Get all product posts (only approved ones)
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
+    const products = await Product.find({ isApproved: true }).sort({ createdAt: -1 });
     res.json({ products });
   } catch (error) {
     console.error("Get all products error:", error);
@@ -290,7 +290,7 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-// Get all products posted by a specific user
+// Get all products posted by a specific user (shows both approved and pending)
 const getMyProducts = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -307,6 +307,38 @@ const getMyProducts = async (req, res) => {
   }
 };
 
+// Get all products for Admin (approved + pending)
+const getAdminProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .populate("user", "name email");
+    res.json({ products });
+  } catch (error) {
+    console.error("Get admin products error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Approve a product by ID
+const approveProduct = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      { isApproved: true },
+      { new: true }
+    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json({ message: "Product approved successfully", product });
+  } catch (error) {
+    console.error("Approve product error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   postProduct,
   deleteProduct,
@@ -314,6 +346,8 @@ module.exports = {
   getAllProducts,
   getProductImage,
   getMyProducts,
+  getAdminProducts,
+  approveProduct,
   uploadMiddleware,
   initProductGridFS,
 };

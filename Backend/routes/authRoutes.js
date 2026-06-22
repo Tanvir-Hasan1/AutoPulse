@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../controllers/authController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const adminMiddleware = require("../middlewares/adminMiddleware");
 
 /**
  * @swagger
@@ -122,7 +123,8 @@ router.get("/user/:email", authMiddleware, auth.getUserByEmail);
  *       500:
  *         description: Server error
  */
-router.get("/users", authMiddleware, auth.getAllUsers);
+router.get("/users", authMiddleware, adminMiddleware, auth.getAllUsers);
+router.put("/users/:userId/role", authMiddleware, adminMiddleware, auth.updateUserRole);
 
 /**
  * @swagger

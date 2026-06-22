@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const adminMiddleware = require("../middlewares/adminMiddleware");
 const multer = require("multer");
 
 // Multer config for image upload (memory storage)
@@ -247,5 +248,9 @@ router.get("/products/:userId", authMiddleware, productController.getMyProducts)
  *         description: Server error
  */
 router.get("/product-image/:productId", productController.getProductImage);
+
+// Admin Routes
+router.get("/admin/all", authMiddleware, adminMiddleware, productController.getAdminProducts);
+router.put("/approve/:productId", authMiddleware, adminMiddleware, productController.approveProduct);
 
 module.exports = router;

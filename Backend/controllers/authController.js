@@ -116,6 +116,7 @@ const loginUser = async (req, res) => {
       email: user.email,
       name: user.name,
       avatar: user.avatar,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       bikes: (user.bikes || []).map((bike) => ({
@@ -173,10 +174,10 @@ const getUserByEmail = async (req, res) => {
 // Get All Users (for testing only)
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().populate("bikes");
     res.status(200).json({ users });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -283,6 +284,7 @@ const forgotPassword = async (req, res) => {
     await sendMail({
       to: user.email,
       subject: "Your Password Reset Code",
+      text: `Hello ${user.name},\n\nYou requested a password reset. Use the following OTP to reset your password: ${otp}\n\nThis code will expire in 10 minutes.\n\nIf you did not request this, please ignore this email.`,
       html: htmlContent,
     });
 
@@ -391,6 +393,28 @@ const logoutUser = async (req, res) => {
   }
 };
 
+const updateUserRole = async (req, res) => {
+  const { userId } = req.params;
+  const { role } = req.body;
+
+  if (!["user", "admin"].includes(role)) {
+    return res.status(400).json({ message: "Invalid role value" });
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.role = role;
+    await user.save();
+    res.status(200).json({ message: "User role updated successfully", user });
+  } catch (error) {
+    console.error("Update user role error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -402,4 +426,5 @@ module.exports = {
   changeName,
   refreshTokenController,
   logoutUser,
+  updateUserRole,
 };

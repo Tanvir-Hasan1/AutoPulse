@@ -173,6 +173,7 @@ function ResetPasswordPage() {
           <TextInput
             style={[styles.input, errors.otp && styles.inputError]}
             placeholder="Enter 6-digit code"
+            placeholderTextColor="#000000"
             value={otp}
             onChangeText={(text) => {
               setOtp(text.replace(/[^0-9]/g, ""));
@@ -208,6 +209,7 @@ function ResetPasswordPage() {
                 errors.newPassword && styles.inputError,
               ]}
               placeholder="Enter new password"
+              placeholderTextColor="#000000"
               value={newPassword}
               onChangeText={(text) => {
                 setNewPassword(text);
@@ -244,6 +246,7 @@ function ResetPasswordPage() {
                 errors.confirmPassword && styles.inputError,
               ]}
               placeholder="Confirm new password"
+              placeholderTextColor="#000000"
               value={confirmPassword}
               onChangeText={(text) => {
                 setConfirmPassword(text);

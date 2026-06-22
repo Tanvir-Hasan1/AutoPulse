@@ -155,6 +155,22 @@ const ProductsTab = ({
               {product.category}
             </Text>
             <Text style={styles.productPrice}>TK {product.price}</Text>
+            <View style={{
+              alignSelf: 'flex-start',
+              backgroundColor: product.isApproved ? '#DEF7EC' : '#FEF3C7',
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              borderRadius: 6,
+              marginTop: 4
+            }}>
+              <Text style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: product.isApproved ? '#03543F' : '#92400E'
+              }}>
+                {product.isApproved ? 'Approved' : 'Pending Approval'}
+              </Text>
+            </View>
             {product.condition && (
               <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
                 Condition:{" "}

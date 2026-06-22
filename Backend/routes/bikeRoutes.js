@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const bike = require("../controllers/bikeController");
+const bikeBrand = require("../controllers/bikeBrandController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const adminMiddleware = require("../middlewares/adminMiddleware");
 
-// Public route — called during onboarding right after signup (no token yet)
-// The user ID is passed in the request body for ownership
+// Public route — called during onboarding right after signup (no token required)
+router.get("/brands", bikeBrand.getAllBrands);
 router.post("/registerBike", bike.registerBike);
 
 // Secure all other bike routes
@@ -213,5 +215,10 @@ router.delete("/delete", bike.deleteBike);
  *         description: Server error
  */
 router.get("/user/:userId", bike.getUserBikes);
+
+// Admin Routes for Bike Brands
+router.post("/brands", adminMiddleware, bikeBrand.createBrand);
+router.put("/brands/:id", adminMiddleware, bikeBrand.updateBrand);
+router.delete("/brands/:id", adminMiddleware, bikeBrand.deleteBrand);
 
 module.exports = router;

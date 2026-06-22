@@ -1,6 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -62,6 +62,21 @@ export default function OnboardingScreen() {
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [brandsList, setBrandsList] = useState([]);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const response = await api.get("/bikes/brands");
+        if (response && response.brands) {
+          setBrandsList(response.brands);
+        }
+      } catch (error) {
+        console.error("Error fetching bike brands:", error);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const [bikeData, setBikeData] = useState({
     brand: "",
@@ -171,8 +186,8 @@ export default function OnboardingScreen() {
               dropdownIconColor="#000000"
             >
               <Picker.Item label="Select brand" value="" color="#000000" />
-              {BIKE_BRANDS.map((brand) => (
-                <Picker.Item key={brand} label={brand} value={brand} color="#000000" />
+              {brandsList.map((brand) => (
+                <Picker.Item key={brand._id || brand.id} label={brand.name} value={brand.name} color="#000000" />
               ))}
             </Picker>
           </View>
@@ -189,9 +204,11 @@ export default function OnboardingScreen() {
             >
               <Picker.Item label="Select model" value="" color="#000000" />
               {bikeData.brand &&
-                BIKE_MODELS[bikeData.brand]?.map((model) => (
-                  <Picker.Item key={model} label={model} value={model} color="#000000" />
-                ))}
+                brandsList
+                  .find((b) => b.name === bikeData.brand)
+                  ?.models?.map((model) => (
+                    <Picker.Item key={model} label={model} value={model} color="#000000" />
+                  ))}
             </Picker>
           </View>
         </>

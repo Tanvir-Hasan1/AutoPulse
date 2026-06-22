@@ -18,6 +18,7 @@ const productSchema = new mongoose.Schema(
     address: { type: String, required: true },
     details: { type: String },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    isApproved: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
