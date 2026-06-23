@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import {
   ActivityIndicator,
   Alert,
@@ -16,13 +20,72 @@ import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function License() {
+  const navigation = useNavigation();
   const userId = useAuthStore((s) => s.userId);
   const [licenseImageUri, setLicenseImageUri] = useState(null);
   const [isLoadingLicense, setIsLoadingLicense] = useState(false);
   const [licenseFileType, setLicenseFileType] = useState(null); // 'image' or 'pdf'
+  const [error, setError] = useState(null);
+
+  const handleDownload = async () => {
+    if (!licenseImageUri) return;
+    const isPdf = licenseFileType === "pdf";
+    const filename = `driving_license.${isPdf ? "pdf" : "png"}`;
+    const localUri = FileSystem.cacheDirectory + filename;
+
+    setIsLoadingLicense(true);
+    try {
+      if (isPdf) {
+        const token = useAuthStore.getState().accessToken;
+        const { uri } = await FileSystem.downloadAsync(licenseImageUri, localUri, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setIsLoadingLicense(false);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
+        } else {
+          Alert.alert("Success", `File downloaded to cache: ${uri}`);
+        }
+      } else {
+        const base64Code = licenseImageUri.split("base64,")[1] || licenseImageUri;
+        await FileSystem.writeAsStringAsync(localUri, base64Code, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        setIsLoadingLicense(false);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(localUri);
+        } else {
+          Alert.alert("Success", `File saved to cache: ${localUri}`);
+        }
+      }
+    } catch (err) {
+      setIsLoadingLicense(false);
+      console.error("Download error:", err);
+      Alert.alert("Error", "Failed to download and share file.");
+    }
+  };
+
+  useEffect(() => {
+    if (licenseImageUri) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={handleDownload} style={{ marginRight: 16 }}>
+            <Ionicons name="download-outline" size={24} color="#4F46E5" />
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => null,
+      });
+    }
+  }, [licenseImageUri]);
 
   // Handler to fetch and preview license
   const handleLicensePress = async () => {
+    setError(null);
     if (!userId) {
       Alert.alert("Error", "User ID not found. Please log in again.");
       return;
@@ -68,43 +131,70 @@ export default function License() {
       }
     } catch (error) {
       console.error("License download error:", error);
-      Alert.alert("Error", error.message || "Failed to download license");
+      setError(error.message || "Failed to download license");
       setIsLoadingLicense(false);
     }
   };
 
+  useEffect(() => {
+    if (userId) {
+      handleLicensePress();
+    }
+  }, [userId]);
+
   return (
     <View style={styles.container}>
-      {/* License Preview Button (hidden if license already loaded) */}
-      {!licenseImageUri && (
-        <TouchableOpacity style={styles.openBtn} onPress={handleLicensePress}>
-          <Text style={styles.openBtnText}>Show License</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* License File (Image or PDF) */}
-      {licenseFileType === "image" && licenseImageUri && (
-        <ScrollView
-          contentContainerStyle={styles.licenseScrollContainer}
-          maximumZoomScale={3}
-          minimumZoomScale={1}
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-        >
-          <Image
-            source={{ uri: licenseImageUri }}
-            style={styles.licenseImage}
-            resizeMode="contain"
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons
+            name="document-text-outline"
+            size={64}
+            color="#9CA3AF"
+            style={{ marginBottom: 16 }}
           />
-        </ScrollView>
-      )}
-      {licenseFileType === "pdf" && licenseImageUri && (
-        <Pdf
-          source={{ uri: licenseImageUri, headers: { Authorization: `Bearer ${useAuthStore.getState().accessToken}` } }}
-          style={styles.pdf}
-          trustAllCerts={false}
-          onError={(error) => console.log('PDF Render Error:', error)}
-        />
+          <Text style={styles.errorTitle}>No Document Found</Text>
+          <Text style={styles.errorSubtitle}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={handleLicensePress}
+          >
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* License Preview Button (hidden if license already loaded) */}
+          {!licenseImageUri && (
+            <TouchableOpacity style={styles.openBtn} onPress={handleLicensePress}>
+              <Text style={styles.openBtnText}>Show License</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* License File (Image or PDF) */}
+          {licenseFileType === "image" && licenseImageUri && (
+            <ScrollView
+              contentContainerStyle={styles.licenseScrollContainer}
+              maximumZoomScale={3}
+              minimumZoomScale={1}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+            >
+              <Image
+                source={{ uri: licenseImageUri }}
+                style={styles.licenseImage}
+                resizeMode="contain"
+              />
+            </ScrollView>
+          )}
+          {licenseFileType === "pdf" && licenseImageUri && (
+            <Pdf
+              source={{ uri: licenseImageUri, headers: { Authorization: `Bearer ${useAuthStore.getState().accessToken}` } }}
+              style={styles.pdf}
+              trustAllCerts={false}
+              onError={(error) => console.log('PDF Render Error:', error)}
+            />
+          )}
+        </>
       )}
 
       {/* Loading Modal for License */}
@@ -173,5 +263,32 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     fontSize: 18,
     color: "#333",
+  },
+  errorContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  retryBtn: {
+    backgroundColor: "#4F46E5",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  retryBtnText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

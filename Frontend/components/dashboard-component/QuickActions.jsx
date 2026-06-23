@@ -16,7 +16,7 @@ const QuickActions = () => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionsContainer}>
-        <InteractiveCard delay={600} style={styles.actionItem} onPress={() => handleNavigation("/(tabs)/(dashboard)/driving-license")}>
+        <InteractiveCard delay={600} style={styles.actionItem} onPress={() => handleNavigation("/(tabs)/(dashboard)/license")}>
           <View style={[styles.actionIcon, { backgroundColor: 'rgba(79, 70, 229, 0.1)' }]}>
             <Ionicons name="card" size={moderateScale(24)} color="#4F46E5" />
           </View>

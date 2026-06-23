@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import {
   ActivityIndicator,
   Alert,
@@ -15,13 +19,71 @@ import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 export default function Registration() {
+  const navigation = useNavigation();
   const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
   const token = useAuthStore((s) => s.accessToken);
   const [fileUri, setFileUri] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [fileType, setFileType] = useState(null); // 'image' or 'pdf'
+  const [error, setError] = useState(null);
+
+  const handleDownload = async () => {
+    if (!fileUri) return;
+    const isPdf = fileType === "pdf";
+    const filename = `bike_registration.${isPdf ? "pdf" : "png"}`;
+    const localUri = FileSystem.cacheDirectory + filename;
+
+    setIsLoading(true);
+    try {
+      if (isPdf) {
+        const { uri } = await FileSystem.downloadAsync(fileUri, localUri, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setIsLoading(false);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
+        } else {
+          Alert.alert("Success", `File downloaded to cache: ${uri}`);
+        }
+      } else {
+        const base64Code = fileUri.split("base64,")[1] || fileUri;
+        await FileSystem.writeAsStringAsync(localUri, base64Code, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        setIsLoading(false);
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(localUri);
+        } else {
+          Alert.alert("Success", `File saved to cache: ${localUri}`);
+        }
+      }
+    } catch (err) {
+      setIsLoading(false);
+      console.error("Download error:", err);
+      Alert.alert("Error", "Failed to download and share file.");
+    }
+  };
+
+  useEffect(() => {
+    if (fileUri) {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity onPress={handleDownload} style={{ marginRight: 16 }}>
+            <Ionicons name="download-outline" size={24} color="#4F46E5" />
+          </TouchableOpacity>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => null,
+      });
+    }
+  }, [fileUri]);
 
   const handleRegistrationPress = async () => {
+    setError(null);
     if (!selectedBikeId) {
       Alert.alert("Error", "No bike selected. Please select a bike first.");
       return;
@@ -63,45 +125,72 @@ export default function Registration() {
       }
     } catch (error) {
       console.error("Registration download error:", error);
-      Alert.alert("Error", error.message || "Failed to download registration");
+      setError(error.message || "Failed to download registration");
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (selectedBikeId) {
+      handleRegistrationPress();
+    }
+  }, [selectedBikeId]);
+
   return (
     <View style={styles.container}>
-      {/* Registration Preview Button (hidden if file already loaded) */}
-      {!fileUri && (
-        <TouchableOpacity
-          style={styles.openBtn}
-          onPress={handleRegistrationPress}
-        >
-          <Text style={styles.openBtnText}>Show Registration</Text>
-        </TouchableOpacity>
-      )}
-      {/* Registration File (Image or PDF) */}
-      {fileType === "image" && fileUri && (
-        <ScrollView
-          contentContainerStyle={styles.licenseScrollContainer}
-          maximumZoomScale={3}
-          minimumZoomScale={1}
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-        >
-          <Image
-            source={{ uri: fileUri }}
-            style={styles.licenseImage}
-            resizeMode="contain"
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons
+            name="document-text-outline"
+            size={64}
+            color="#9CA3AF"
+            style={{ marginBottom: 16 }}
           />
-        </ScrollView>
-      )}
-      {fileType === "pdf" && fileUri && (
-        <Pdf
-          source={{ uri: fileUri, headers: { Authorization: `Bearer ${token}` } }}
-          style={styles.pdf}
-          trustAllCerts={false}
-          onError={(error) => console.log('PDF Render Error:', error)}
-        />
+          <Text style={styles.errorTitle}>No Document Found</Text>
+          <Text style={styles.errorSubtitle}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={handleRegistrationPress}
+          >
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {/* Registration Preview Button (hidden if file already loaded) */}
+          {!fileUri && (
+            <TouchableOpacity
+              style={styles.openBtn}
+              onPress={handleRegistrationPress}
+            >
+              <Text style={styles.openBtnText}>Show Registration</Text>
+            </TouchableOpacity>
+          )}
+          {/* Registration File (Image or PDF) */}
+          {fileType === "image" && fileUri && (
+            <ScrollView
+              contentContainerStyle={styles.licenseScrollContainer}
+              maximumZoomScale={3}
+              minimumZoomScale={1}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+            >
+              <Image
+                source={{ uri: fileUri }}
+                style={styles.licenseImage}
+                resizeMode="contain"
+              />
+            </ScrollView>
+          )}
+          {fileType === "pdf" && fileUri && (
+            <Pdf
+              source={{ uri: fileUri, headers: { Authorization: `Bearer ${token}` } }}
+              style={styles.pdf}
+              trustAllCerts={false}
+              onError={(error) => console.log('PDF Render Error:', error)}
+            />
+          )}
+        </>
       )}
       {/* Loading Modal for Registration */}
       {isLoading && (
@@ -169,5 +258,32 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     fontSize: 18,
     color: "#333",
+  },
+  errorContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#374151",
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  retryBtn: {
+    backgroundColor: "#4F46E5",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  retryBtnText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
