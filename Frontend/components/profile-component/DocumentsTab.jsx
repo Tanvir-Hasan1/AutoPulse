@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as DocumentPicker from "expo-document-picker";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,6 +20,8 @@ import { API_BASE_URL } from "../../config";
 import { useAuthStore } from "../../store/useAuthStore";
 import api from "../../store/api";
 import ConfirmDeleteModal from "../common/ConfirmDeleteModal";
+import UploadOptionModal from "../common/UploadOptionModal";
+
 
 const DocumentsTab = ({ documents, styles }) => {
   const userId = useAuthStore((s) => s.userId);
@@ -37,6 +38,10 @@ const DocumentsTab = ({ documents, styles }) => {
   const [registrationLoading, setRegistrationLoading] = useState(true);
   const [taxTokenInfo, setTaxTokenInfo] = useState(null);
   const [taxTokenLoading, setTaxTokenLoading] = useState(true);
+  const [uploadModalVisible, setUploadModalVisible] = useState(false);
+  const [activeUploadType, setActiveUploadType] = useState(null);
+  const [uploadModalTitle, setUploadModalTitle] = useState("");
+
 
   // Modal State
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -208,45 +213,86 @@ const DocumentsTab = ({ documents, styles }) => {
     }
   };
 
-  // Handler to upload a new license document
-  const handleUploadLicense = async () => {
+  // Trigger guided upload modal
+  const triggerUpload = (type, title) => {
+    setActiveUploadType(type);
+    setUploadModalTitle(title);
+    setUploadModalVisible(true);
+  };
+
+  // Handler when file is selected/compiled by the modal
+  const handleUploadFileSelected = async (file) => {
+    if (!file) return;
+
+    setIsLoadingLicense(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "image/*"],
-        copyToCacheDirectory: true,
-      });
-      if (result.canceled || !result.assets || !result.assets[0]) return;
-      const file = result.assets[0];
-      setIsLoadingLicense(true);
       const formData = new FormData();
-      formData.append("license", {
-        uri: file.uri,
-        name: file.name || "license.pdf",
-        type: file.mimeType || "application/pdf",
-      });
-      const data = await api.upload(`/license/upload/${user.userId}`, formData);
-      setIsLoadingLicense(false);
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: data.message || "License uploaded successfully",
-        position: "bottom",
-        autoHide: true,
-        visibilityTime: 2500,
-      });
-      fetchLicenseInfo(); // Refresh license info after upload
+      
+      if (activeUploadType === 'license') {
+        formData.append("license", {
+          uri: file.uri,
+          name: file.name || "license.pdf",
+          type: file.type || "application/pdf",
+        });
+        const data = await api.upload(`/license/upload/${user.userId}`, formData);
+        setIsLoadingLicense(false);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message || "License uploaded successfully",
+          position: "bottom",
+          autoHide: true,
+          visibilityTime: 2500,
+        });
+        fetchLicenseInfo();
+      } else if (activeUploadType === 'registration') {
+        formData.append("registration", {
+          uri: file.uri,
+          name: file.name || "registration.pdf",
+          type: file.type || "application/pdf",
+        });
+        const data = await api.upload(`/registration/upload/${user.selectedBikeId}`, formData);
+        setIsLoadingLicense(false);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message || "Registration uploaded successfully",
+          position: "bottom",
+          autoHide: true,
+          visibilityTime: 2500,
+        });
+        fetchRegistrationInfo();
+      } else if (activeUploadType === 'taxToken') {
+        formData.append("taxToken", {
+          uri: file.uri,
+          name: file.name || "tax-token.pdf",
+          type: file.type || "application/pdf",
+        });
+        const data = await api.upload(`/tax-token/upload/${user.selectedBikeId}`, formData);
+        setIsLoadingLicense(false);
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: data.message || "Tax token uploaded successfully",
+          position: "bottom",
+          autoHide: true,
+          visibilityTime: 2500,
+        });
+        fetchTaxTokenInfo();
+      }
     } catch (error) {
       setIsLoadingLicense(false);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error.message || "Failed to upload license",
+        text2: error.message || "Failed to upload document",
         position: "bottom",
         autoHide: true,
         visibilityTime: 3000,
       });
     }
   };
+
 
   // Handler to view a registration document
   const handleViewRegistration = async () => {
@@ -360,90 +406,7 @@ const DocumentsTab = ({ documents, styles }) => {
     }
   };
 
-  // Handler to upload a new registration document
-  const handleUploadRegistration = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "image/*"],
-        copyToCacheDirectory: true,
-      });
-      if (result.canceled || !result.assets || !result.assets[0]) return;
-      const file = result.assets[0];
-      setIsLoadingLicense(true);
-      const formData = new FormData();
-      formData.append("registration", {
-        uri: file.uri,
-        name: file.name || "registration.pdf",
-        type: file.mimeType || "application/pdf",
-      });
-      const data = await api.upload(`/registration/upload/${user.selectedBikeId}`, formData);
-      setIsLoadingLicense(false);
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: data.message || "Registration uploaded successfully",
-        position: "bottom",
-        autoHide: true,
-        visibilityTime: 2500,
-      });
-      fetchRegistrationInfo(); // Refresh registration info after upload
-    } catch (error) {
-      setIsLoadingLicense(false);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error.message || "Failed to upload registration document",
-        position: "bottom",
-        autoHide: true,
-        visibilityTime: 3000,
-      });
-    }
-  };
 
-  // Handler to upload a new tax token document
-  const handleUploadTaxToken = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "image/*"],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled || !result.assets || !result.assets[0]) return;
-
-      const file = result.assets[0];
-      setIsLoadingLicense(true);
-
-      const formData = new FormData();
-      formData.append("taxToken", {
-        uri: file.uri,
-        name: file.name || "tax-token.pdf",
-        type: file.mimeType || "application/pdf",
-      });
-
-      const data = await api.upload(`/tax-token/upload/${user.selectedBikeId}`, formData);
-      setIsLoadingLicense(false);
-
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: data.message || "Tax token uploaded successfully",
-        position: "bottom",
-        autoHide: true,
-        visibilityTime: 2500,
-      });
-      fetchTaxTokenInfo(); // Refresh tax token info after upload
-    } catch (error) {
-      setIsLoadingLicense(false);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: error.message || "Failed to upload tax token document",
-        position: "bottom",
-        autoHide: true,
-        visibilityTime: 3000,
-      });
-    }
-  };
   // Handler to delete a tax token document
   const handleDeleteTaxToken = async () => {
     try {
@@ -565,11 +528,11 @@ const DocumentsTab = ({ documents, styles }) => {
                 style={[styles.documentButton, { width: "100%" }]}
                 onPress={
                   isLicense
-                    ? () => handleUploadLicense()
+                    ? () => triggerUpload('license', 'Driving License')
                     : isRegistration
-                    ? () => handleUploadRegistration()
+                    ? () => triggerUpload('registration', 'Registration Certificate (RC)')
                     : isTaxToken
-                    ? () => handleUploadTaxToken()
+                    ? () => triggerUpload('taxToken', 'Tax Token')
                     : undefined
                 }
               >
@@ -730,6 +693,12 @@ const DocumentsTab = ({ documents, styles }) => {
         onConfirm={executeDelete}
         title="Delete Document"
         message="Are you sure you want to delete this document? This action cannot be undone."
+      />
+      <UploadOptionModal
+        visible={uploadModalVisible}
+        onClose={() => setUploadModalVisible(false)}
+        onSelect={handleUploadFileSelected}
+        title={uploadModalTitle}
       />
     </ScrollView>
   );

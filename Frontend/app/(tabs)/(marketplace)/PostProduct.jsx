@@ -88,78 +88,9 @@ export default function PostProduct() {
 
       console.log("Launching image library...");
       const result = await ImagePicker.launchImageLibraryAsync({
-        // Removed deprecated MediaTypeOptions.Images - images are default
+        mediaTypes: ['images'],
         allowsEditing: true,
         // aspect: [4, 3],
-        quality: 0.8, // Slightly reduced quality for better performance
-        allowsMultipleSelection: false,
-      });
-
-      console.log("Full result object:", JSON.stringify(result, null, 2));
-
-      if (result.canceled) {
-        console.log("User cancelled image selection");
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        console.log("Selected image URI:", selectedImage.uri);
-        setImageUri(selectedImage.uri);
-      } else {
-        console.log("No assets found in result");
-        Alert.alert("Error", "No image was selected");
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert("Error", "Failed to pick image. Please try again.");
-    }
-  };
-
-  // Alternative Solution 2: Use string directly
-  const pickImageAlternative = async () => {
-    console.log("Picking image...");
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission Denied", "Camera roll permissions are required!");
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "Images", // Use string directly
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    console.log("Image picker result:", result);
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      console.log("Setting image URI:", result.assets[0].uri);
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  // Solution 3: More robust version with better error handling
-  const pickImageRobust = async () => {
-    try {
-      console.log("Requesting permissions...");
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Camera roll permissions are required!"
-        );
-        return;
-      }
-
-      console.log("Launching image library...");
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
         quality: 0.8, // Slightly reduced quality for better performance
         allowsMultipleSelection: false,
       });
