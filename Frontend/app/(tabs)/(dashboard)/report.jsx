@@ -16,6 +16,8 @@ import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
 import Reports from "../../../components/dashboard-component/reports";
 import YearlyCostsBreakdown from "../../../components/dashboard-component/reports/YearlyCostsBreakdown";
+import BikeSelectionModal from "../../../components/dashboard-component/BikeSelectionModal";
+import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 
@@ -31,12 +33,21 @@ const themeColors = {
 
 const ReportPage = () => {
   const bikeId = useAuthStore((s) => s.selectedBikeId);
+  const bikes = useAuthStore((s) => s.bikes);
+  const selectBike = useAuthStore((s) => s.selectBike);
   const [refreshing, setRefreshing] = useState(false);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [bikeModalVisible, setBikeModalVisible] = useState(false);
+
+  const handleBikeSelect = (newBikeId) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    selectBike(newBikeId);
+    setBikeModalVisible(false);
+  };
 
   const fetchReportData = async (filterVal = filter) => {
     if (!bikeId) return;
@@ -133,6 +144,33 @@ const ReportPage = () => {
           />
         }
       >
+        {/* Bike Selector Bar */}
+        {bikeData && bikeData.brand && (
+          <View style={styles.selectorSection}>
+            <TouchableOpacity
+              style={styles.bikeSelectorCard}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setBikeModalVisible(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.bikeSelectorDetails}>
+                <View style={styles.bikeIconBg}>
+                  <Ionicons name="bicycle" size={18} color="#2563EB" />
+                </View>
+                <Text style={styles.selectedBikeText}>
+                  {bikeData.brand} {bikeData.model}
+                </Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{bikeData.year}</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-down" size={20} color="#2563EB" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Bike Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Bike Info</Text>
@@ -324,6 +362,14 @@ const ReportPage = () => {
           </View>
         </View>
       </Modal>
+
+      <BikeSelectionModal
+        modalVisible={bikeModalVisible}
+        setModalVisible={setBikeModalVisible}
+        bikes={bikes}
+        selectedBikeId={bikeId}
+        handleBikeSelect={handleBikeSelect}
+      />
     </View>
   );
 };
@@ -547,6 +593,47 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700",
+  },
+  selectorSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  bikeSelectorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "rgba(0,0,0,0.02)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  bikeSelectorDetails: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  bikeIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  selectedBikeText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginRight: 8,
   },
 });
 
