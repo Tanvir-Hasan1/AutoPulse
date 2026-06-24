@@ -17,6 +17,7 @@ import {
 import Pdf from 'react-native-pdf';
 import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../store/api";
 
 export default function Registration() {
   const navigation = useNavigation();
@@ -90,29 +91,23 @@ export default function Registration() {
     }
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/registration/download/${selectedBikeId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to download registration");
+      // Fetch metadata first (handles token refresh automatically)
+      const data = await api.get(`/registration/info/${selectedBikeId}`);
+      if (!data || !data.registration) {
+        throw new Error("No registration document found for this bike");
       }
-      const contentType = response.headers.get("content-type");
+
+      const contentType = data.registration.contentType;
       if (contentType && contentType.includes("pdf")) {
         const pdfUrl = `${API_BASE_URL}/registration/download/${selectedBikeId}`;
         setFileUri(pdfUrl);
         setFileType("pdf");
         setIsLoading(false);
       } else if (contentType && contentType.startsWith("image/")) {
-        // Handle image
-        const blob = await response.blob();
+        // Fetch image as blob
+        const blob = await api.get(`/registration/download/${selectedBikeId}`, {
+          responseType: "blob",
+        });
         const reader = new FileReader();
         reader.onloadend = () => {
           setFileUri(reader.result);

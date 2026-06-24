@@ -220,7 +220,10 @@ const ProductsTab = ({
           )}
         </TouchableOpacity>
       ))}
-      <TouchableOpacity style={styles.viewAllButton}>
+      <TouchableOpacity
+        style={styles.viewAllButton}
+        onPress={() => router.push("/(tabs)/(profile)/ViewAllProducts")}
+      >
         <Text style={styles.viewAllText}>View All My Products</Text>
       </TouchableOpacity>
     </ScrollView>

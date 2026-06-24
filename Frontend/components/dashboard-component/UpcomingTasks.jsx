@@ -5,6 +5,7 @@ import { ScaledSheet, moderateScale } from "react-native-size-matters";
 import InteractiveCard from '../common/InteractiveCard';
 import api from '../../store/api';
 import { useAuthStore } from '../../store/useAuthStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const UpcomingTasks = ({ tasks }) => {
   const selectedBikeId = useAuthStore((s) => s.selectedBikeId);
@@ -117,7 +118,7 @@ const UpcomingTasks = ({ tasks }) => {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
+        <SafeAreaView style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>All Tasks</Text>
@@ -237,7 +238,7 @@ const UpcomingTasks = ({ tasks }) => {
               )
             )}
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -335,7 +336,7 @@ const styles = ScaledSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: "#F7F9FC",
-    paddingTop: '20@vs',
+    paddingTop: '8@vs',
   },
   modalHeader: {
     flexDirection: "row",

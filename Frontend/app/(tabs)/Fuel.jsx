@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Platform,
   StatusBar,
@@ -7,7 +7,14 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Pressable,
 } from "react-native";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CalendarModal from "../../components/CalendarModal";
 import FuelLog from "../../components/FuelLog";
@@ -18,6 +25,61 @@ import { useAuthStore } from "../../store/useAuthStore";
 export default function FuelServiceTracker() {
   const bikeId = useAuthStore((s) => s.selectedBikeId);
   const [activeTab, setActiveTab] = useState("fuel");
+
+  const [containerWidth, setContainerWidth] = useState(0);
+  const activeTabTranslateX = useSharedValue(0);
+
+  useEffect(() => {
+    activeTabTranslateX.value = withSpring(activeTab === "fuel" ? 0 : 1, {
+      damping: 20,
+      stiffness: 250,
+      overshootClamping: true,
+    });
+  }, [activeTab]);
+
+  const animatedPillStyle = useAnimatedStyle(() => {
+    const tabWidth = (containerWidth - 8) / 2;
+    return {
+      transform: [
+        {
+          translateX: activeTabTranslateX.value * tabWidth,
+        },
+      ],
+    };
+  });
+
+  const fuelTabScale = useSharedValue(1);
+  const serviceTabScale = useSharedValue(1);
+
+  const fuelTabStyle = useAnimatedStyle(() => {
+    const targetScale = activeTab === "fuel" ? 1.04 : 0.96;
+    return {
+      transform: [
+        {
+          scale: withSpring(fuelTabScale.value * targetScale, {
+            damping: 15,
+            stiffness: 250,
+            overshootClamping: true,
+          }),
+        },
+      ],
+    };
+  });
+
+  const serviceTabStyle = useAnimatedStyle(() => {
+    const targetScale = activeTab === "service" ? 1.04 : 0.96;
+    return {
+      transform: [
+        {
+          scale: withSpring(serviceTabScale.value * targetScale, {
+            damping: 15,
+            stiffness: 250,
+            overshootClamping: true,
+          }),
+        },
+      ],
+    };
+  });
 
   const [fuelLevel, setFuelLevel] = useState(65);
   const [showFuelDatePicker, setShowFuelDatePicker] = useState(false);
@@ -59,44 +121,81 @@ export default function FuelServiceTracker() {
 
       <Text style={styles.title}>Fuel & Service Management</Text>
 
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "fuel" && styles.activeTab]}
-          onPress={() => setActiveTab("fuel")}
-        >
-          <Ionicons
-            name="car"
-            size={20}
-            color={activeTab === "fuel" ? "#4F46E5" : "#9CA3AF"}
-          />
-          <Text
+      <View
+        style={styles.tabContainer}
+        onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
+      >
+        {containerWidth > 0 && (
+          <Animated.View
             style={[
-              styles.tabText,
-              activeTab === "fuel" && styles.activeTabText,
+              styles.activeTabPill,
+              {
+                width: (containerWidth - 8) / 2,
+              },
+              animatedPillStyle,
             ]}
-          >
-            Fuel Log
-          </Text>
-        </TouchableOpacity>
+          />
+        )}
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "service" && styles.activeTab]}
-          onPress={() => setActiveTab("service")}
+        <Pressable
+          style={styles.tab}
+          onPressIn={() => {
+            fuelTabScale.value = withSpring(0.92, { damping: 10 });
+          }}
+          onPressOut={() => {
+            fuelTabScale.value = withSpring(1, { damping: 10 });
+          }}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setActiveTab("fuel");
+          }}
         >
-          <Ionicons
-            name="construct"
-            size={20}
-            color={activeTab === "service" ? "#4F46E5" : "#9CA3AF"}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "service" && styles.activeTabText,
-            ]}
-          >
-            Service Log
-          </Text>
-        </TouchableOpacity>
+          <Animated.View style={[styles.tabContent, fuelTabStyle]}>
+            <Ionicons
+              name="car"
+              size={20}
+              color={activeTab === "fuel" ? "#4F46E5" : "#9CA3AF"}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "fuel" && styles.activeTabText,
+              ]}
+            >
+              Fuel Log
+            </Text>
+          </Animated.View>
+        </Pressable>
+
+        <Pressable
+          style={styles.tab}
+          onPressIn={() => {
+            serviceTabScale.value = withSpring(0.92, { damping: 10 });
+          }}
+          onPressOut={() => {
+            serviceTabScale.value = withSpring(1, { damping: 10 });
+          }}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setActiveTab("service");
+          }}
+        >
+          <Animated.View style={[styles.tabContent, serviceTabStyle]}>
+            <Ionicons
+              name="construct"
+              size={20}
+              color={activeTab === "service" ? "#4F46E5" : "#9CA3AF"}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "service" && styles.activeTabText,
+              ]}
+            >
+              Service Log
+            </Text>
+          </Animated.View>
+        </Pressable>
       </View>
 
       <View style={{ flex: 1 }}>
@@ -172,15 +271,22 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 8,
     padding: 4,
+    position: "relative",
+    height: 48,
+    overflow: "hidden",
   },
   tab: {
     flex: 1,
+    borderRadius: 6,
+    zIndex: 1,
+    height: "100%",
+  },
+  tabContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 6,
+    width: "100%",
+    height: "100%",
   },
   tabText: {
     marginLeft: 8,
@@ -188,8 +294,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#9CA3AF",
   },
-  activeTab: {
+  activeTabPill: {
+    position: "absolute",
+    top: 4,
+    bottom: 4,
+    left: 4,
     backgroundColor: "#ffffff",
+    borderRadius: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,

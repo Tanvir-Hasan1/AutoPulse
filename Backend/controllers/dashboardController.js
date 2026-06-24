@@ -203,6 +203,7 @@ function timeAgo(date) {
 exports.getBikeReport = async (req, res) => {
   try {
     const { bikeId } = req.params;
+    const { filter } = req.query;
 
     // 1. Bike data
     const bike = await Bike.findById(bikeId);
@@ -219,43 +220,60 @@ exports.getBikeReport = async (req, res) => {
     // 4. All service logs (lifetime)
     const allServiceLogs = await Service.find({ bike: bikeId });
 
+    // Filter based on range
+    const currentYear = new Date().getFullYear();
+    let targetYear = null;
+    if (filter === "this_year") {
+      targetYear = currentYear;
+    } else if (filter === "prev_year") {
+      targetYear = currentYear - 1;
+    }
+
+    const fuelLogsToProcess = targetYear 
+      ? allFuelLogs.filter(log => new Date(log.date).getFullYear() === targetYear)
+      : allFuelLogs;
+
+    const serviceLogsToProcess = targetYear 
+      ? allServiceLogs.filter(log => new Date(log.date).getFullYear() === targetYear)
+      : allServiceLogs;
+
     // 5. Last 8 fuel logs for chart
-    const recentFuelLogs = allFuelLogs.slice(0, 8);
+    const recentFuelLogs = fuelLogsToProcess.slice(0, 8);
 
     // 6. Last 30 days for monthly spending
     const today = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
-    const last30Fuel = allFuelLogs.filter(
+    const last30Fuel = fuelLogsToProcess.filter(
       (log) => log.date >= thirtyDaysAgo && log.date <= today
     );
-    const last30Service = allServiceLogs.filter(
+    const last30Service = serviceLogsToProcess.filter(
       (log) => log.date >= thirtyDaysAgo && log.date <= today
     );
     const monthlySpending =
       last30Fuel.reduce((sum, log) => sum + (log.totalCost || 0), 0) +
       last30Service.reduce((sum, log) => sum + (log.cost || 0), 0);
 
-    // 7. Lifetime totals
-    const totalFuel = allFuelLogs.reduce(
+    // 7. Filtered totals
+    const totalFuel = fuelLogsToProcess.reduce(
       (sum, log) => sum + (log.amount || 0),
       0
     );
-    const totalFuelSpend = allFuelLogs.reduce(
+    const totalFuelSpend = fuelLogsToProcess.reduce(
       (sum, log) => sum + (log.totalCost || 0),
       0
     );
-    const totalServiceSpend = allServiceLogs.reduce(
+    const totalServiceSpend = serviceLogsToProcess.reduce(
       (sum, log) => sum + (log.cost || 0),
       0
     );
     const totalSpend = totalFuelSpend + totalServiceSpend;
     const avgCostPerLitre = totalFuel > 0 ? totalFuelSpend / totalFuel : 0;
 
-    // 8. Lifetime fuel efficiency (km/l)
+    // 8. Fuel efficiency (km/l) for selected period
     let fuelEfficiency = 0;
-    if (allFuelLogs.length >= 2) {
-      const sorted = [...allFuelLogs].sort((a, b) => a.odometer - b.odometer);
+    if (fuelLogsToProcess.length >= 2) {
+      const sorted = [...fuelLogsToProcess].sort((a, b) => a.odometer - b.odometer);
       let km = 0,
         fuel = 0;
       for (let i = 1; i < sorted.length; i++) {
@@ -268,45 +286,102 @@ exports.getBikeReport = async (req, res) => {
       fuelEfficiency = fuel > 0 ? km / fuel : 0;
     }
 
-    // 9. Monthly spending/fuel trends (all time)
+    // 9. Monthly spending/fuel trends
     const monthlyStats = {};
-    allFuelLogs.forEach((log) => {
-      const month = `${log.date.getFullYear()}-${String(
-        log.date.getMonth() + 1
+    fuelLogsToProcess.forEach((log) => {
+      const dateObj = new Date(log.date);
+      const month = `${dateObj.getFullYear()}-${String(
+        dateObj.getMonth() + 1
       ).padStart(2, "0")}`;
       if (!monthlyStats[month])
         monthlyStats[month] = { spending: 0, litres: 0, month };
-      monthlyStats[month].spending += log.totalCost;
-      monthlyStats[month].litres += log.amount;
+      monthlyStats[month].spending += log.totalCost || 0;
+      monthlyStats[month].litres += log.amount || 0;
     });
+
+    serviceLogsToProcess.forEach((log) => {
+      const dateObj = new Date(log.date);
+      const month = `${dateObj.getFullYear()}-${String(
+        dateObj.getMonth() + 1
+      ).padStart(2, "0")}`;
+      if (!monthlyStats[month])
+        monthlyStats[month] = { spending: 0, litres: 0, month };
+      monthlyStats[month].spending += log.cost || 0;
+    });
+
     const monthlyData = Object.values(monthlyStats).sort((a, b) =>
       a.month.localeCompare(b.month)
     );
 
-    // 10. Fuel consumption trend (litres by month, lifetime)
+    // 10. Fuel consumption trend (litres by month)
     const fuelConsumptionTrend = monthlyData.map((d) => ({
       month: d.month,
-      litres: d.litres,
+      litres: Math.round(d.litres),
     }));
 
-    // 11. Fuel price trend (unitCost, last 8 refuels)
+    // 11. Monthly expense trend (spending by month)
+    const monthlyExpenseTrend = monthlyData.map((d) => ({
+      month: d.month,
+      spending: Math.round(d.spending),
+    }));
+
+    // 12. Fuel price trend (unitCost, last 8 refuels)
     const fuelPriceTrend = recentFuelLogs
       .map((log) => ({
-        date: log.date.toISOString().split("T")[0],
+        date: new Date(log.date).toISOString().split("T")[0],
         unitCost: log.unitCost,
       }))
       .reverse();
 
-    // 12. Cost breakdown (lifetime)
+    // 13. Cost breakdown
     const fuelCost = totalFuelSpend;
     const serviceCost = totalServiceSpend;
-    // You may add partsCost etc. if you want
-    const partsCost = 0;
+    const partsCost = 0; // fallback parts cost
     const costBreakdown = [
       { name: "Fuel", value: fuelCost },
       { name: "Service", value: serviceCost },
       { name: "Parts", value: partsCost },
     ];
+
+    // 14. Monthly costs list grouped by year
+    const monthlyCostsMap = {};
+    fuelLogsToProcess.forEach((log) => {
+      const dateObj = new Date(log.date);
+      const year = dateObj.getFullYear().toString();
+      const monthNum = String(dateObj.getMonth() + 1).padStart(2, "0");
+      if (!monthlyCostsMap[year]) monthlyCostsMap[year] = {};
+      if (!monthlyCostsMap[year][monthNum]) {
+        monthlyCostsMap[year][monthNum] = { fuel: 0, service: 0 };
+      }
+      monthlyCostsMap[year][monthNum].fuel += log.totalCost || 0;
+    });
+
+    serviceLogsToProcess.forEach((log) => {
+      const dateObj = new Date(log.date);
+      const year = dateObj.getFullYear().toString();
+      const monthNum = String(dateObj.getMonth() + 1).padStart(2, "0");
+      if (!monthlyCostsMap[year]) monthlyCostsMap[year] = {};
+      if (!monthlyCostsMap[year][monthNum]) {
+        monthlyCostsMap[year][monthNum] = { fuel: 0, service: 0 };
+      }
+      monthlyCostsMap[year][monthNum].service += log.cost || 0;
+    });
+
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const monthlyCosts = {};
+    Object.keys(monthlyCostsMap).forEach((year) => {
+      monthlyCosts[year] = Object.keys(monthlyCostsMap[year])
+        .map((monthNum) => {
+          const idx = parseInt(monthNum, 10) - 1;
+          return {
+            monthNum,
+            month: monthNames[idx],
+            fuel: Math.round(monthlyCostsMap[year][monthNum].fuel),
+            service: Math.round(monthlyCostsMap[year][monthNum].service),
+          };
+        })
+        .sort((a, b) => b.monthNum.localeCompare(a.monthNum)); // sort descending
+    });
 
     const maxFuelOdo = allFuelLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
     const maxServiceOdo = allServiceLogs.reduce((max, log) => Math.max(max, log.odometer || 0), 0);
@@ -326,7 +401,7 @@ exports.getBikeReport = async (req, res) => {
         lastServiceOdometer: lastService?.odometer || null,
       },
       fuelLogs: recentFuelLogs.map((log) => ({
-        date: log.date.toISOString().split("T")[0],
+        date: new Date(log.date).toISOString().split("T")[0],
         amount: log.amount,
         unitCost: log.unitCost,
         totalCost: log.totalCost,
@@ -337,9 +412,11 @@ exports.getBikeReport = async (req, res) => {
       avgCostPerLitre: Number(avgCostPerLitre.toFixed(1)),
       fuelEfficiency: Number(fuelEfficiency.toFixed(1)),
       monthlySpending: Number(monthlySpending.toFixed(0)),
-      fuelConsumptionTrend, // [{month, litres}]
-      costBreakdown, // [{name,value}]
-      fuelPriceTrend, // [{date,unitCost}]
+      fuelConsumptionTrend,
+      monthlyExpenseTrend,
+      costBreakdown,
+      fuelPriceTrend,
+      monthlyCosts,
     });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });

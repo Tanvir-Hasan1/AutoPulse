@@ -118,24 +118,22 @@ const DocumentsTab = ({ documents, styles }) => {
     try {
       if (doc.name === "Driving License" && user.selectedBikeId) {
         setIsLoadingLicense(true);
-        const token = useAuthStore.getState().accessToken;
+        
+        // Ensure metadata is retrieved/refreshed (handles token refresh automatically)
+        await api.get(`/license/info/${user.userId}`);
+        const isPdf = licenseInfo?.contentType && licenseInfo.contentType.includes("pdf");
         const url = `${API_BASE_URL}/license/download/${user.userId}`;
-        const response = await fetch(url, { 
-          method: "GET",
-          headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to download license");
-        }
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("pdf")) {
+
+        if (isPdf) {
           setLicenseImageUri(url);
           setLicenseFileType("pdf");
           setLicenseOverlayVisible(true);
           setIsLoadingLicense(false);
-        } else if (contentType && contentType.startsWith("image/")) {
-          const blob = await response.blob();
+        } else {
+          // Download image as blob
+          const blob = await api.get(`/license/download/${user.userId}`, {
+            responseType: "blob",
+          });
           const reader = new FileReader();
           reader.onloadend = () => {
             setLicenseImageUri(reader.result);
@@ -144,8 +142,6 @@ const DocumentsTab = ({ documents, styles }) => {
             setIsLoadingLicense(false);
           };
           reader.readAsDataURL(blob);
-        } else {
-          throw new Error("Unsupported file type");
         }
       } else {
         Toast.show({
@@ -174,23 +170,22 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleViewTaxToken = async () => {
     try {
       setIsLoadingLicense(true);
-      const token = useAuthStore.getState().accessToken;
+      
+      // Ensure metadata is retrieved/refreshed (handles token refresh automatically)
+      await api.get(`/tax-token/info/${user.selectedBikeId}`);
+      const isPdf = taxTokenInfo?.contentType && taxTokenInfo.contentType.includes("pdf");
       const url = `${API_BASE_URL}/tax-token/download/${user.selectedBikeId}`;
-      const response = await fetch(url, { 
-        method: "GET",
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-      });
-      if (!response.ok) {
-        throw new Error("Failed to download tax token document");
-      }
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("pdf")) {
-          setLicenseImageUri(url);
-          setLicenseFileType("pdf");
-          setLicenseOverlayVisible(true);
-          setIsLoadingLicense(false);
-      } else if (contentType && contentType.startsWith("image/")) {
-        const blob = await response.blob();
+
+      if (isPdf) {
+        setLicenseImageUri(url);
+        setLicenseFileType("pdf");
+        setLicenseOverlayVisible(true);
+        setIsLoadingLicense(false);
+      } else {
+        // Download image as blob
+        const blob = await api.get(`/tax-token/download/${user.selectedBikeId}`, {
+          responseType: "blob",
+        });
         const reader = new FileReader();
         reader.onloadend = () => {
           setLicenseImageUri(reader.result);
@@ -199,8 +194,6 @@ const DocumentsTab = ({ documents, styles }) => {
           setIsLoadingLicense(false);
         };
         reader.readAsDataURL(blob);
-      } else {
-        throw new Error("Unsupported file type");
       }
     } catch (error) {
       Toast.show({
@@ -259,23 +252,22 @@ const DocumentsTab = ({ documents, styles }) => {
   const handleViewRegistration = async () => {
     try {
       setIsLoadingLicense(true);
-      const token = useAuthStore.getState().accessToken;
+      
+      // Ensure metadata is retrieved/refreshed (handles token refresh automatically)
+      await api.get(`/registration/info/${user.selectedBikeId}`);
+      const isPdf = registrationInfo?.contentType && registrationInfo.contentType.includes("pdf");
       const url = `${API_BASE_URL}/registration/download/${user.selectedBikeId}`;
-      const response = await fetch(url, { 
-        method: "GET",
-        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
-      });
-      if (!response.ok) {
-        throw new Error("Failed to download registration document");
-      }
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("pdf")) {
-          setLicenseImageUri(url);
-          setLicenseFileType("pdf");
-          setLicenseOverlayVisible(true);
-          setIsLoadingLicense(false);
-      } else if (contentType && contentType.startsWith("image/")) {
-        const blob = await response.blob();
+
+      if (isPdf) {
+        setLicenseImageUri(url);
+        setLicenseFileType("pdf");
+        setLicenseOverlayVisible(true);
+        setIsLoadingLicense(false);
+      } else {
+        // Download image as blob
+        const blob = await api.get(`/registration/download/${user.selectedBikeId}`, {
+          responseType: "blob",
+        });
         const reader = new FileReader();
         reader.onloadend = () => {
           setLicenseImageUri(reader.result);
@@ -284,8 +276,6 @@ const DocumentsTab = ({ documents, styles }) => {
           setIsLoadingLicense(false);
         };
         reader.readAsDataURL(blob);
-      } else {
-        throw new Error("Unsupported file type");
       }
     } catch (error) {
       Toast.show({

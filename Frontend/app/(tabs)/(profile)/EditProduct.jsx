@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../store/api";
 
 const categories = [
   { label: "Accessories", value: "accessories" },
@@ -251,59 +252,33 @@ const EditProduct = () => {
         });
       }
 
-      const token = useAuthStore.getState().accessToken;
-      const response = await fetch(
-        `${API_BASE_URL}/marketplace/edit-product/${productId}`,
+      await api.patch(
+        `/marketplace/edit-product/${productId}`,
+        formData,
         {
-          method: "PATCH",
-          body: formData,
           headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            // Don't set Content-Type header - let the browser set it with boundary for multipart/form-data
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
-      console.log("Response status:", response.status);
-      console.log("Response headers:", response.headers);
-
-      const resText = await response.text();
-      console.log("Raw response:", resText);
-
-      let resJson;
-      try {
-        resJson = JSON.parse(resText);
-      } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError);
-        throw new Error("Invalid response from server");
-      }
-
-      console.log("Parsed response:", resJson);
-
       setUpdating(false);
-
-      if (response.ok) {
-        setImageVersion(Date.now()); // Bust cache for new image
-        Alert.alert("Success", "Product updated successfully!", [
-          {
-            text: "OK",
-            onPress: () => {
-              // Navigate back and refresh the previous screen
-              navigation.goBack();
-            },
+      setImageVersion(Date.now()); // Bust cache for new image
+      Alert.alert("Success", "Product updated successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            // Navigate back and refresh the previous screen
+            navigation.goBack();
           },
-        ]);
-      } else {
-        console.error("Update failed:", resJson);
-        Alert.alert("Error", resJson.message || "Failed to update product.");
-      }
+        },
+      ]);
     } catch (err) {
       console.error("Update error:", err);
       setUpdating(false);
       Alert.alert(
         "Error",
-        "Failed to update product. Please check your connection and try again."
+        err.message || "Failed to update product. Please check your connection and try again."
       );
     }
   };

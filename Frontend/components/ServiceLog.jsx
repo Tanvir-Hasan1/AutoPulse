@@ -293,8 +293,9 @@ export default function ServiceLog({
                   style={[
                     styles.dropdownButtonText,
                     !(isEditing ? editingLog?.type : newServiceLog?.type) &&
-                      styles.dropdownPlaceholder,
+                    styles.dropdownPlaceholder,
                   ]}
+                  numberOfLines={1}
                 >
                   {(isEditing ? editingLog?.type : newServiceLog?.type) ||
                     "Select service type"}
@@ -417,7 +418,7 @@ export default function ServiceLog({
               style={[
                 styles.historyItem,
                 selectedLogId === (log._id || log.id) &&
-                  styles.selectedHistoryItem,
+                styles.selectedHistoryItem,
               ]}
             >
               {/* Action Icons */}
@@ -551,7 +552,7 @@ export default function ServiceLog({
                   style={[
                     styles.dropdownItem,
                     (isEditing ? editingLog?.type : newServiceLog?.type) ===
-                      type && styles.dropdownItemSelected,
+                    type && styles.dropdownItemSelected,
                   ]}
                   onPress={() => handleServiceTypeSelect(type)}
                 >
@@ -559,15 +560,15 @@ export default function ServiceLog({
                     style={[
                       styles.dropdownItemText,
                       (isEditing ? editingLog?.type : newServiceLog?.type) ===
-                        type && styles.dropdownItemTextSelected,
+                      type && styles.dropdownItemTextSelected,
                     ]}
                   >
                     {type}
                   </Text>
                   {(isEditing ? editingLog?.type : newServiceLog?.type) ===
                     type && (
-                    <Ionicons name="checkmark" size={20} color="#4F46E5" />
-                  )}
+                      <Ionicons name="checkmark" size={20} color="#4F46E5" />
+                    )}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -654,7 +655,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingLeft: 12,
+    paddingRight: 16,
     paddingVertical: 10,
     backgroundColor: "#ffffff",
     height: 44,
@@ -662,6 +664,7 @@ const styles = StyleSheet.create({
   dropdownButtonText: {
     fontSize: 16,
     color: "#1f2937",
+    flex: 1,
   },
   dropdownPlaceholder: {
     color: "#9ca3af",

@@ -14,8 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { API_BASE_URL } from "../../../config";
 import { useAuthStore } from "../../../store/useAuthStore";
+import api from "../../../store/api";
 
 const categories = [
   { label: "Accessories", value: "accessories" },
@@ -217,29 +217,16 @@ export default function PostProduct() {
           type,
         });
       }
-      const token = useAuthStore.getState().accessToken;
-      const response = await fetch(
-        `${API_BASE_URL}/marketplace/post-product/${user.userId}`,
-        {
-          method: "POST",
-          headers: {
-            // 'Content-Type' should NOT be set for FormData in React Native fetch
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: formData,
-        }
+      await api.upload(
+        `/marketplace/post-product/${user.userId}`,
+        formData
       );
-      const resJson = await response.json();
       setUploading(false);
-      if (response.ok) {
-        Alert.alert("Success", "Product posted!");
-        router.back();
-      } else {
-        Alert.alert("Error", resJson.message || "Failed to post product.");
-      }
+      Alert.alert("Success", "Product posted!");
+      router.back();
     } catch (err) {
       setUploading(false);
-      Alert.alert("Error", "Failed to post product. Please try again.");
+      Alert.alert("Error", err.message || "Failed to post product. Please try again.");
     }
   };
 

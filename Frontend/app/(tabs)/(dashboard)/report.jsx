@@ -1,5 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   RefreshControl,
@@ -7,38 +6,43 @@ import {
   StyleSheet,
   Text,
   View,
+  ActivityIndicator,
+  TouchableOpacity,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import api from "../../../store/api";
 import { useAuthStore } from "../../../store/useAuthStore";
-
-const chartConfig = {
-  backgroundGradientFrom: "#fff",
-  backgroundGradientTo: "#fff",
-  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  strokeWidth: 2,
-  barPercentage: 0.5,
-  useShadowColorFromDataset: false,
-};
+import Reports from "../../../components/dashboard-component/reports";
+import YearlyCostsBreakdown from "../../../components/dashboard-component/reports/YearlyCostsBreakdown";
 
 const { width } = Dimensions.get("window");
-const CHART_WIDTH = width - 40;
+
+const themeColors = {
+  cardBackground: "#FFFFFF",
+  chartText: "#4B5563",
+  title: "#1F2937",
+  textPrimary: "#1F2937",
+  textSecondary: "#6B7280",
+  dotInactive: "#D1D5DB",
+  border: "#E5E7EB",
+};
 
 const ReportPage = () => {
   const bikeId = useAuthStore((s) => s.selectedBikeId);
   const [refreshing, setRefreshing] = useState(false);
-
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
-  const fetchReportData = async () => {
+  const fetchReportData = async (filterVal = filter) => {
     if (!bikeId) return;
     setLoading(true);
     setError(null);
-    api.get(`/dashboard/bikes/${bikeId}/report`)
+    api.get(`/dashboard/bikes/${bikeId}/report?filter=${filterVal}`)
       .then((data) => {
         setReport(data);
         setLoading(false);
@@ -51,49 +55,76 @@ const ReportPage = () => {
   };
 
   useEffect(() => {
-    fetchReportData();
+    fetchReportData(filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bikeId]);
+  }, [bikeId, filter]);
 
-  if (loading) return <Text style={styles.loadingText}>Loading...</Text>;
-  if (error) return <Text style={styles.errorText}>{error}</Text>;
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.loadingText}>Loading reports...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchReportData}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!report) return null;
 
-  // Helper to ensure array and not null
+  // Helpers to sanitize input
   const safeArray = (arr) => (Array.isArray(arr) ? arr : []);
-  // Helper to ensure number
   const safeNumber = (n) => (typeof n === "number" && !isNaN(n) ? n : 0);
 
   const {
     bikeData = {},
-    fuelLogs = [],
-    totalFuel,
-    totalSpend,
-    avgCostPerLitre,
-    fuelEfficiency,
-    monthlySpending,
-    fuelConsumptionTrend,
-    costBreakdown,
-    fuelPriceTrend,
+    totalFuel = 0,
+    totalSpend = 0,
+    avgCostPerLitre = 0,
+    fuelEfficiency = 0,
+    fuelConsumptionTrend = [],
+    costBreakdown = [],
+    fuelPriceTrend = [],
+    monthlyExpenseTrend = [],
+    monthlyCosts = {},
   } = report || {};
 
-  // Sanitize all data
   const _fuelConsumptionTrend = safeArray(fuelConsumptionTrend);
   const _costBreakdown = safeArray(costBreakdown);
   const _fuelPriceTrend = safeArray(fuelPriceTrend);
-  const _monthlySpending = safeNumber(monthlySpending);
-  const _totalFuel = safeNumber(totalFuel);
-  const _totalSpend = safeNumber(totalSpend);
-  const _avgCostPerLitre = safeNumber(avgCostPerLitre);
-  const _fuelEfficiency = safeNumber(fuelEfficiency);
+  const _monthlyExpenseTrend = safeArray(monthlyExpenseTrend);
+
+  // Formatting pie data for Reports slider legends
+  const colors = ["#2563EB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
+  const formattedPieData = _costBreakdown.map((item, idx) => ({
+    name: item.name || "",
+    population: safeNumber(item.value),
+    color: colors[idx % colors.length],
+    legendFontColor: "#333",
+    legendFontSize: 12,
+  }));
+
+  const visiblePieData = formattedPieData.filter((item) => item.population > 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
+            colors={["#2563EB"]}
+            tintColor="#2563EB"
             onRefresh={async () => {
               setRefreshing(true);
               await fetchReportData();
@@ -107,256 +138,415 @@ const ReportPage = () => {
           <Text style={styles.sectionTitle}>Bike Info</Text>
           {bikeData && bikeData.brand ? (
             <View style={styles.bikeInfoContainer}>
-              <Text style={styles.bikeInfoText}>
-                <Ionicons name="bicycle" size={18} color="#007AFF" />{" "}
-                {bikeData.brand} {bikeData.model} ({bikeData.year})
-              </Text>
-              <Text style={styles.bikeInfoText}>
-                <Ionicons name="pricetag" size={16} color="#007AFF" />{" "}
-                Registration: {bikeData.registrationNumber}
-              </Text>
-              <Text style={styles.bikeInfoText}>
-                <Ionicons name="speedometer" size={16} color="#007AFF" />{" "}
-                Odometer: {bikeData.odometer} km
-              </Text>
-              <Text style={styles.bikeInfoText}>
-                <Ionicons name="calendar" size={16} color="#007AFF" /> Last
-                Service: {bikeData.lastServiceDate || "--"}
-              </Text>
-              <Text style={styles.bikeInfoText}>
-                <Ionicons name="navigate" size={16} color="#007AFF" /> Last
-                Service Odo: {bikeData.lastServiceOdometer || "--"}
-              </Text>
+              <View style={styles.bikeHeader}>
+                <Ionicons name="bicycle" size={22} color="#2563EB" />
+                <Text style={styles.bikeName}>
+                  {bikeData.brand} {bikeData.model}
+                </Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{bikeData.year}</Text>
+                </View>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoCol}>
+                  <Text style={styles.infoLabel}>Registration</Text>
+                  <Text style={styles.infoVal}>{bikeData.registrationNumber || "--"}</Text>
+                </View>
+                <View style={styles.infoCol}>
+                  <Text style={styles.infoLabel}>Odometer</Text>
+                  <Text style={styles.infoVal}>{bikeData.odometer ? `${bikeData.odometer} km` : "--"}</Text>
+                </View>
+              </View>
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoCol}>
+                  <Text style={styles.infoLabel}>Last Service Date</Text>
+                  <Text style={styles.infoVal}>{bikeData.lastServiceDate || "--"}</Text>
+                </View>
+                <View style={styles.infoCol}>
+                  <Text style={styles.infoLabel}>Last Service Odo</Text>
+                  <Text style={styles.infoVal}>{bikeData.lastServiceOdometer ? `${bikeData.lastServiceOdometer} km` : "--"}</Text>
+                </View>
+              </View>
             </View>
           ) : (
-            <Text style={styles.bikeInfoText}>No bike data available.</Text>
+            <View style={styles.bikeInfoContainer}>
+              <Text style={styles.noBikeText}>No bike data available.</Text>
+            </View>
           )}
         </View>
 
         {/* Fuel Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fuel Summary</Text>
-          <View style={styles.summaryRow}>
-            <SummaryBox label="Total Fuel" value={`${totalFuel}L`} />
-            <SummaryBox label="Total Spent" value={`৳${totalSpend}`} />
-            <SummaryBox label="Avg Cost/L" value={`৳${avgCostPerLitre}`} />
-            <SummaryBox label="KM/L" value={`${fuelEfficiency}`} />
+          <View style={styles.headerRow}>
+            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Fuel Summary</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setDropdownVisible(true)}
+            >
+              <Text style={styles.dropdownButtonText}>
+                {filter === "all"
+                  ? "All"
+                  : filter === "this_year"
+                  ? "This Year"
+                  : "Previous Year"}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color="#2563EB" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryBox}>
+              <MaterialCommunityIcons name="gas-station-outline" size={20} color="#2563EB" style={styles.boxIcon} />
+              <Text style={styles.summaryValue}>{totalFuel ?? 0}L</Text>
+              <Text style={styles.summaryLabel}>Total Fuel</Text>
+            </View>
+            <View style={styles.summaryBox}>
+              <Ionicons name="cash-outline" size={20} color="#10B981" style={styles.boxIcon} />
+              <Text style={styles.summaryValue}>৳{totalSpend ?? 0}</Text>
+              <Text style={styles.summaryLabel}>Total Spent</Text>
+            </View>
+            <View style={styles.summaryBox}>
+              <Ionicons name="pricetag-outline" size={20} color="#F59E0B" style={styles.boxIcon} />
+              <Text style={styles.summaryValue}>৳{avgCostPerLitre ?? 0}</Text>
+              <Text style={styles.summaryLabel}>Avg Cost/L</Text>
+            </View>
+            <View style={styles.summaryBox}>
+              <Ionicons name="speedometer-outline" size={20} color="#EF4444" style={styles.boxIcon} />
+              <Text style={styles.summaryValue}>{fuelEfficiency ?? 0}</Text>
+              <Text style={styles.summaryLabel}>KM/L</Text>
+            </View>
           </View>
         </View>
 
-        {/* Monthly Spending (Bar Chart) */}
-        <ChartSection title="Monthly Spending (৳)">
-          {_fuelConsumptionTrend.length > 0 &&
-          _fuelConsumptionTrend.some((d) => typeof d.litres === "number") ? (
-            <BarChart
-              data={{
-                labels: _fuelConsumptionTrend.map((d) => d.month || ""),
-                datasets: [
-                  {
-                    data: _fuelConsumptionTrend.map((d) =>
-                      safeNumber(d.litres)
-                    ),
-                  },
-                ],
-              }}
-              width={CHART_WIDTH}
-              height={220}
-              chartConfig={chartConfig}
-              style={{ borderRadius: 16 }}
-            />
-          ) : (
-            <Text style={styles.noDataText}>No data available.</Text>
-          )}
-          <Text style={styles.monthlyTotalText}>
-            Last 30 days: ৳{_monthlySpending}
-          </Text>
-        </ChartSection>
+        {/* Performance Analytics Slider */}
+        <View style={{ paddingTop: 16 }}>
+          <Text style={[styles.sectionTitle, { paddingHorizontal: 20 }]}>Performance Analytics</Text>
+          <Reports
+            visiblePieData={visiblePieData}
+            fuelPriceTrend={_fuelPriceTrend}
+            fuelConsumptionTrend={_fuelConsumptionTrend}
+            monthlyExpenseTrend={_monthlyExpenseTrend}
+            pieData={formattedPieData}
+            themeColors={themeColors}
+          />
+        </View>
 
-        {/* Fuel Consumption Trend (Line Chart) */}
-        <ChartSection title="Fuel Consumption Trend (L)">
-          {_fuelConsumptionTrend.length > 0 &&
-          _fuelConsumptionTrend.some((d) => typeof d.litres === "number") ? (
-            <LineChart
-              data={{
-                labels: _fuelConsumptionTrend.map((d) => d.month || ""),
-                datasets: [
-                  {
-                    data: _fuelConsumptionTrend.map((d) =>
-                      safeNumber(d.litres)
-                    ),
-                  },
-                ],
-              }}
-              width={CHART_WIDTH}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={{ borderRadius: 16 }}
-            />
-          ) : (
-            <Text style={styles.noDataText}>No data available.</Text>
-          )}
-        </ChartSection>
-
-        {/* Pie Chart: Cost Breakdown */}
-        <ChartSection title="Cost Breakdown">
-          {_costBreakdown.length > 0 &&
-          _costBreakdown.some(
-            (item) => typeof item.value === "number" && item.value > 0
-          ) ? (
-            <PieChart
-              data={_costBreakdown.map((item) => ({
-                name: item.name || "",
-                population: safeNumber(item.value),
-                color:
-                  item.name === "Fuel"
-                    ? "#FF6B6B"
-                    : item.name === "Service"
-                    ? "#4ECDC4"
-                    : "#45B7D1",
-                legendFontColor: "#333",
-                legendFontSize: 12,
-              }))}
-              width={CHART_WIDTH}
-              height={220}
-              chartConfig={chartConfig}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="15"
-            />
-          ) : (
-            <Text style={styles.noDataText}>No data available.</Text>
-          )}
-        </ChartSection>
-
-        {/* Fuel Price Trend (Line Chart) */}
-        <ChartSection title="Fuel Price Trend (৳/L)">
-          {_fuelPriceTrend.length > 0 &&
-          _fuelPriceTrend.some((d) => typeof d.unitCost === "number") ? (
-            <LineChart
-              data={{
-                labels: _fuelPriceTrend.map((d) => d.date || ""),
-                datasets: [
-                  {
-                    data: _fuelPriceTrend.map((d) => safeNumber(d.unitCost)),
-                  },
-                ],
-              }}
-              width={CHART_WIDTH}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={{ borderRadius: 16 }}
-            />
-          ) : (
-            <Text style={styles.noDataText}>No data available.</Text>
-          )}
-        </ChartSection>
+        {/* Yearly Costs Breakdown Section */}
+        <YearlyCostsBreakdown monthlyCosts={monthlyCosts} />
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Select Filter Dropdown Sheet */}
+      <Modal
+        visible={dropdownVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDropdownVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalDismiss}
+            activeOpacity={1}
+            onPress={() => setDropdownVisible(false)}
+          />
+          <View style={styles.bottomSheet}>
+            <View style={styles.bottomSheetHeader}>
+              <View style={styles.bottomSheetIndicator} />
+              <Text style={styles.bottomSheetTitle}>Select Fuel Range</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.bottomSheetItem,
+                filter === "all" && styles.bottomSheetItemActive,
+              ]}
+              onPress={() => {
+                setFilter("all");
+                setDropdownVisible(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.bottomSheetItemText,
+                  filter === "all" && styles.bottomSheetItemTextActive,
+                ]}
+              >
+                All Time
+              </Text>
+              {filter === "all" && <Ionicons name="checkmark-circle" size={20} color="#2563EB" />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.bottomSheetItem,
+                filter === "this_year" && styles.bottomSheetItemActive,
+              ]}
+              onPress={() => {
+                setFilter("this_year");
+                setDropdownVisible(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.bottomSheetItemText,
+                  filter === "this_year" && styles.bottomSheetItemTextActive,
+                ]}
+              >
+                This Year ({new Date().getFullYear()})
+              </Text>
+              {filter === "this_year" && <Ionicons name="checkmark-circle" size={20} color="#2563EB" />}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.bottomSheetItem,
+                filter === "prev_year" && styles.bottomSheetItemActive,
+              ]}
+              onPress={() => {
+                setFilter("prev_year");
+                setDropdownVisible(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.bottomSheetItemText,
+                  filter === "prev_year" && styles.bottomSheetItemTextActive,
+                ]}
+              >
+                Previous Year ({new Date().getFullYear() - 1})
+              </Text>
+              {filter === "prev_year" && <Ionicons name="checkmark-circle" size={20} color="#2563EB" />}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
-const SummaryBox = ({ label, value }) => (
-  <View style={styles.summaryBox}>
-    <Text style={styles.summaryValue}>{value ?? "--"}</Text>
-    <Text style={styles.summaryLabel}>{label}</Text>
-  </View>
-);
-
-const ChartSection = ({ title, children }) => (
-  <View style={styles.chartSection}>
-    <Text style={styles.chartSectionTitle}>{title}</Text>
-    <View style={styles.chartContainer}>{children}</View>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+    gap: 4,
+  },
+  dropdownButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#2563EB",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "flex-end",
+  },
+  modalDismiss: {
+    flex: 1,
+  },
+  bottomSheet: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 12,
+  },
+  bottomSheetHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  bottomSheetIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 2,
+    marginBottom: 12,
+  },
+  bottomSheetTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+  },
+  bottomSheetItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+  },
+  bottomSheetItemActive: {},
+  bottomSheetItemText: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#4B5563",
+  },
+  bottomSheetItemTextActive: {
+    color: "#2563EB",
+    fontWeight: "700",
+  },
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   section: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "700",
-    color: "#333",
-    marginBottom: 16,
-    fontFamily: "System",
+    fontWeight: "800",
+    color: "#111827",
+    marginBottom: 12,
+    letterSpacing: 0.3,
   },
   bikeInfoContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 8,
-    elevation: 2,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "rgba(0,0,0,0.02)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  bikeInfoText: {
-    fontSize: 15,
+  bikeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  bikeName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginLeft: 10,
+    flex: 1,
+  },
+  badge: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#2563EB",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginVertical: 12,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 6,
+  },
+  infoCol: {
+    width: "48%",
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#9CA3AF",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     marginBottom: 2,
-    color: "#444",
-    fontFamily: "System",
   },
-  summaryRow: {
+  infoVal: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#374151",
+  },
+  noBikeText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+  summaryGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
   summaryBox: {
-    width: (width - 60) / 2,
-    marginBottom: 12,
+    width: (width - 56) / 2,
+    marginBottom: 16,
     padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     alignItems: "center",
-    elevation: 2,
+    shadowColor: "rgba(0,0,0,0.02)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  boxIcon: {
+    marginBottom: 8,
   },
   summaryValue: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "800",
+    color: "#1F2937",
+    marginBottom: 4,
   },
   summaryLabel: {
-    fontSize: 12,
-    color: "#666",
-  },
-  chartSection: {
-    padding: 20,
-  },
-  chartSectionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-  },
-  chartContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    elevation: 3,
-  },
-  monthlyTotalText: {
-    marginTop: 8,
-    textAlign: "right",
-    color: "#2196F3",
-    fontWeight: "bold",
+    fontSize: 11,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   loadingText: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 40,
-    textAlign: "center",
+    fontSize: 15,
+    color: "#4B5563",
+    marginTop: 12,
+    fontWeight: "500",
   },
   errorText: {
-    fontSize: 16,
-    color: "#F44336",
-    marginTop: 40,
-    textAlign: "center",
-  },
-  noDataText: {
     fontSize: 15,
-    color: "#999",
+    color: "#EF4444",
+    marginTop: 12,
     textAlign: "center",
-    paddingVertical: 32,
+    paddingHorizontal: 20,
+    fontWeight: "500",
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: "#2563EB",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  retryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
 });
 

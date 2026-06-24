@@ -94,31 +94,23 @@ export default function License() {
     setIsLoadingLicense(true);
 
     try {
-      const token = useAuthStore.getState().accessToken;
-      const response = await fetch(
-        `${API_BASE_URL}/license/download/${userId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to download license");
+      // Fetch metadata first (handles token refresh automatically)
+      const data = await api.get(`/license/info/${userId}`);
+      if (!data || !data.license) {
+        throw new Error("No driving license found for this user");
       }
 
-      const contentType = response.headers.get("content-type");
+      const contentType = data.license.contentType;
       if (contentType && contentType.includes("pdf")) {
         const pdfUrl = `${API_BASE_URL}/license/download/${userId}`;
         setLicenseImageUri(pdfUrl);
         setLicenseFileType("pdf");
         setIsLoadingLicense(false);
       } else if (contentType && contentType.startsWith("image/")) {
-        // Handle image
-        const blob = await response.blob();
+        // Fetch image as blob
+        const blob = await api.get(`/license/download/${userId}`, {
+          responseType: "blob",
+        });
         const reader = new FileReader();
         reader.onloadend = () => {
           setLicenseImageUri(reader.result);
