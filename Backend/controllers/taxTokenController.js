@@ -47,10 +47,10 @@ const upload = multer({
 
 // Email notification function for tax token upload
 const sendTaxTokenUploadEmail = (bike, taxTokenData) => {
-  bike
+  return bike
     .populate("user", "name email")
     .then((user) => {
-      sendMail({
+      return sendMail({
         to: user.user.email,
         subject: "Tax Token Document Uploaded Successfully! 🏍️ - AutoPulse",
         text: `Dear ${
@@ -119,10 +119,10 @@ const sendTaxTokenUploadEmail = (bike, taxTokenData) => {
 
 // Email notification function for tax token deletion
 const sendTaxTokenDeleteEmail = (bike) => {
-  bike
+  return bike
     .populate("user", "name email")
     .then((user) => {
-      sendMail({
+      return sendMail({
         to: user.user.email,
         subject: "Tax Token Document Deleted - AutoPulse Alert",
         text: `Dear ${

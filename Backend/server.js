@@ -23,7 +23,7 @@ app.use(cors());
 // API Request Logger
 app.use((req, res, next) => {
   const start = Date.now();
-  
+
   // Intercept res.json to capture the response body
   const originalJson = res.json;
   let responseBody;
@@ -35,14 +35,14 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     const duration = Date.now() - start;
     let logMessage = `[API] ${req.method} ${req.originalUrl} - Status: ${res.statusCode} (${duration}ms)`;
-    
+
     // Append error message if status is 4xx or 5xx
     if (res.statusCode >= 400 && responseBody && responseBody.message) {
       logMessage += ` | Error: ${responseBody.message}`;
     } else if (res.statusCode >= 400 && responseBody && responseBody.error) {
       logMessage += ` | Error: ${responseBody.error}`;
     }
-    
+
     console.log(logMessage);
   });
   next();
@@ -51,6 +51,19 @@ app.use((req, res, next) => {
 // Swagger Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 // Routes
+app.get("/api/debug-env", (req, res) => {
+  const getMasked = (val) => {
+    if (!val) return "undefined/empty";
+    return val.replace(/:([^@]+)@/, ":******@");
+  };
+  res.json({
+    MONGO_URI: getMasked(process.env.MONGO_URI),
+    MONGODB_URI: getMasked(process.env.MONGODB_URI),
+    VERCEL: process.env.VERCEL || "false",
+    NODE_ENV: process.env.NODE_ENV || "development",
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/bikes", bikeRoutes);
 app.use("/api/fuel", fuelRoutes);
@@ -61,13 +74,21 @@ app.use("/api/registration", registrationRoutes);
 app.use("/api/tax-token", taxTokenRoutes);
 app.use("/api/marketplace", productRoutes); // Use product routes
 
-// Connect to MongoDB and start server
+// Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI || process.env.MONGODB_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
-    app.listen(PORT, "0.0.0.0", () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
   })
   .catch((err) => console.error("❌ MongoDB connection failed:", err));
+
+
+// Start server locally (only when not running in Vercel serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, "0.0.0.0", () =>
+    console.log(`🚀 Server running on port ${PORT}`)
+  );
+}
+
+// Export app for Vercel Serverless Function deployment
+module.exports = app;

@@ -123,7 +123,7 @@ const uploadLicense = async (req, res) => {
         await user.save();
 
         // Send email notification
-        sendLicenseUploadEmail(user, licenseData);
+        await sendLicenseUploadEmail(user, licenseData);
 
         res.status(201).json({
           message: "Driving license uploaded successfully",
@@ -338,7 +338,7 @@ const deleteLicense = async (req, res) => {
     await user.save();
 
     // Send email notification
-    sendLicenseDeleteEmail(user);
+    await sendLicenseDeleteEmail(user);
 
     res.status(200).json({
       message: "Driving license deleted successfully",
@@ -402,8 +402,9 @@ const verifyLicense = async (req, res) => {
 const uploadMiddleware = upload.single("license");
 
 // Send license upload email
+// Send license upload email
 const sendLicenseUploadEmail = (user, licenseData) => {
-  sendMail({
+  return sendMail({
     to: user.email,
     subject: "License Document Uploaded Successfully! 🏍️ - AutoPulse",
     text: `Dear ${
@@ -446,12 +447,12 @@ const sendLicenseUploadEmail = (user, licenseData) => {
         <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
       </div>
     </div>`,
-  });
+  }).catch((e) => console.error("Error sending license upload email:", e));
 };
 
 // Send license deletion email
 const sendLicenseDeleteEmail = (user) => {
-  sendMail({
+  return sendMail({
     to: user.email,
     subject: "License Document Deleted - AutoPulse Alert",
     text: `Dear ${
@@ -479,7 +480,7 @@ const sendLicenseDeleteEmail = (user) => {
         <p style="color: #6b7280; font-size: 14px;">Ride safe! 🏍️<br>AutoPulse Team</p>
       </div>
     </div>`,
-  });
+  }).catch((e) => console.error("Error sending license delete email:", e));
 };
 
 module.exports = {

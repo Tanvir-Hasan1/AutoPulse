@@ -47,10 +47,10 @@ const upload = multer({
 
 // Email notification function for registration upload
 const sendRegistrationUploadEmail = (bike, registrationData) => {
-  bike
+  return bike
     .populate("user", "name email")
     .then((user) => {
-      sendMail({
+      return sendMail({
         to: user.user.email,
         subject: "Registration Document Uploaded Successfully! 🏍️ - AutoPulse",
         text: `Dear ${
@@ -82,10 +82,10 @@ const sendRegistrationUploadEmail = (bike, registrationData) => {
 
 // Email notification function for registration deletion
 const sendRegistrationDeleteEmail = (bike) => {
-  bike
+  return bike
     .populate("user", "name email")
     .then((user) => {
-      sendMail({
+      return sendMail({
         to: user.user.email,
         subject: "Registration Document Deleted - AutoPulse Alert",
         text: `Dear ${

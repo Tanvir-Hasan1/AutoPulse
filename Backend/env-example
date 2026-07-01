@@ -4,4 +4,5 @@ JWT_SECRET=your_jwt_secret_here
 JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
 RESEND_TOKEN=your_resend_token_here
 RESEND_MAIL=your_resend_mail_here
-JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
+GMAIL_USER=your_gmail_username_here
+GMAIL_PASS=your_gmail_app_password_here
